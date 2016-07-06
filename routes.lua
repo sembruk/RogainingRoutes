@@ -1,3 +1,4 @@
+#!/usr/bin/env lua
 --[[
    Copyright 2016 Semyon Yakimov
 
@@ -20,9 +21,9 @@
 
 --! Configuration
 
-local inFileName = "mapForRoutesMini.png"
-local cpFileName = "coordinates.txt"
-local splitsFileName = "splits6so.csv"
+local mapFileName = "map.png"
+local cpFileName = "checkpoints.txt"
+local splitsFileName = "splits.htm"
 local group = "Мужчины-24"
 local members = 2
 local metersInPixel = 10.3985
@@ -32,6 +33,8 @@ start.x = 655
 start.y = 448
 
 ---
+
+local xml = require "xml" -- sudo luarocks install xml
 
 function degToRadian(angle)
    return angle * math.pi / 180
@@ -62,6 +65,7 @@ end
 
 local checkPoints = {}
 
+--[[
 for line in io.lines(cpFileName) do
    local _,_,cp,x,y = string.find(line,"^(%d+)%s([%d%-]+)%s([%d%-]+)$")
    if cp then
@@ -77,6 +81,7 @@ for line in io.lines(cpFileName) do
       checkPoints[cp].y = _y + start.y
    end
 end
+]]
 
 function drawRoute(commandCps,cmd)
    if group then
@@ -89,8 +94,8 @@ function drawRoute(commandCps,cmd)
    end
 
 local annotation = string.format("Команда\n    %s\n    %s\n    %s\nМесто\n    %s\nРезультат\n    %s\nВремя\n    %s\nДлина по прямым\n    %.2f км\nОчков на километр\n    %.2f",cmd.number..'. '..cmd.name,cmd.member1,cmd.member2 or '',cmd.placement..' ('..group..')',cmd.result,cmd.timeout,cmd.len,cmd.result/cmd.len)
-   --run(string.format("convert %s -gravity SouthEast -page +200+0 -background white -mosaic -fill none -stroke blue -strokewidth 2 -draw 'polyline %d,%d %s' %s",inFileName,start.x,start.y,str,outFileName))
-   run(string.format("convert %s -gravity SouthEast -splice +0+0 -background white -chop 250x1414 -fill none -stroke blue -strokewidth 2 -draw 'polyline %d,%d %s' -font Arial-Курсив -fill blue -pointsize 40 -gravity NorthWest -draw \"text 1020,50 '%s'\" %s",inFileName,start.x,start.y,str,annotation,outFileName))
+   --run(string.format("convert %s -gravity SouthEast -page +200+0 -background white -mosaic -fill none -stroke blue -strokewidth 2 -draw 'polyline %d,%d %s' %s",mapFileName,start.x,start.y,str,outFileName))
+   run(string.format("convert %s -gravity SouthEast -splice +0+0 -background white -chop 250x1414 -fill none -stroke blue -strokewidth 2 -draw 'polyline %d,%d %s' -font Arial-Курсив -fill blue -pointsize 40 -gravity NorthWest -draw \"text 1020,50 '%s'\" %s",mapFileName,start.x,start.y,str,annotation,outFileName))
 end
 
 function fromCSV(s)
@@ -183,12 +188,11 @@ function handleLine(line)
    drawRoute(route,cmd)
 end
 
+--[[
 local lastLine
 for line in io.lines(splitsFileName) do
-   --[[
    if line:find("<h2>"..group.."</h2>") then
    end
-   ]]
    if lastLine and line then
       line = lastLine .. line
    end
@@ -200,4 +204,8 @@ for line in io.lines(splitsFileName) do
       lastLine = line
    end
 end
+--]]
+
+local splits_data = xml.loadpath(splitsFileName)
+print(xml.find(splits_data, "h2"))
 

@@ -1,3 +1,5 @@
 *.o
 *.swp
+*.htm
+*.html
 tags

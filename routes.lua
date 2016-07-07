@@ -34,8 +34,6 @@ start.y = 448
 
 ---
 
-local xml = require "xml" -- sudo luarocks install xml
-
 function degToRadian(angle)
    return angle * math.pi / 180
 end
@@ -206,6 +204,23 @@ for line in io.lines(splitsFileName) do
 end
 --]]
 
-local splits_data = xml.loadpath(splitsFileName)
-print(xml.find(splits_data, "h2"))
+local xml = require "xml" -- sudo luarocks install xml
+
+local file = io.open(splitsFileName)
+local docstr = file:read("*a")
+file:close()
+
+docstr = docstr:gsub("<meta.->","")
+docstr = docstr:gsub("<style>.-</style>","")
+docstr = docstr:gsub("<nobr>","")
+docstr = docstr:gsub("<br>","")
+docstr = "<document>"..docstr.."</document>"
+
+local splits_data = xml.load(docstr)
+for i,v in ipairs(splits_data) do
+   print(v.xml)
+   if (v.xml == 'h2' and v[1] == group) then
+      print(group)
+   end
+end
 

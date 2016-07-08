@@ -30,9 +30,11 @@ local members = 2
 local metersInPixel = 9.8778
 local k = 35/1000
 local rotateAngle = 19.5 ---< in degrees
-local start = {}
-start.x = 1069
-start.y = 1719
+local start = {
+   x = 1069,
+   y = 1719,
+}
+local image = {}
 
 ---
 
@@ -72,7 +74,7 @@ function rotate(x,y,radians)
    return retX, retY
 end
 
-function run(cmd)
+function run(cmd, act)
    local ret,err = io.popen(cmd,"r")
    if not ret then
       print("No output from ",cmd)
@@ -81,7 +83,11 @@ function run(cmd)
 
    for line in ret:lines() do
       if line and line ~= "" then
-         print(line)
+         if act then
+            act(line)
+         else
+            print(line)
+         end
       end
    end
    ret:close()
@@ -212,6 +218,12 @@ function handleLine(line)
    drawRoute(route,cmd)
 end
 
+run("identify map.jpg", function(str)
+   local _,_,w,h = str:find('(%d+)x(%d+)')
+   image.width = w
+   image.height = h
+end)
+
 local title = ""
 
 function makeTeamHtml(team, cps)
@@ -258,7 +270,7 @@ H1  {font-size: 14pt;font-weight: bold;color: #AA0055;text-align: left;}
 <tr><th>КП</th><th>Время</th><th>Сплит</th><th>Очки</th><th>Расстояние (км)</th><th>Скорость (мин/км)</th></tr>
 ]]..teamTbl(team)..
 [[</table><br>
-<canvas id="e" width="1200" height="846"></canvas>
+<canvas id="e" width="]]..image.width..[[" height="]]..image.height..[["></canvas>
 <script>
 ]]..cpList()..
 [[var canvas = document.getElementById("e");

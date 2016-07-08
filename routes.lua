@@ -22,16 +22,17 @@
 --! Configuration
 
 local mapFileName = "map.png"
-local cpFileName = "checkpoints.txt"
-local splitsFileName = "splits.htm"
+local cpFileName = "/home/sem/mega/routes/coordinates.xml"
+local splitsFileName = "/home/sem/mega/routes/splits.htm"
 local group = "Мужчины-24"
 local start_time = "12:00:00"
 local members = 2
-local metersInPixel = 10.3985
+local metersInPixel = 9.8778
+local k = 35/1000
 local rotateAngle = 19.5 ---< in degrees
 local start = {}
-start.x = 655 
-start.y = 448
+start.x = 1069
+start.y = 1719
 
 ---
 
@@ -86,9 +87,9 @@ function run(cmd)
    ret:close()
 end
 
-local checkPoints = {}
 
 --[[
+local checkPoints = {}
 for line in io.lines(cpFileName) do
    local _,_,cp,x,y = string.find(line,"^(%d+)%s([%d%-]+)%s([%d%-]+)$")
    if cp then
@@ -213,11 +214,10 @@ end
 
 local title = ""
 
-function makeTeamHtml(team)
+function makeTeamHtml(team, cps)
    local function teamTbl()
       local str = ""
       for i,v in ipairs(team.route) do
-         print(i,v.id)
          str = str.."<tr>"
          str = str.."<td>"..v.id.."</td>"
          str = str.."<td>"..v.time.."</td>"
@@ -230,6 +230,16 @@ function makeTeamHtml(team)
       str = str .. "<tr><th>&nbsp;</th><th>"..team.time.."</th><th>&nbsp;</th><th>"..team.result.."</th><th>len км</th><th><strong>sp мин/км</strong></th></tr>"
       return str
    end
+
+   local function cpList()
+      local str = 'var kp_list = [ '
+      for i,v in ipairs(team.route) do
+         str = str..'['..cps[v.id].x..','..cps[v.id].y..',"rgb(224,0,62)"],'
+      end
+      str = str..'];'
+      return str
+   end
+
    local team_html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <style>
@@ -250,11 +260,11 @@ H1  {font-size: 14pt;font-weight: bold;color: #AA0055;text-align: left;}
 [[</table><br>
 <canvas id="e" width="1200" height="846"></canvas>
 <script>
-var kp_list = [ [-37.682621152963,88.178141223889, "rgb(224,0,62)"],[33.246734052268,138.9698643235, "rgb(255,124,0)"],[180.87718210406,195.55901461462, "rgb(255,62,0)"],[277.00257784591,306.14715879549, "rgb(255,224,0)"],[402.00732781358,180.83974950794, "rgb(255,256,0)"],[308.38933837824,123.56418008532, "rgb(204,0,102)"],[194.97707140447,-29.888142510114, "rgb(255,248,0)"],[91.260427247149,-33.153961737027, "rgb(255,192,0)"],[44.451940829338,-63.770250623801, "rgb(255,220,0)"],[80.855216971534,-147.30907564722, "rgb(255,210,0)"],[146.03865049667,-151.26643540435, "rgb(170,0,170)"],[264.51880493588,-163.84143234645, "rgb(255,150,0)"],[370.03460555934,-144.71285147047, "rgb(255,176,0)"],[344.494971314,-229.35321025571, "rgb(127,0,256)"],[210.90423151532,-279.44335827926, "rgb(159,0,192)"],[147.15537992571,-271.54623343836, "rgb(159,0,192)"],[6.7052458202325,-268.69392853459, "rgb(255,30,0)"],[-71.817864912021,-270.16742066676, "rgb(186,0,138)"],[-171.20343815739,-298.64377106811, "rgb(155,0,200)"],[-222.71142376999,-233.82500065405, "rgb(228,0,54)"],[-284.32749876714,-145.96818222339, "rgb(228,0,54)"],[-50.581639616175,-198.85180118398, "rgb(202,0,106)"],[-34.388896172877,-122.86271170794, "rgb(201,0,108)"],[0.093530421142196,-0.13601196055146, "rgb(161,0,188)"],];
-var canvas = document.getElementById("e");
+]]..cpList()..
+[[var canvas = document.getElementById("e");
 var context = canvas.getContext("2d");
 var map = new Image();
-var c = [732.53574555004, 321.79749051649];
+var c = []]..start.x..','..start.y..[[];
 map.src = "map.jpg";
 map.onload = function() {
 	context.drawImage(map, 0, 0);
@@ -313,6 +323,7 @@ function parseTeamSplits(team_data)
             local cp = {}
             _,_,cp.time,cp.id = string.find(v[1],'^(%d+:%d+)%[(%d+)%]')
             _,_,cp.split = string.find(v[1],'(%d+:%d+)$')
+            cp.id = tonumber(cp.id)
             if cp.split == nil then
                cp.split = cp.time
             end
@@ -360,10 +371,16 @@ for i,v in ipairs(splits_data) do
    end
 end
 
---print(teams[1].id)
---print(teams[1].second_name)
-for i,v in ipairs(teams[1].route) do
-   --print(v.id)
+local cp_data = xml.loadpath(cpFileName)
+local checkPoints = {}
+for i,v in ipairs(cp_data) do
+   if v.cp then
+      local cp = tonumber(v.cp)
+      checkPoints[cp] = {}
+      checkPoints[cp].x = math.floor(v.x * k / metersInPixel)
+      checkPoints[cp].y = math.floor(v.y * k / metersInPixel)
+   end
 end
-makeTeamHtml(teams[1])
+
+makeTeamHtml(teams[1],checkPoints)
 

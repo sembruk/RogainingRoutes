@@ -49,7 +49,7 @@ function timeToSec(str)
    end
 end
 
-start_time = timeToSec(start_time)
+local start_secs = timeToSec(start_time)
 
 function secToTime(sec)
    local hour = math.floor(sec/3600)
@@ -243,7 +243,7 @@ function makeTeamHtml(team, cps)
          x = 0,
          y = 0,
       }
-      local str = ""
+      local str = "<tr><td>С</td><td>"..start_time.."</td><td></td><td></td><td></td><td></td></tr>\n"
       local sum = 0
       local sum_len = 0
       for i,v in ipairs(team.route) do
@@ -273,12 +273,12 @@ function makeTeamHtml(team, cps)
             str = str.."<td></td>"
          end
          str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len).."</td>"
-         str = str.."<td></td>"
+         str = str.."<td>"..string.format("%.2f",timeToSec(v.split)/len/60).."</td>"
          str = str.."</tr>\n"
       end
       str = str .. "<tr><th>&nbsp;</th><th>&nbsp;</th><th>"..team.time..
       "</th><th>"..team.result.."</th><th>"..string.format("%.2f км",sum_len)..
-      "</th><th><strong>sp мин/км</strong></th></tr>\n"
+      "</th><th><strong>"..string.format("%.2f",timeToSec(team.time)/sum_len/60).." мин/км</strong></th></tr>\n"
       local sum_len = sum_len + math.sqrt((0 - previos.x)^2 + (0 - previos.y)^2)
       return str
    end
@@ -383,7 +383,7 @@ function parseTeamSplits(team_data)
             end
             local secs = timeToSec(cp.time)
             prev_secs = secs
-            secs = secs + start_time
+            secs = secs + start_secs
             cp.time = secToTime(secs)
             _,_,cp.local_points = string.find(cp.id,'^(%d+)%d$')
             table.insert(team.route,cp)
@@ -395,7 +395,7 @@ function parseTeamSplits(team_data)
    finish.id = "Ф"
    local secs = timeToSec(team.time)
    local split = secs - prev_secs
-   secs = secs + start_time
+   secs = secs + start_secs
    finish.time = secToTime(secs)
    finish.split = secToSplit(split)
    table.insert(team.route,finish)

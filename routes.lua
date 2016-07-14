@@ -147,13 +147,13 @@ function makeTeamHtml(team, cps)
          else
             str = str.."<td></td>"
          end
-         str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len).."</td>"
-         str = str.."<td>"..string.format("%.2f",timeToSec(v.split)/len/60).."</td>"
+         str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len):gsub('%.',',').."</td>"
+         str = str.."<td>"..string.format("%.2f",timeToSec(v.split)/len/60):gsub('%.',',').."</td>"
          str = str.."</tr>\n"
       end
       str = str .. "<tr><th>&nbsp;</th><th>&nbsp;</th><th>"..team.time..
-      "</th><th>"..team.result.."</th><th>"..string.format("%.2f км",sum_len)..
-      "</th><th><strong>"..string.format("%.2f",timeToSec(team.time)/sum_len/60).." мин/км</strong></th></tr>\n"
+      "</th><th>"..team.result.."</th><th>"..string.format("%.2f км",sum_len):gsub('%.',',')..
+      "</th><th><strong>"..string.format("%.2f",timeToSec(team.time)/sum_len/60):gsub('%.',',').." мин/км</strong></th></tr>\n"
       local sum_len = sum_len + math.sqrt((0 - previos.x)^2 + (0 - previos.y)^2)
       return str
    end
@@ -173,28 +173,29 @@ function makeTeamHtml(team, cps)
    local team_html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <style>
-body {font-family: "Arial Narrow"; font-size: 10pt;}
-table {font-family: "Arial Narrow"; font-size: 10pt; border:1px AA0055; background: #ddd;text-align: center;}
-table td{ margin:O; padding: 0 2px; background: #FFFFFF;}
-.rezult th { font-family: "Arial Narrow";font-style: italic; font-size: 10pt;color: #AA0055;padding: 2px 3px; background: #EEEEBB;}
-H1  {font-size: 14pt;font-weight: bold;text-align: left;}
-.yl, tr.yl td {background: #FFFFAA;}
+body {font-family:"Arial Narrow"; font-size:12pt;}
+table.result {font-family:"Arial Narrow"; font-size:12pt; border:1px AA0055; background:#ddd; text-align:center;}
+table td{ margin:O; padding:0 2px; background:#fff;}
+h1 {font-size:16pt; font-weight:bold; text-align:left;}
 </style>
 <title>]]..team.id.."."..team.name..[[</title>
 </head>
 <body>
 <h1>]]..title..[[</h1>
 <table>
-<tr><td>Команда</td><td>]]..team.id.."."..team.name..[[</td></tr>
-<tr><td>Участники</td><td>]]..team.second_name..", "..team.first_name..[[</td></tr>
+<tr><td>Команда</td><td><b>]]..team.id.."."..team.name..[[</b></td></tr>
+<tr><td>Участники</td><td><b>]]..team.second_name..", "..team.first_name..[[</b></td></tr>
 <!--<tr><td>Город</td><td>]]..[[</td></tr>-->
-<tr><td>Место</td><td>]]..team.position..[[</td></tr>
+<tr><td>Место</td><td>]]..
+((tonumber(team.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
+team.position..[[</span> (]]..
+group..[[)</td></tr>
 <tr><td>Очки</td><td>]]..team.sum..[[</td></tr>
 <tr><td>Штраф</td><td>]]..(team.sum-team.result)..[[</td></tr>
 <tr><td>Время</td><td>]]..team.time..[[</td></tr>
 <tr><td>Результат</td><td><b>]]..team.result..[[</b></td></tr>
 </table>
-<table>
+<table class="result">
 <tr><th>КП</th><th>Время</th><th>Сплит</th><th>Очки</th><th>Расстояние (км)</th><th>Скорость (мин/км)</th></tr>
 ]]..team_tbl..
 [[</table><br>

@@ -303,7 +303,7 @@ table td{ margin:O; padding: 0 2px; background: #FFFFFF;}
 H1  {font-size: 14pt;font-weight: bold;color: #AA0055;text-align: left;}
 .yl, tr.yl td {background: #FFFFAA;}
 </style>
-<title>]]..title..[[</title>
+<title>]]..team.id.."."..team.name..[[</title>
 </head>
 <body>
 <h1>График движения команды №]]..team.id.." "..team.name.." ("..team.second_name.." "..team.first_name..[[)</h1>

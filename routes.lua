@@ -178,6 +178,34 @@ function makeTeamHtml(team, cps)
    end
    cp_list = cp_list..'[0,0] ];'
 
+   function makeArrow(c0)
+      local x = c0.x / metersInPixel
+      local y = c0.y / metersInPixel
+      local c = {}
+      c[1] = {}
+      c[2] = {}
+      c[3] = {}
+      local a = 50
+      local b = 6
+      local l = math.sqrt(x^2 + y^2)
+      c[1].x = l - a 
+      c[2].x = l
+      c[3].x = c[1].x
+      c[1].y = b
+      c[2].y = 0
+      c[3].y = -b
+      local angle = math.atan(y/x)
+      c[1].x,c[1].y = rotate(c[1].x,c[1].y,angle)
+      c[2].x,c[2].y = rotate(c[2].x,c[2].y,angle)
+      c[3].x,c[3].y = rotate(c[3].x,c[3].y,angle)
+      local arrow = 'var arrow = [ '
+      for _,i in ipairs{1,2,3,1} do
+         arrow = arrow ..'['..math.floor(c[i].x)..','..math.floor(c[i].y)..'],'
+      end
+      arrow = arrow..' ];'
+      return arrow
+   end
+
    local team_html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <style>
@@ -209,8 +237,10 @@ group..[[)</td></tr>
 [[</table><br>
 <canvas id="map" width="]]..image.width..[[" height="]]..image.height..[["></canvas>
 <script>
-]]..cp_list..
-[[var canvas = document.getElementById("map");
+   ]]..cp_list..
+   "\n   "..makeArrow(cps[team.route[1].id])..[[
+
+   var canvas = document.getElementById("map");
    var context = canvas.getContext("2d");
    var map = new Image();
    var s = []]..start.x..','..start.y..[[];
@@ -218,26 +248,32 @@ group..[[)</td></tr>
    map.onload = function() {
       context.scale(]]..javascript_map_scale..","..javascript_map_scale..[[);
       context.drawImage(map, 0, 0);
-      for (i=0, l=cp_list.length; i<l; i++) {
+      context.strokeStyle = "rgba(255,0,0,0.5)";
+      context.fillStyle = "rgba(255,0,0,0.5)";
+      for (i=0; i<cp_list.length; i++) {
          context.beginPath();
          context.arc(s[0] + cp_list[i][0], s[1] + cp_list[i][1], 3, 0, Math.PI * 2, false);
          context.closePath();
-         context.strokeStyle = "rgba(255,0,0,0.5)";
          context.stroke();
-         context.fillStyle = "rgba(255,0,0,0.5)";
          context.fill();
       }
       context.lineWidth = 3;
       var old_x = 0, old_y = 0;
-      for (i=0, l=cp_list.length; i<l; i++) {
+      for (i=0; i<cp_list.length; i++) {
          context.beginPath();
          context.moveTo(s[0] + old_x, s[1] + old_y);
          context.lineTo(s[0] + cp_list[i][0], s[1] + cp_list[i][1]);
-         context.strokeStyle = "rgba(255,0,0,0.5)";
          context.stroke();
          old_x = cp_list[i][0];
          old_y = cp_list[i][1];
       }
+      context.beginPath();
+      context.moveTo(s[0] + arrow[0][0], s[1] + arrow[0][1]);
+      for (i=1; i<arrow.length; i++) {
+         context.lineTo(s[0] + arrow[i][0], s[1] + arrow[i][1]);
+      }
+      context.stroke();
+      context.fill();
    };
 </script>
 </body></html>
@@ -350,6 +386,7 @@ for i,v in ipairs(cp_data) do
 end
 
 for i,v in ipairs(teams) do
-   makeTeamHtml(v,checkPoints)
+   --makeTeamHtml(v,checkPoints)
 end
+makeTeamHtml(teams[4],checkPoints)
 

@@ -28,6 +28,7 @@ local group = "Мужчины-24"
 local start_time = "12:00:00"
 local metersInPixel = 9.8778
 local k = 35/1000
+local javascript_map_scale = 0.6
 local rotateAngle = 0 ---< in degrees
 local start = {
    x = 1069,
@@ -212,13 +213,14 @@ group..[[)</td></tr>
 [[var canvas = document.getElementById("map");
    var context = canvas.getContext("2d");
    var map = new Image();
-   var c = []]..start.x..','..start.y..[[];
+   var s = []]..start.x..','..start.y..[[];
    map.src = "]]..mapFileName..[[";
    map.onload = function() {
+      context.scale(]]..javascript_map_scale..","..javascript_map_scale..[[);
       context.drawImage(map, 0, 0);
       for (i=0, l=cp_list.length; i<l; i++) {
          context.beginPath();
-         context.arc(c[0] + cp_list[i][0], c[1] + cp_list[i][1], 3, 0, Math.PI * 2, false);
+         context.arc(s[0] + cp_list[i][0], s[1] + cp_list[i][1], 3, 0, Math.PI * 2, false);
          context.closePath();
          context.strokeStyle = "rgba(255,0,0,0.5)";
          context.stroke();
@@ -229,8 +231,8 @@ group..[[)</td></tr>
       var old_x = 0, old_y = 0;
       for (i=0, l=cp_list.length; i<l; i++) {
          context.beginPath();
-         context.moveTo(c[0] + old_x, c[1] + old_y);
-         context.lineTo(c[0] + cp_list[i][0], c[1] + cp_list[i][1]);
+         context.moveTo(s[0] + old_x, s[1] + old_y);
+         context.lineTo(s[0] + cp_list[i][0], s[1] + cp_list[i][1]);
          context.strokeStyle = "rgba(255,0,0,0.5)";
          context.stroke();
          old_x = cp_list[i][0];
@@ -272,17 +274,19 @@ function parseTeamSplits(team_data)
          else
             local cp = {}
             _,_,cp.time,cp.id = string.find(v[1],'^(%d+:%d+)%[(%d+)%]')
-            _,_,cp.split = string.find(v[1],'(%d+:%d+)$')
             cp.id = tonumber(cp.id)
-            if cp.split == nil then
-               cp.split = cp.time
+            if cp.id and cp.id ~= 0 then
+               _,_,cp.split = string.find(v[1],'(%d+:%d+)$')
+               if cp.split == nil then
+                  cp.split = cp.time
+               end
+               local secs = timeToSec(cp.time)
+               prev_secs = secs
+               secs = secs + start_secs
+               cp.time = secToTime(secs)
+               _,_,cp.local_points = string.find(cp.id,'^(%d+)%d$')
+               table.insert(team.route,cp)
             end
-            local secs = timeToSec(cp.time)
-            prev_secs = secs
-            secs = secs + start_secs
-            cp.time = secToTime(secs)
-            _,_,cp.local_points = string.find(cp.id,'^(%d+)%d$')
-            table.insert(team.route,cp)
          end
       end
    end
@@ -345,6 +349,7 @@ for i,v in ipairs(cp_data) do
    end
 end
 
-makeTeamHtml(teams[1],checkPoints)
-makeTeamHtml(teams[4],checkPoints)
+for i,v in ipairs(teams) do
+   makeTeamHtml(v,checkPoints)
+end
 

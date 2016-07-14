@@ -244,12 +244,12 @@ function makeTeamHtml(team, cps)
          y = 0,
       }
       local str = "<tr><td>С</td><td>"..start_time.."</td><td></td><td></td><td></td><td></td></tr>\n"
-      local sum = 0
       local sum_len = 0
+      team.sum = 0
       for i,v in ipairs(team.route) do
          local x,y
          if tonumber(v.id) then
-            sum = sum + v.local_points
+            team.sum = team.sum + v.local_points
             x = cps[v.id].x
             y = cps[v.id].y
          else
@@ -268,7 +268,7 @@ function makeTeamHtml(team, cps)
          str = str.."<td>"..v.time.."</td>"
          str = str.."<td>"..v.split.."</td>"
          if tonumber(v.id) then
-            str = str.."<td>"..v.local_points.." / "..sum.."</td>"
+            str = str.."<td>"..v.local_points.." / "..team.sum.."</td>"
          else
             str = str.."<td></td>"
          end
@@ -282,6 +282,8 @@ function makeTeamHtml(team, cps)
       local sum_len = sum_len + math.sqrt((0 - previos.x)^2 + (0 - previos.y)^2)
       return str
    end
+
+   local team_tbl = teamTbl()
 
    local cp_list = 'var cp_list = [ '
    for i,v in ipairs(team.route) do
@@ -297,19 +299,29 @@ function makeTeamHtml(team, cps)
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <style>
 body {font-family: "Arial Narrow"; font-size: 10pt;}
-table {font-family: "Arial Narrow"; font-size: 10pt; border:1px solid #AA0055; background: #DDDDAA;text-align: center;}
+table {font-family: "Arial Narrow"; font-size: 10pt; border:1px AA0055; background: #ddd;text-align: center;}
 table td{ margin:O; padding: 0 2px; background: #FFFFFF;}
 .rezult th { font-family: "Arial Narrow";font-style: italic; font-size: 10pt;color: #AA0055;padding: 2px 3px; background: #EEEEBB;}
-H1  {font-size: 14pt;font-weight: bold;color: #AA0055;text-align: left;}
+H1  {font-size: 14pt;font-weight: bold;text-align: left;}
 .yl, tr.yl td {background: #FFFFAA;}
 </style>
 <title>]]..team.id.."."..team.name..[[</title>
 </head>
 <body>
-<h1>График движения команды №]]..team.id.." "..team.name.." ("..team.second_name.." "..team.first_name..[[)</h1>
+<h1>]]..title..[[</h1>
+<table>
+<tr><td>Команда</td><td>]]..team.id.."."..team.name..[[</td></tr>
+<tr><td>Участники</td><td>]]..team.second_name..", "..team.first_name..[[</td></tr>
+<!--<tr><td>Город</td><td>]]..[[</td></tr>-->
+<tr><td>Место</td><td>]]..team.position..[[</td></tr>
+<tr><td>Очки</td><td>]]..team.sum..[[</td></tr>
+<tr><td>Штраф</td><td>]]..(team.sum-team.result)..[[</td></tr>
+<tr><td>Время</td><td>]]..team.time..[[</td></tr>
+<tr><td>Результат</td><td><b>]]..team.result..[[</b></td></tr>
+</table>
 <table>
 <tr><th>КП</th><th>Время</th><th>Сплит</th><th>Очки</th><th>Расстояние (км)</th><th>Скорость (мин/км)</th></tr>
-]]..teamTbl(team)..
+]]..team_tbl..
 [[</table><br>
 <canvas id="e" width="]]..image.width..[[" height="]]..image.height..[["></canvas>
 <script>

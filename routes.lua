@@ -21,7 +21,7 @@
 
 --! Configuration
 
-local mapFileName = "map.png"
+local mapFileName = "map.jpg"
 local cpFileName = "/home/sem/mega/routes/coordinates.xml"
 local splitsFileName = "/home/sem/mega/routes/splits.htm"
 local group = "Мужчины-24"
@@ -104,7 +104,7 @@ function run(cmd, act)
    ret:close()
 end
 
-run("identify map.jpg", function(str)
+run("identify "..mapFileName, function(str)
    local _,_,w,h = str:find('(%d+)x(%d+)')
    image.width = w
    image.height = h
@@ -118,7 +118,7 @@ function makeTeamHtml(team, cps)
          x = 0,
          y = 0,
       }
-      local str = "<tr><td>С</td><td>"..start_time.."</td><td></td><td></td><td></td><td></td></tr>\n"
+      local str = "<tr><td>С</td><td>"..start_time.."</td><td></td><td></td><td></td><td></td><td></td></tr>\n"
       local sum_len = 0
       team.sum = 0
       for i,v in ipairs(team.route) do
@@ -149,11 +149,18 @@ function makeTeamHtml(team, cps)
          end
          str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len):gsub('%.',',').."</td>"
          str = str.."<td>"..string.format("%.2f",timeToSec(v.split)/len/60):gsub('%.',',').."</td>"
+         if tonumber(v.id) then
+            str = str.."<td>"..secToSplit(timeToSec(v.split)/v.local_points).."</td>"
+         else
+            str = str.."<td></td>"
+         end
          str = str.."</tr>\n"
       end
       str = str .. "<tr><th>&nbsp;</th><th>&nbsp;</th><th>"..team.time..
-      "</th><th>"..team.result.."</th><th>"..string.format("%.2f км",sum_len):gsub('%.',',')..
-      "</th><th><strong>"..string.format("%.2f",timeToSec(team.time)/sum_len/60):gsub('%.',',').." мин/км</strong></th></tr>\n"
+      "</th><th>"..team.sum.."</th><th>"..string.format("%.2f км",sum_len):gsub('%.',',')..
+      "</th><th><strong>"..
+      string.format("%.2f",timeToSec(team.time)/sum_len/60):gsub('%.',',').." мин/км</strong></th><th>"..
+      secToSplit(timeToSec(team.time)/team.sum).." мин/очко</th></tr>\n"
       local sum_len = sum_len + math.sqrt((0 - previos.x)^2 + (0 - previos.y)^2)
       return str
    end
@@ -178,7 +185,7 @@ table.result {font-family:"Arial Narrow"; font-size:12pt; border:1px AA0055; bac
 table td{ margin:O; padding:0 2px; background:#fff;}
 h1 {font-size:16pt; font-weight:bold; text-align:left;}
 </style>
-<title>]]..team.id.."."..team.name..[[</title>
+<title>]]..team.id.."."..team.name.." ("..title..[[, результаты)</title>
 </head>
 <body>
 <h1>]]..title..[[</h1>
@@ -196,43 +203,44 @@ group..[[)</td></tr>
 <tr><td>Результат</td><td><b>]]..team.result..[[</b></td></tr>
 </table>
 <table class="result">
-<tr><th>КП</th><th>Время</th><th>Сплит</th><th>Очки</th><th>Расстояние (км)</th><th>Скорость (мин/км)</th></tr>
+<tr><th>КП</th><th>Время</th><th>Сплит</th><th>Очки</th><th>Расстояние (км)</th><th>Скорость (мин/км)</th><th>Мин/очко</th></tr>
 ]]..team_tbl..
 [[</table><br>
-<canvas id="e" width="]]..image.width..[[" height="]]..image.height..[["></canvas>
+<canvas id="map" width="]]..image.width..[[" height="]]..image.height..[["></canvas>
 <script>
 ]]..cp_list..
-[[var canvas = document.getElementById("e");
-var context = canvas.getContext("2d");
-var map = new Image();
-var c = []]..start.x..','..start.y..[[];
-map.src = "map.jpg";
-map.onload = function() {
-	context.drawImage(map, 0, 0);
-	for (i=0, l=cp_list.length; i<l; i++) {
-		context.beginPath();
-		context.arc(c[0] + cp_list[i][0], c[1] + cp_list[i][1], 3, 0, Math.PI * 2, false);
-		context.closePath();
-		context.strokeStyle = "#f00";
-		context.stroke();
-		context.fillStyle = "rgba(255,0,0,0.5)";
-		context.fill();
-	}
-	context.lineWidth = 3;
-	var old_x = 0, old_y = 0;
-	for (i=0, l=cp_list.length; i<l; i++) {
-		context.beginPath();
-		context.moveTo(c[0] + old_x, c[1] + old_y);
-		context.lineTo(c[0] + cp_list[i][0], c[1] + cp_list[i][1]);
-		context.strokeStyle = "rgba(255,0,0,0.5)";
-		context.stroke();
-		old_x = cp_list[i][0]; old_y = cp_list[i][1];
-	}
-};
+[[var canvas = document.getElementById("map");
+   var context = canvas.getContext("2d");
+   var map = new Image();
+   var c = []]..start.x..','..start.y..[[];
+   map.src = "]]..mapFileName..[[";
+   map.onload = function() {
+      context.drawImage(map, 0, 0);
+      for (i=0, l=cp_list.length; i<l; i++) {
+         context.beginPath();
+         context.arc(c[0] + cp_list[i][0], c[1] + cp_list[i][1], 3, 0, Math.PI * 2, false);
+         context.closePath();
+         context.strokeStyle = "rgba(255,0,0,0.5)";
+         context.stroke();
+         context.fillStyle = "rgba(255,0,0,0.5)";
+         context.fill();
+      }
+      context.lineWidth = 3;
+      var old_x = 0, old_y = 0;
+      for (i=0, l=cp_list.length; i<l; i++) {
+         context.beginPath();
+         context.moveTo(c[0] + old_x, c[1] + old_y);
+         context.lineTo(c[0] + cp_list[i][0], c[1] + cp_list[i][1]);
+         context.strokeStyle = "rgba(255,0,0,0.5)";
+         context.stroke();
+         old_x = cp_list[i][0];
+         old_y = cp_list[i][1];
+      }
+   };
 </script>
 </body></html>
 ]]
-   local team_file = io.open(team.id .. ".html","w")
+   local team_file = io.open("team" .. team.id .. ".html","w")
    team_file:write(team_html)
    team_file:close()
 end

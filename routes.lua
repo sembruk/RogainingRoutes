@@ -62,6 +62,17 @@ function secToTime(sec)
    return string.format("%d:%02d:%02d",hour,min,sec)
 end
 
+function secToSplit(sec)
+   local hour = math.floor(sec/3600)
+   sec = sec - hour*3600
+   local min = math.floor(sec/60)
+   sec = sec - min*60
+   if hour == 0 then
+      return string.format("%02d:%02d",min,sec)
+   end
+   return string.format("%d:%02d:%02d",hour,min,sec)
+end
+
 function degToRadian(angle)
    return angle * math.pi / 180
 end
@@ -228,29 +239,59 @@ local title = ""
 
 function makeTeamHtml(team, cps)
    local function teamTbl()
+      local previos = {
+         x = 0,
+         y = 0,
+      }
       local str = ""
+      local sum = 0
+      local sum_len = 0
       for i,v in ipairs(team.route) do
+         local x,y
+         if tonumber(v.id) then
+            sum = sum + v.local_points
+            x = cps[v.id].x
+            y = cps[v.id].y
+         else
+            x = 0
+            y = 0
+         end
+
+         local len =  math.sqrt((x - previos.x)^2 + (y - previos.y)^2)
+         len = len / 1000 -- km
+         sum_len = sum_len + len
+         previos.x = x
+         previos.y = y
+
          str = str.."<tr>"
          str = str.."<td>"..v.id.."</td>"
          str = str.."<td>"..v.time.."</td>"
          str = str.."<td>"..v.split.."</td>"
-         str = str.."<td></td>"
-         str = str.."<td></td>"
+         if tonumber(v.id) then
+            str = str.."<td>"..v.local_points.." / "..sum.."</td>"
+         else
+            str = str.."<td></td>"
+         end
+         str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len).."</td>"
          str = str.."<td></td>"
          str = str.."</tr>\n"
       end
-      str = str .. "<tr><th>&nbsp;</th><th>"..team.time.."</th><th>&nbsp;</th><th>"..team.result.."</th><th>len км</th><th><strong>sp мин/км</strong></th></tr>"
+      str = str .. "<tr><th>&nbsp;</th><th>&nbsp;</th><th>"..team.time..
+      "</th><th>"..team.result.."</th><th>"..string.format("%.2f км",sum_len)..
+      "</th><th><strong>sp мин/км</strong></th></tr>\n"
+      local sum_len = sum_len + math.sqrt((0 - previos.x)^2 + (0 - previos.y)^2)
       return str
    end
 
-   local function cpList()
-      local str = 'var kp_list = [ '
-      for i,v in ipairs(team.route) do
-         str = str..'['..cps[v.id].x..','..cps[v.id].y..',"rgb(224,0,62)"],'
+   local cp_list = 'var cp_list = [ '
+   for i,v in ipairs(team.route) do
+      if tonumber(v.id) then
+         local x_p = math.floor(cps[v.id].x / metersInPixel)
+         local y_p = math.floor(cps[v.id].y / metersInPixel)
+         cp_list = cp_list ..'['..x_p..','..y_p..'],'
       end
-      str = str..'];'
-      return str
    end
+   cp_list = cp_list..'[0,0] ];'
 
    local team_html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -272,7 +313,7 @@ H1  {font-size: 14pt;font-weight: bold;color: #AA0055;text-align: left;}
 [[</table><br>
 <canvas id="e" width="]]..image.width..[[" height="]]..image.height..[["></canvas>
 <script>
-]]..cpList()..
+]]..cp_list..
 [[var canvas = document.getElementById("e");
 var context = canvas.getContext("2d");
 var map = new Image();
@@ -280,24 +321,24 @@ var c = []]..start.x..','..start.y..[[];
 map.src = "map.jpg";
 map.onload = function() {
 	context.drawImage(map, 0, 0);
-	for (i=0, l=kp_list.length; i<l; i++) {
+	for (i=0, l=cp_list.length; i<l; i++) {
 		context.beginPath();
-		context.arc(c[0] + kp_list[i][0], c[1] + kp_list[i][1], 4, 0, Math.PI * 2, false);
+		context.arc(c[0] + cp_list[i][0], c[1] + cp_list[i][1], 3, 0, Math.PI * 2, false);
 		context.closePath();
 		context.strokeStyle = "#f00";
 		context.stroke();
-		context.fillStyle = "#f00";
+		context.fillStyle = "rgba(255,0,0,0.5)";
 		context.fill();
 	}
 	context.lineWidth = 3;
 	var old_x = 0, old_y = 0;
-	for (i=0, l=kp_list.length; i<l; i++) {
+	for (i=0, l=cp_list.length; i<l; i++) {
 		context.beginPath();
 		context.moveTo(c[0] + old_x, c[1] + old_y);
-		context.lineTo(c[0] + kp_list[i][0], c[1] + kp_list[i][1]);
-		context.strokeStyle = kp_list[i][2];
+		context.lineTo(c[0] + cp_list[i][0], c[1] + cp_list[i][1]);
+		context.strokeStyle = "rgba(255,0,0,0.5)";
 		context.stroke();
-		old_x = kp_list[i][0]; old_y = kp_list[i][1];
+		old_x = cp_list[i][0]; old_y = cp_list[i][1];
 	}
 };
 </script>
@@ -324,6 +365,7 @@ local field_name_by_index = {
 function parseTeamSplits(team_data)
    local team = {}
    team.route = {}
+   local prev_secs
    for i,v in ipairs(team_data) do
       if (v.xml == "td") then
          if v[1] == nil then
@@ -339,13 +381,25 @@ function parseTeamSplits(team_data)
             if cp.split == nil then
                cp.split = cp.time
             end
-            local time = timeToSec(cp.time)
-            time = time + start_time
-            cp.time = secToTime(time)
+            local secs = timeToSec(cp.time)
+            prev_secs = secs
+            secs = secs + start_time
+            cp.time = secToTime(secs)
+            _,_,cp.local_points = string.find(cp.id,'^(%d+)%d$')
             table.insert(team.route,cp)
          end
       end
    end
+
+   local finish = {}
+   finish.id = "Ф"
+   local secs = timeToSec(team.time)
+   local split = secs - prev_secs
+   secs = secs + start_time
+   finish.time = secToTime(secs)
+   finish.split = secToSplit(split)
+   table.insert(team.route,finish)
+
    return team
 end
 
@@ -385,14 +439,16 @@ end
 
 local cp_data = xml.loadpath(cpFileName)
 local checkPoints = {}
+
 for i,v in ipairs(cp_data) do
    if v.cp then
       local cp = tonumber(v.cp)
       checkPoints[cp] = {}
-      checkPoints[cp].x = math.floor(v.x * k / metersInPixel)
-      checkPoints[cp].y = math.floor(v.y * k / metersInPixel)
+      checkPoints[cp].x = v.x * k
+      checkPoints[cp].y = v.y * k
    end
 end
 
 makeTeamHtml(teams[1],checkPoints)
+makeTeamHtml(teams[4],checkPoints)
 

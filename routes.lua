@@ -25,7 +25,7 @@ local mapFileName = "map.jpg"
 local cpFileName = "/home/sem/mega/routes/coordinates.xml"
 local splitsFileName = "/home/sem/mega/routes/splits.htm"
 local outDir = "./out"
-local group = "Мужчины-24"
+local groups = {"Мужчины-24","Женщины-24","Смешанные-24"}
 local start_time = "12:00:00"
 local metersInPixel = 9.8778
 local k = 35/1000
@@ -230,7 +230,7 @@ function makeTeamHtml(team, cps)
 <tr><td>Место</td><td>]]..
 ((tonumber(team.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
 team.position..[[</span> (]]..
-group..[[)</td></tr>
+team.group..[[)</td></tr>
 <tr><td>Очки</td><td>]]..team.sum..[[</td></tr>
 <tr><td>Штраф</td><td>]]..(team.sum-team.result)..[[</td></tr>
 <tr><td>Время</td><td>]]..team.time..[[</td></tr>
@@ -297,19 +297,19 @@ function makeResultHtml(teams)
 <body>
 <h1>]]..title..[[ Результаты</h1>
 <table class="result">
-<tr><th>Место</th><th>Группа</th><th>Номер</th><th>Название</th><th>Участники</th><th>Результат</th><th>Место в группе</th></tr>
+<tr><th>Абсолют</th><th>Группа</th><th>Номер</th><th>Название</th><th>Участники</th><th>Результат</th><th>Место в группе</th></tr>
 ]]..
 (function()
    local str = ""
    for i,v in ipairs(teams) do
       str = str.."<tr>"
-      str = str.."<td>"..v.position.."</td>"
+      str = str.."<td>"..i.."</td>"
       str = str.."<td>"..v.subgroup.."</td>"
       str = str.."<td>"..v.id.."</td>"
       str = str..'<td><a href="team'..v.id..'.html">'..v.name..'</a></td>'
       str = str.."<td>"..v.second_name.." "..v.first_name.."</td>"
       str = str.."<td>"..v.result.."</td>"
-      str = str.."<td>"..v.position.." ("..group..")</td>"
+      str = str.."<td>"..v.position.." ("..v.group..")</td>"
       str = str.."</tr>\n"
    end
    return str
@@ -321,6 +321,28 @@ end)()
    local results_file = io.open(outDir.."/results.html","w")
    results_file:write(html)
    results_file:close()
+end
+
+function tableInsertByResult(t,team)
+   if not next(t) then
+      table.insert(t,team)
+      return
+   end
+   for i,v in ipairs(t) do
+      if tonumber(team.result) > tonumber(v.result) then
+         table.insert(t,i,team)
+         break
+      elseif tonumber(team.result) == tonumber(v.result) then
+         if timeToSec(team.time) < timeToSec(v.time) then
+            table.insert(t,i,team)
+            break
+         end
+      end
+      if i == #t then
+         table.insert(t,team)
+         break
+      end
+   end
 end
 
 local field_name_by_index = {
@@ -336,8 +358,9 @@ local field_name_by_index = {
    "_"
 }
 
-function parseTeamSplits(team_data)
+function parseTeamSplits(team_data, group)
    local team = {}
+   team.group = group
    team.route = {}
    local prev_secs
    for i,v in ipairs(team_data) do
@@ -366,6 +389,10 @@ function parseTeamSplits(team_data)
          end
       end
    end
+   
+   if not team.result then
+      return
+   end
 
    local finish = {}
    finish.id = "Ф"
@@ -380,10 +407,21 @@ function parseTeamSplits(team_data)
 end
 
 local teams = {}
-function parseSplitsTable(html_data)
+function parseSplitsTable(html_data, group)
    for i,v in ipairs(html_data) do
       if (v.xml == "tr" and i ~= 1) then
-         table.insert(teams, parseTeamSplits(v))
+         local team = parseTeamSplits(v, group)
+         if team then
+            tableInsertByResult(teams, team)
+         end
+      end
+   end
+end
+
+function getGroup(str)
+   for i,v in ipairs(groups) do
+      if str == v then
+         return v
       end
    end
 end
@@ -405,10 +443,12 @@ local splits_data = xml.load(docstr)
 title = xml.find(splits_data,"title")[1]
 
 for i,v in ipairs(splits_data) do
-   if (v.xml == 'h2' and v[1] == group) then
-      if (splits_data[i+1].xml == "table") then
-         parseSplitsTable(splits_data[i+1])
-         break
+   if (v.xml == 'h2') then
+      local group = getGroup(v[1])
+      if group then
+         if (splits_data[i+1].xml == "table") then
+            parseSplitsTable(splits_data[i+1], group)
+         end
       end
    end
 end

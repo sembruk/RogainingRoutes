@@ -205,6 +205,9 @@ function makeTeamHtml(team, cps)
       c[2].y = 0
       c[3].y = -b
       local angle = math.atan(y/x)
+      if x < 0 then
+         angle = math.pi + angle
+      end
       c[1].x,c[1].y = rotate(c[1].x,c[1].y,angle)
       c[2].x,c[2].y = rotate(c[2].x,c[2].y,angle)
       c[3].x,c[3].y = rotate(c[3].x,c[3].y,angle)
@@ -297,19 +300,21 @@ function makeResultHtml(teams)
 <body>
 <h1>]]..title..[[ Результаты</h1>
 <table class="result">
-<tr><th>Абсолют</th><th>Группа</th><th>Номер</th><th>Название</th><th>Участники</th><th>Результат</th><th>Место в группе</th></tr>
+<tr><th>Абсолют</th><th>Номер</th><th>Название</th><th>Участники</th><th>Результат</th><th>Время</th><th>Место в группе</th></tr>
 ]]..
 (function()
    local str = ""
    for i,v in ipairs(teams) do
       str = str.."<tr>"
       str = str.."<td>"..i.."</td>"
-      str = str.."<td>"..v.subgroup.."</td>"
+      --str = str.."<td>"..v.subgroup.."</td>"
       str = str.."<td>"..v.id.."</td>"
       str = str..'<td><a href="team'..v.id..'.html">'..v.name..'</a></td>'
       str = str.."<td>"..v.second_name.." "..v.first_name.."</td>"
       str = str.."<td>"..v.result.."</td>"
-      str = str.."<td>"..v.position.." ("..v.group..")</td>"
+      str = str.."<td>"..v.time.."</td>"
+      str = str.."<td>"..((tonumber(v.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
+      v.position.."</span>("..v.group..")</td>"
       str = str.."</tr>\n"
    end
    return str
@@ -466,8 +471,7 @@ for i,v in ipairs(cp_data) do
 end
 
 for i,v in ipairs(teams) do
-   --makeTeamHtml(v,checkPoints)
+   makeTeamHtml(v,checkPoints)
 end
-makeTeamHtml(teams[4],checkPoints)
 makeResultHtml(teams)
 

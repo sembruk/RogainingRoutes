@@ -24,6 +24,7 @@
 local mapFileName = "map.jpg"
 local cpFileName = "/home/sem/mega/routes/coordinates.xml"
 local splitsFileName = "/home/sem/mega/routes/splits.htm"
+local outDir = "./out"
 local group = "Мужчины-24"
 local start_time = "12:00:00"
 local metersInPixel = 9.8778
@@ -105,13 +106,22 @@ function run(cmd, act)
    ret:close()
 end
 
-run("identify "..mapFileName, function(str)
+run("identify "..outDir.."/"..mapFileName, function(str)
    local _,_,w,h = str:find('(%d+)x(%d+)')
    image.width = w
    image.height = h
 end)
 
 local title = ""
+local style = [[
+<style>
+body {font-family:"Arial Narrow"; font-size:12pt;}
+table.result {font-family:"Arial Narrow"; font-size:12pt; border:1px AA0055; background:#ddd; text-align:center;}
+table td{ margin:O; padding:0 2px; background:#fff;}
+h1 {font-size:16pt; font-weight:bold; text-align:left;}
+</style>
+]]
+
 
 function makeTeamHtml(team, cps)
    local function teamTbl()
@@ -208,12 +218,7 @@ function makeTeamHtml(team, cps)
 
    local team_html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<style>
-body {font-family:"Arial Narrow"; font-size:12pt;}
-table.result {font-family:"Arial Narrow"; font-size:12pt; border:1px AA0055; background:#ddd; text-align:center;}
-table td{ margin:O; padding:0 2px; background:#fff;}
-h1 {font-size:16pt; font-weight:bold; text-align:left;}
-</style>
+]]..style..[[
 <title>]]..team.id.."."..team.name.." ("..title..[[, результаты)</title>
 </head>
 <body>
@@ -278,9 +283,44 @@ group..[[)</td></tr>
 </script>
 </body></html>
 ]]
-   local team_file = io.open("team" .. team.id .. ".html","w")
+   local team_file = io.open(outDir.."/team" .. team.id .. ".html","w")
    team_file:write(team_html)
    team_file:close()
+end
+
+function makeResultHtml(teams)
+   local html = [[
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+]]..style..[[
+<title>]]..title..[[ Результаты</title>
+</head>
+<body>
+<h1>]]..title..[[ Результаты</h1>
+<table class="result">
+<tr><th>Место</th><th>Группа</th><th>Номер</th><th>Название</th><th>Участники</th><th>Результат</th><th>Место в группе</th></tr>
+]]..
+(function()
+   local str = ""
+   for i,v in ipairs(teams) do
+      str = str.."<tr>"
+      str = str.."<td>"..v.position.."</td>"
+      str = str.."<td>"..v.subgroup.."</td>"
+      str = str.."<td>"..v.id.."</td>"
+      str = str..'<td><a href="team'..v.id..'.html">'..v.name..'</a></td>'
+      str = str.."<td>"..v.second_name.." "..v.first_name.."</td>"
+      str = str.."<td>"..v.result.."</td>"
+      str = str.."<td>"..v.position.." ("..group..")</td>"
+      str = str.."</tr>\n"
+   end
+   return str
+end)()
+..[[
+</table>
+</body></html>
+]]
+   local results_file = io.open(outDir.."/results.html","w")
+   results_file:write(html)
+   results_file:close()
 end
 
 local field_name_by_index = {
@@ -389,4 +429,5 @@ for i,v in ipairs(teams) do
    --makeTeamHtml(v,checkPoints)
 end
 makeTeamHtml(teams[4],checkPoints)
+makeResultHtml(teams)
 

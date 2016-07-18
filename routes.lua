@@ -106,12 +106,6 @@ function run(cmd, act)
    ret:close()
 end
 
-run("identify "..outDir.."/"..mapFileName, function(str)
-   local _,_,w,h = str:find('(%d+)x(%d+)')
-   image.width = w
-   image.height = h
-end)
-
 local title = ""
 local style = [[
 <style>
@@ -243,7 +237,7 @@ team.group..[[)</td></tr>
 <tr><th>КП</th><th>Время</th><th>Сплит</th><th>Очки</th><th>Расстояние (км)</th><th>Скорость (мин/км)</th><th>Мин/очко</th></tr>
 ]]..team_tbl..
 [[</table><br>
-<canvas id="map" width="]]..image.width..[[" height="]]..image.height..[["></canvas>
+<canvas id="map"></canvas>
 <script>
    ]]..cp_list..
    "\n   "..makeArrow(cps[team.route[1].id])..[[
@@ -254,6 +248,8 @@ team.group..[[)</td></tr>
    var s = []]..start.x..','..start.y..[[];
    map.src = "]]..mapFileName..[[";
    map.onload = function() {
+      canvas.width = this.naturalWidth;
+      canvas.height = this.naturalHeight;
       context.scale(]]..javascript_map_scale..","..javascript_map_scale..[[);
       context.drawImage(map, 0, 0);
       context.strokeStyle = "rgba(255,0,0,0.5)";

@@ -110,9 +110,12 @@ local title = ""
 local style = [[
 <style>
 body {font-family:"Arial Narrow"; font-size:12pt;}
-table.result {font-family:"Arial Narrow"; font-size:12pt; border:1px AA0055; background:#ddd; text-align:center;}
+table {text-align:center;}
+table.team {text-align:left;}
+table.result {font-family:"Arial Narrow"; font-size:12pt; border:1px AA0055; background:#ddd;}
 table td{ margin:O; padding:0 2px; background:#fff;}
 h1 {font-size:16pt; font-weight:bold; text-align:left;}
+div.rectangle {background: blue; height: 10px; width: 50px;}
 </style>
 ]]
 
@@ -153,7 +156,7 @@ function makeTeamHtml(team, cps)
             str = str.."<td></td>"
          end
          str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len):gsub('%.',',').."</td>"
-         str = str.."<td>"..string.format("%.2f",timeToSec(v.split)/len/60):gsub('%.',',').."</td>"
+         str = str..'<td><table width="100%"><tr><td>'..string.format("%.2f",timeToSec(v.split)/len/60):gsub('%.',',')..'</td><td width="200px"><div class="rectangle"></div></td></tr></table></td>'
          if tonumber(v.id) then
             str = str.."<td>"..secToSplit(timeToSec(v.split)/v.local_points).."</td>"
          else

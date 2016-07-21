@@ -22,18 +22,19 @@
 --! Configuration
 
 local mapFileName = "map.jpg"
-local cpFileName = "/home/sem/mega/routes/coordinates.xml"
-local splitsFileName = "/home/sem/mega/routes/splits.htm"
+local cpFileName = "coordinates.xml"
+local splitsFileName = "splits.htm"
 local outDir = "./out"
-local groups = {"Мужчины-24","Женщины-24","Смешанные-24"}
+local title = "Чемпионат России по рогейну на велосипедах, 08.08.2015"
+local groups = {"Вело_24",}
 local start_time = "12:00:00"
 local metersInPixel = 9.8778
-local k = 35/1000
-local javascript_map_scale = 0.6
+local k = 50/1000
+local javascript_map_scale = 1
 local rotateAngle = 0 ---< in degrees
 local start = {
-   x = 1069,
-   y = 1719,
+   x = 1251,
+   y = 356,
 }
 
 ---
@@ -106,7 +107,6 @@ function run(cmd, act)
    ret:close()
 end
 
-local title = ""
 local style = [[
 <style>
 body {font-family:"Arial Narrow"; font-size:12pt;}
@@ -133,6 +133,7 @@ function makeTeamHtml(team, cps)
          local x,y
          if tonumber(v.id) then
             team.sum = team.sum + v.local_points
+            print(v.id)
             x = cps[v.id].x
             y = cps[v.id].y
          else
@@ -355,11 +356,11 @@ local field_name_by_index = {
    "second_name",
    "first_name",
    "name",
+   "subgroup",
    "result",
    "time",
    "position",
-   "subgroup",
-   "_"
+   --"_"
 }
 
 function parseTeamSplits(team_data, group)
@@ -401,6 +402,12 @@ function parseTeamSplits(team_data, group)
    local finish = {}
    finish.id = "Ф"
    local secs = timeToSec(team.time)
+
+   --print("")
+   for k,v in pairs(team) do
+      --print(k,v)
+   end
+
    local split = secs - prev_secs
    secs = secs + start_secs
    finish.time = secToTime(secs)
@@ -444,7 +451,8 @@ docstr = "<document>"..docstr.."</document>"
 
 local splits_data = xml.load(docstr)
 
-title = xml.find(splits_data,"title")[1]
+local e = xml.find(splits_data,"title")
+title = (e and e[1]) or title
 
 for i,v in ipairs(splits_data) do
    if (v.xml == 'h2') then
@@ -461,6 +469,7 @@ local cp_data = xml.loadpath(cpFileName)
 local checkPoints = {}
 
 for i,v in ipairs(cp_data) do
+   print(i,v)
    if v.cp then
       local cp = tonumber(v.cp)
       checkPoints[cp] = {}

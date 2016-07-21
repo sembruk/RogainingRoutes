@@ -115,7 +115,9 @@ table.team {text-align:left;}
 table.result {font-family:"Arial Narrow"; font-size:12pt; border:1px AA0055; background:#ddd;}
 table td{ margin:O; padding:0 2px; background:#fff;}
 h1 {font-size:16pt; font-weight:bold; text-align:left;}
-div.rectangle {background: blue; height: 10px; width: 50px;}
+div {max-width: 800px;}
+div.blue_rectangle {background: blue; height: 10px; width: 0px;}
+div.green_rectangle {background: green; height: 10px; width: 0px;}
 </style>
 ]]
 
@@ -156,9 +158,16 @@ function makeTeamHtml(team, cps)
             str = str.."<td></td>"
          end
          str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len):gsub('%.',',').."</td>"
-         str = str..'<td><table width="100%"><tr><td>'..string.format("%.2f",timeToSec(v.split)/len/60):gsub('%.',',')..'</td><td width="200px"><div class="rectangle"></div></td></tr></table></td>'
+         local speed = timeToSec(v.split)/len/60
+         str = str..'<td><table width="100%"><tr><td width="40px">'..string.format("%.2f",speed):gsub('%.',',')..
+         '</td><td><div class="blue_rectangle" style="width:'..math.floor(speed*3)..
+         'px;"></div></td></tr></table></td>'
          if tonumber(v.id) then
-            str = str.."<td>"..secToSplit(timeToSec(v.split)/v.local_points).."</td>"
+            local effectiv = timeToSec(v.split)/v.local_points
+            str = str..'<td><table width="100%"><tr><td width="40px">'..
+            secToSplit(effectiv)..
+            '</td><td><div class="green_rectangle" style="width:'..math.floor(effectiv/10)..
+            'px;"></div></td></tr></table></td>'
          else
             str = str.."<td></td>"
          end
@@ -223,7 +232,7 @@ function makeTeamHtml(team, cps)
 </head>
 <body>
 <h1>]]..title..[[</h1>
-<table>
+<table class="team">
 <tr><td>Команда</td><td><b>]]..team.id.."."..team.name..[[</b></td></tr>
 <tr><td>Участники</td><td><b>]]..team.second_name..", "..team.first_name..[[</b></td></tr>
 <!--<tr><td>Город</td><td>]]..[[</td></tr>-->

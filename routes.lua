@@ -28,7 +28,7 @@ local outDir = "./out"
 local title = "Чемпионат России по рогейну на велосипедах, 08.08.2015"
 local groups = {"Вело_24",}
 local start_time = "12:00:00"
-local metersInPixel = 9.8778
+local metersInPixel = 28.22222
 local k = 50/1000
 local javascript_map_scale = 1
 local rotateAngle = 0 ---< in degrees
@@ -135,7 +135,6 @@ function makeTeamHtml(team, cps)
          local x,y
          if tonumber(v.id) then
             team.sum = team.sum + v.local_points
-            print(v.id)
             x = cps[v.id].x
             y = cps[v.id].y
          else
@@ -202,7 +201,7 @@ function makeTeamHtml(team, cps)
       c[1] = {}
       c[2] = {}
       c[3] = {}
-      local a = 50
+      local a = 30
       local b = 6
       local l = math.sqrt(x^2 + y^2)
       c[1].x = l - a 
@@ -322,8 +321,9 @@ function makeResultHtml(teams)
       str = str.."<td>"..v.second_name.." "..v.first_name.."</td>"
       str = str.."<td>"..v.result.."</td>"
       str = str.."<td>"..v.time.."</td>"
-      str = str.."<td>"..((tonumber(v.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
-      v.position.."</span>("..v.group..")</td>"
+      --str = str.."<td>"..((tonumber(v.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
+      --v.position.."</span>("..v.group..")</td>"
+      str = str.."<td>"..v.subgroup.."</td>"
       str = str.."</tr>\n"
    end
    return str
@@ -412,11 +412,6 @@ function parseTeamSplits(team_data, group)
    finish.id = "Ф"
    local secs = timeToSec(team.time)
 
-   --print("")
-   for k,v in pairs(team) do
-      --print(k,v)
-   end
-
    local split = secs - prev_secs
    secs = secs + start_secs
    finish.time = secToTime(secs)
@@ -478,7 +473,6 @@ local cp_data = xml.loadpath(cpFileName)
 local checkPoints = {}
 
 for i,v in ipairs(cp_data) do
-   print(i,v)
    if v.cp then
       local cp = tonumber(v.cp)
       checkPoints[cp] = {}

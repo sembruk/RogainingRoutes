@@ -20,21 +20,33 @@
 
 
 --! Configuration
-
-local mapFileName = "map.jpg"
-local cpFileName = "coordinates.xml"
-local splitsFileName = "splits.htm"
-local outDir = "./out"
+local map_filename = "map.jpg"
+local course_data_filename = "coordinates.xml"
+local splits_filename = "../../mega/routes/splits.htm"
+local out_dir = "./out"
 local title = "Чемпионат России по рогейну на велосипедах, 08.08.2015"
 local groups = {"Вело_24",}
 local start_time = "12:00:00"
-local metersInPixel = 28.22222
+local meters_in_pixel = 28.22222
 local k = 50/1000
 local javascript_map_scale = 1
 local rotateAngle = 0 ---< in degrees
 local start = {
    x = 1251,
    y = 356,
+}
+
+local sfr_split_field_name_by_index = {
+   "number",
+   "id",
+   "second_name",
+   "first_name",
+   "name",
+   "subgroup",
+   "result",
+   "time",
+   "position",
+   --"_"
 }
 
 ---
@@ -187,16 +199,16 @@ function makeTeamHtml(team, cps)
    local cp_list = 'var cp_list = [ '
    for i,v in ipairs(team.route) do
       if tonumber(v.id) then
-         local x_p = math.floor(cps[v.id].x / metersInPixel)
-         local y_p = math.floor(cps[v.id].y / metersInPixel)
+         local x_p = math.floor(cps[v.id].x / meters_in_pixel)
+         local y_p = math.floor(cps[v.id].y / meters_in_pixel)
          cp_list = cp_list ..'['..x_p..','..y_p..'],'
       end
    end
    cp_list = cp_list..'[0,0] ];'
 
    function makeArrow(c0)
-      local x = c0.x / metersInPixel
-      local y = c0.y / metersInPixel
+      local x = c0.x / meters_in_pixel
+      local y = c0.y / meters_in_pixel
       local c = {}
       c[1] = {}
       c[2] = {}
@@ -258,7 +270,7 @@ team.group..[[)</td></tr>
    var context = canvas.getContext("2d");
    var map = new Image();
    var s = []]..start.x..','..start.y..[[];
-   map.src = "]]..mapFileName..[[";
+   map.src = "]]..map_filename..[[";
    map.onload = function() {
       canvas.width = this.naturalWidth;
       canvas.height = this.naturalHeight;
@@ -294,7 +306,7 @@ team.group..[[)</td></tr>
 </script>
 </body></html>
 ]]
-   local team_file = io.open(outDir.."/team" .. team.id .. ".html","w")
+   local team_file = io.open(out_dir.."/team" .. team.id .. ".html","w")
    team_file:write(team_html)
    team_file:close()
 end
@@ -332,7 +344,7 @@ end)()
 </table>
 </body></html>
 ]]
-   local results_file = io.open(outDir.."/results.html","w")
+   local results_file = io.open(out_dir.."/results.html","w")
    results_file:write(html)
    results_file:close()
 end
@@ -359,19 +371,6 @@ function tableInsertByResult(t,team)
    end
 end
 
-local field_name_by_index = {
-   "number",
-   "id",
-   "second_name",
-   "first_name",
-   "name",
-   "subgroup",
-   "result",
-   "time",
-   "position",
-   --"_"
-}
-
 function parseTeamSplits(team_data, group)
    local team = {}
    team.group = group
@@ -382,8 +381,8 @@ function parseTeamSplits(team_data, group)
          if v[1] == nil then
             break
          end
-         if field_name_by_index[i] then
-            team[field_name_by_index[i]] = v[1]
+         if sfr_split_field_name_by_index[i] then
+            team[sfr_split_field_name_by_index[i]] = v[1]
          else
             local cp = {}
             _,_,cp.time,cp.id = string.find(v[1],'^(%d+:%d+)%[(%d+)%]')
@@ -422,7 +421,8 @@ function parseTeamSplits(team_data, group)
 end
 
 local teams = {}
-function parseSplitsTable(html_data, group)
+function parseSfrSplitsTable(html_data, group)
+   local teams = {}
    for i,v in ipairs(html_data) do
       if (v.xml == "tr" and i ~= 1) then
          local team = parseTeamSplits(v, group)
@@ -431,6 +431,7 @@ function parseSplitsTable(html_data, group)
          end
       end
    end
+   return teams
 end
 
 function getGroup(str)
@@ -443,46 +444,54 @@ end
 
 local xml = require "xml" -- sudo luarocks install xml
 
-local file = io.open(splitsFileName)
-local docstr = file:read("*a")
-file:close()
+function parseSfrSplitsHtml(splits_filename)
+   local file = io.open(splits_filename)
+   local docstr = file:read("*a")
+   file:close()
 
-docstr = docstr:gsub("<meta.->","")
-docstr = docstr:gsub("<style>.-</style>","")
-docstr = docstr:gsub("<nobr>","")
-docstr = docstr:gsub("<br>","")
-docstr = "<document>"..docstr.."</document>"
+   docstr = docstr:gsub("<meta.->","")
+   docstr = docstr:gsub("<style>.-</style>","")
+   docstr = docstr:gsub("<nobr>","")
+   docstr = docstr:gsub("<br>","")
+   docstr = "<document>"..docstr.."</document>"
 
-local splits_data = xml.load(docstr)
+   local splits_data = xml.load(docstr)
 
-local e = xml.find(splits_data,"title")
-title = (e and e[1]) or title
+   local e = xml.find(splits_data,"title")
+   title = (e and e[1]) or title
 
-for i,v in ipairs(splits_data) do
-   if (v.xml == 'h2') then
-      local group = getGroup(v[1])
-      if group then
-         if (splits_data[i+1].xml == "table") then
-            parseSplitsTable(splits_data[i+1], group)
+   for i,v in ipairs(splits_data) do
+      if (v.xml == 'h2') then
+         local group = getGroup(v[1])
+         if group then
+            if (splits_data[i+1].xml == "table") then
+               parseSfrSplitsTable(splits_data[i+1], group)
+            end
          end
       end
    end
 end
 
-local cp_data = xml.loadpath(cpFileName)
-local checkPoints = {}
+function parseIofCourseDataXml(course_data_filename)
+   local cp_data = xml.loadpath(course_data_filename)
+   local cps = {}
 
-for i,v in ipairs(cp_data) do
-   if v.cp then
-      local cp = tonumber(v.cp)
-      checkPoints[cp] = {}
-      checkPoints[cp].x = v.x * k
-      checkPoints[cp].y = v.y * k
+   for i,v in ipairs(cp_data) do
+      if v.cp then
+         local cp = tonumber(v.cp)
+         cps[cp] = {}
+         cps[cp].x = v.x * k
+         cps[cp].y = v.y * k
+      end
    end
+   return cps
 end
 
+parseSfrSplitsHtml(splits_filename)
+local check_points = parseIofCourseDataXml(course_data_filename)
+
 for i,v in ipairs(teams) do
-   makeTeamHtml(v,checkPoints)
+   makeTeamHtml(v,check_points)
 end
 makeResultHtml(teams)
 

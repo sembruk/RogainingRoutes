@@ -21,14 +21,14 @@
 
 --! Configuration
 local map_filename = "map.jpg"
-local course_data_filename = "coordinates.xml"
+local course_data_filename = "../../mega/routes/BA2016.xml"
 local splits_filename = "../../mega/routes/splits.htm"
 local out_dir = "./out"
-local title = "Чемпионат России по рогейну на велосипедах, 08.08.2015"
+local title = nil
 local groups = {"Вело_24",}
 local start_time = "12:00:00"
-local meters_in_pixel = 28.22222
-local k = 50/1000
+local map_dpi = 72
+--local k = 50/1000
 local javascript_map_scale = 1
 local rotateAngle = 0 ---< in degrees
 local start = {
@@ -52,6 +52,7 @@ local sfr_split_field_name_by_index = {
 ---
 
 local image = {}
+local meters_in_pixel
 
 function timeToSec(str)
    local _,_,hour,min,sec= str:find("^(%d+):(%d+):(%d+)")
@@ -475,23 +476,40 @@ end
 function parseIofCourseDataXml(course_data_filename)
    local cp_data = xml.loadpath(course_data_filename)
    local cps = {}
-
+   local start_position = {}
+   do
+      local start = assert(xml.find(cp_data,"StartPoint"))
+      local position = assert(xml.find(start,"MapPosition"))
+      start_position.x = assert(tonumber(position.x))
+      start_position.y = assert(tonumber(position.y))
+   end
+   local scale_factor
+   do
+      local e =  assert(xml.find(cp_data,"Map"))
+      scale_factor = tonumber(assert(xml.find(e,"Scale"))[1])
+      meters_in_pixel = scale_factor * 0.0254 / map_dpi
+   end
    for i,v in ipairs(cp_data) do
-      if v.cp then
-         local cp = tonumber(v.cp)
-         cps[cp] = {}
-         cps[cp].x = v.x * k
-         cps[cp].y = v.y * k
+      if v.xml == "IOFVersion" then
+         assert(v.version == "2.0.3","Unsupported IOF Course Data version")
+      elseif v.xml == "Control" then
+         local code = assert(tonumber(xml.find(v,"ControlCode")[1]))
+         cps[code] = {}
+         local position = assert(xml.find(v,"MapPosition"))
+         cps[code].x = (assert(tonumber(position.x)) - start_position.x) * scale_factor / 1000
+         cps[code].y = -(assert(tonumber(position.y)) - start_position.y) * scale_factor / 1000
       end
    end
    return cps
 end
 
-parseSfrSplitsHtml(splits_filename)
+--parseSfrSplitsHtml(splits_filename)
 local check_points = parseIofCourseDataXml(course_data_filename)
 
+--[[
 for i,v in ipairs(teams) do
    makeTeamHtml(v,check_points)
 end
 makeResultHtml(teams)
+]]
 

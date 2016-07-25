@@ -22,10 +22,10 @@
 --! Configuration
 local map_filename = "map.jpg"
 local course_data_filename = "../../mega/routes/BA2016.xml"
-local splits_filename = "../../mega/routes/splits.htm"
+local splits_filename = "../../mega/routes/BA2016s.htm"
 local out_dir = "./out"
-local title = nil
-local groups = {"Вело_24",}
+local title = "BikeAdventure, 28.05.2016."
+local groups = {"24 M",}
 local start_time = "12:00:00"
 local map_dpi = 72
 --local k = 50/1000
@@ -42,7 +42,7 @@ local sfr_split_field_name_by_index = {
    "second_name",
    "first_name",
    "name",
-   "subgroup",
+   --"subgroup",
    "result",
    "time",
    "position",
@@ -380,7 +380,7 @@ function parseTeamSplits(team_data, group)
    for i,v in ipairs(team_data) do
       if (v.xml == "td") then
          if v[1] == nil then
-            break
+            v[1] = ""
          end
          if sfr_split_field_name_by_index[i] then
             team[sfr_split_field_name_by_index[i]] = v[1]
@@ -423,7 +423,7 @@ end
 
 local teams = {}
 function parseSfrSplitsTable(html_data, group)
-   local teams = {}
+   print(group)
    for i,v in ipairs(html_data) do
       if (v.xml == "tr" and i ~= 1) then
          local team = parseTeamSplits(v, group)
@@ -432,7 +432,6 @@ function parseSfrSplitsTable(html_data, group)
          end
       end
    end
-   return teams
 end
 
 function getGroup(str)
@@ -452,8 +451,16 @@ function parseSfrSplitsHtml(splits_filename)
 
    docstr = docstr:gsub("<meta.->","")
    docstr = docstr:gsub("<style>.-</style>","")
+   docstr = docstr:gsub("<head>.-</head>","")
    docstr = docstr:gsub("<nobr>","")
+   docstr = docstr:gsub("</nobr>","")
    docstr = docstr:gsub("<br>","")
+   docstr = docstr:gsub("<html>","")
+   docstr = docstr:gsub("</html>","")
+   docstr = docstr:gsub("<body>","")
+   docstr = docstr:gsub("</body>","")
+   docstr = docstr:gsub("<tbody.->","")
+   docstr = docstr:gsub("</tbody>","")
    docstr = "<document>"..docstr.."</document>"
 
    local splits_data = xml.load(docstr)
@@ -503,13 +510,11 @@ function parseIofCourseDataXml(course_data_filename)
    return cps
 end
 
---parseSfrSplitsHtml(splits_filename)
+parseSfrSplitsHtml(splits_filename)
 local check_points = parseIofCourseDataXml(course_data_filename)
 
---[[
 for i,v in ipairs(teams) do
    makeTeamHtml(v,check_points)
 end
 makeResultHtml(teams)
-]]
 

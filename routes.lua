@@ -481,19 +481,23 @@ function parseIofCourseDataXml(course_data_filename)
    local cp_data = xml.loadpath(course_data_filename)
    local cps = {}
    local start_position = {}
+   local map_position = {}
    local scale_factor
    do
       local e =  assert(xml.find(cp_data,"Map"))
       scale_factor = tonumber(assert(xml.find(e,"Scale"))[1])
       meters_in_pixel = scale_factor * 0.0254 / map_dpi
+      local position = assert(xml.find(e,"MapPosition"))
+      map_position.x = assert(tonumber(position.x))
+      map_position.y = assert(tonumber(position.y))
    end
    do
       local e = assert(xml.find(cp_data,"StartPoint"))
       local position = assert(xml.find(e,"MapPosition"))
       start_position.x = assert(tonumber(position.x))
       start_position.y = assert(tonumber(position.y))
-      start.x = math.floor(start_position.x * scale_factor / 1000 / meters_in_pixel)
-      start.y = math.floor(start_position.y * scale_factor / 1000 / meters_in_pixel)
+      start.x = math.floor((map_position.x + start_position.x) * scale_factor / 1000 / meters_in_pixel)
+      start.y = math.floor((map_position.y - start_position.y) * scale_factor / 1000 / meters_in_pixel)
    end
    for i,v in ipairs(cp_data) do
       if v.xml == "IOFVersion" then

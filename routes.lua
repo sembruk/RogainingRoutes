@@ -20,7 +20,7 @@
 
 
 --! Configuration
-local map_filename = "map.jpg"
+local map_filename = "ba2016.png"
 local course_data_filename = "../../mega/routes/BA2016.xml"
 local splits_filename = "../../mega/routes/BA2016s.htm"
 local out_dir = "./out"
@@ -29,12 +29,8 @@ local groups = {"24 M",}
 local start_time = "12:00:00"
 local map_dpi = 72
 --local k = 50/1000
-local javascript_map_scale = 1
+local javascript_map_scale = 0.5
 local rotateAngle = 0 ---< in degrees
-local start = {
-   x = 1251,
-   y = 356,
-}
 
 local sfr_split_field_name_by_index = {
    "number",
@@ -53,6 +49,7 @@ local sfr_split_field_name_by_index = {
 
 local image = {}
 local meters_in_pixel
+local start = {}
 
 function timeToSec(str)
    local _,_,hour,min,sec= str:find("^(%d+):(%d+):(%d+)")
@@ -286,7 +283,7 @@ team.group..[[)</td></tr>
          context.stroke();
          context.fill();
       }
-      context.lineWidth = 3;
+      context.lineWidth = 4;
       var old_x = 0, old_y = 0;
       for (i=0; i<cp_list.length; i++) {
          context.beginPath();
@@ -484,17 +481,19 @@ function parseIofCourseDataXml(course_data_filename)
    local cp_data = xml.loadpath(course_data_filename)
    local cps = {}
    local start_position = {}
-   do
-      local start = assert(xml.find(cp_data,"StartPoint"))
-      local position = assert(xml.find(start,"MapPosition"))
-      start_position.x = assert(tonumber(position.x))
-      start_position.y = assert(tonumber(position.y))
-   end
    local scale_factor
    do
       local e =  assert(xml.find(cp_data,"Map"))
       scale_factor = tonumber(assert(xml.find(e,"Scale"))[1])
       meters_in_pixel = scale_factor * 0.0254 / map_dpi
+   end
+   do
+      local e = assert(xml.find(cp_data,"StartPoint"))
+      local position = assert(xml.find(e,"MapPosition"))
+      start_position.x = assert(tonumber(position.x))
+      start_position.y = assert(tonumber(position.y))
+      start.x = math.floor(start_position.x * scale_factor / 1000 / meters_in_pixel)
+      start.y = math.floor(start_position.y * scale_factor / 1000 / meters_in_pixel)
    end
    for i,v in ipairs(cp_data) do
       if v.xml == "IOFVersion" then

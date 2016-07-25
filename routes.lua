@@ -238,13 +238,14 @@ function makeTeamHtml(team, cps)
    local team_html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 ]]..style..[[
-<title>]]..team.id.."."..team.name.." ("..title..[[, результаты)</title>
+<title>]]..team.id..". "..(team.name~="" and (team.name) or (team.first_name.." "..team.second_name))..
+" ("..title..[[, результаты)</title>
 </head>
 <body>
 <h1>]]..title..[[</h1>
 <table class="team">
-<tr><td>Команда</td><td><b>]]..team.id.."."..team.name..[[</b></td></tr>
-<tr><td>Участники</td><td><b>]]..team.second_name..", "..team.first_name..[[</b></td></tr>
+<tr><td>Команда</td><td><b>]]..team.id..(team.name~="" and ("."..team.name) or (""))..[[</b></td></tr>
+<tr><td>Участники</td><td><b>]]..team.first_name.." "..team.second_name..[[</b></td></tr>
 <!--<tr><td>Город</td><td>]]..[[</td></tr>-->
 <tr><td>Место</td><td>]]..
 ((tonumber(team.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..

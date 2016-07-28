@@ -375,6 +375,7 @@ function parseTeamSplits(team_data, group)
    team.group = group
    team.route = {}
    local prev_secs
+   local team_secs = 0
    for i,v in ipairs(team_data) do
       if (v.xml == "td") then
          if v[1] == nil then
@@ -382,6 +383,9 @@ function parseTeamSplits(team_data, group)
          end
          if sfr_split_field_name_by_index[i] then
             team[sfr_split_field_name_by_index[i]] = v[1]
+            if sfr_split_field_name_by_index[i] == "id" then
+               print(string.format("Parse splits of team No %d...", team.id))
+            end
          else
             local cp = {}
             _,_,cp.time,cp.id = string.find(v[1],'^(%d+:%d+)%[(%d+)%]')
@@ -391,7 +395,11 @@ function parseTeamSplits(team_data, group)
                if cp.split == nil then
                   cp.split = cp.time
                end
-               local secs = timeToSec(cp.time)
+
+               team_secs = team_secs + timeToSec(cp.split)
+
+               --local secs = timeToSec(cp.time)
+               local secs = team_secs
                prev_secs = secs
                secs = secs + start_secs
                cp.time = secToTime(secs)
@@ -416,6 +424,7 @@ function parseTeamSplits(team_data, group)
    finish.split = secToSplit(split)
    table.insert(team.route,finish)
 
+   print("done")
    return team
 end
 

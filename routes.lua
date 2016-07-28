@@ -209,6 +209,9 @@ function makeTeamHtml(team, cps)
    cp_list = cp_list..'[0,0] ];'
 
    function makeArrow(c0)
+      if not c0 then
+         return ""
+      end
       local x = c0.x / meters_in_pixel
       local y = c0.y / meters_in_pixel
       local c = {}
@@ -383,7 +386,7 @@ end
 function parseMemberSplits(member_data)
    local member = {}
    member.route = {}
-   local prev_secs
+   local prev_secs = 0
    local member_secs = 0
    for i,v in ipairs(member_data) do
       if (v.xml == "td") then
@@ -442,10 +445,10 @@ function parseSfrSplitsTable(html_data, group)
    print(group)
    for i,v in ipairs(html_data) do
       if (v.xml == "tr" and i ~= 1) then
-         local team = parseMemberSplits(v)
-         if team then
-            team.group = group
-            tableInsertByResult(teams, team)
+         local member = parseMemberSplits(v)
+         if member then
+            member.group = group
+            tableInsertByResult(teams, member)
          end
       end
    end

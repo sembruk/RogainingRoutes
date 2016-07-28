@@ -25,7 +25,7 @@ local course_data_filename = "../../mega/routes/BA2016.xml"
 local splits_filename = "../../mega/routes/BA2016s_fixed.htm"
 local out_dir = "./out"
 local title = "BikeAdventure, 28.05.2016."
-local groups = {"24 M",}
+local groups = {"24 K","24 M","24 W"}
 local start_time = "12:00:00"
 local map_dpi = 72
 --local k = 50/1000
@@ -143,7 +143,7 @@ function makeTeamHtml(team, cps)
       local str = "<tr><td>С</td><td>"..start_time.."</td><td></td><td></td><td></td><td></td><td></td></tr>\n"
       local sum_len = 0
       team.sum = 0
-      print(string.format("Make HTML for team No %d",team.id))
+      print(string.format("Make HTML for team No %s",team.id))
       for i,v in ipairs(team.route) do
          local x,y
          if tonumber(v.id) then
@@ -394,7 +394,7 @@ function parseTeamSplits(team_data, group)
          if sfr_split_field_name_by_index[i] then
             team[sfr_split_field_name_by_index[i]] = v[1]
             if sfr_split_field_name_by_index[i] == "id" then
-               print(string.format("Parse splits of team No %d...", team.id))
+               print(string.format("Parse splits of team No %s...", team.id))
             end
          else
             local cp = {}

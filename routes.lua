@@ -22,7 +22,7 @@
 --! Configuration
 local map_filename = "ba2016.png"
 local course_data_filename = "../../mega/routes/BA2016.xml"
-local splits_filename = "../../mega/routes/BA2016s.htm"
+local splits_filename = "../../mega/routes/BA2016s_fixed.htm"
 local out_dir = "./out"
 local title = "BikeAdventure, 28.05.2016."
 local groups = {"24 M",}
@@ -31,6 +31,8 @@ local map_dpi = 72
 --local k = 50/1000
 local javascript_map_scale = 0.5
 local rotateAngle = 0 ---< in degrees
+
+local display_team_name = false
 
 local sfr_split_field_name_by_index = {
    "number",
@@ -141,6 +143,7 @@ function makeTeamHtml(team, cps)
       local str = "<tr><td>С</td><td>"..start_time.."</td><td></td><td></td><td></td><td></td><td></td></tr>\n"
       local sum_len = 0
       team.sum = 0
+      print(string.format("Make HTML for team No %d",team.id))
       for i,v in ipairs(team.route) do
          local x,y
          if tonumber(v.id) then
@@ -167,6 +170,7 @@ function makeTeamHtml(team, cps)
          else
             str = str.."<td></td>"
          end
+         print(v.id, v.split)
          str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len):gsub('%.',',').."</td>"
          local speed = timeToSec(v.split)/len/60
          str = str..'<td><table width="100%"><tr><td width="40px">'..string.format("%.2f",speed):gsub('%.',',')..
@@ -238,13 +242,13 @@ function makeTeamHtml(team, cps)
    local team_html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 ]]..style..[[
-<title>]]..team.id..". "..(team.name~="" and (team.name) or (team.first_name.." "..team.second_name))..
+<title>]]..team.id..". "..(display_team_name and (team.name) or (team.first_name.." "..team.second_name))..
 " ("..title..[[, результаты)</title>
 </head>
 <body>
 <h1>]]..title..[[</h1>
 <table class="team">
-<tr><td>Команда</td><td><b>]]..team.id..(team.name~="" and ("."..team.name) or (""))..[[</b></td></tr>
+<tr><td>Команда</td><td><b>]]..team.id..(display_team_name and ("."..team.name) or (""))..[[</b></td></tr>
 <tr><td>Участники</td><td><b>]]..team.first_name.." "..team.second_name..[[</b></td></tr>
 <!--<tr><td>Город</td><td>]]..[[</td></tr>-->
 <tr><td>Место</td><td>]]..
@@ -319,7 +323,9 @@ function makeResultHtml(teams)
 <body>
 <h1>]]..title..[[ Результаты</h1>
 <table class="result">
-<tr><th>Абсолют</th><th>Номер</th><th>Название</th><th>Участники</th><th>Результат</th><th>Время</th><th>Место в группе</th></tr>
+<tr><th>Абсолют</th><th>Номер</th>]]..
+(display_team_name and "<th>Название</th>" or "")..
+[[<th>Участники</th><th>Результат</th><th>Время</th><th>Место в группе</th></tr>
 ]]..
 (function()
    local str = ""
@@ -328,13 +334,17 @@ function makeResultHtml(teams)
       str = str.."<td>"..i.."</td>"
       --str = str.."<td>"..v.subgroup.."</td>"
       str = str.."<td>"..v.id.."</td>"
-      str = str..'<td><a href="team'..v.id..'.html">'..v.name..'</a></td>'
-      str = str.."<td>"..v.second_name.." "..v.first_name.."</td>"
+      if display_team_name then
+         str = str..'<td><a href="team'..v.id..'.html">'..v.name..'</a></td>'
+         str = str.."<td>"..v.first_name.." "..v.second_name.."</td>"
+      else
+         str = str..'<td><a href="team'..v.id..'.html">'..v.first_name.." "..v.second_name..'</a></td>'
+      end
       str = str.."<td>"..v.result.."</td>"
       str = str.."<td>"..v.time.."</td>"
-      --str = str.."<td>"..((tonumber(v.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
-      --v.position.."</span>("..v.group..")</td>"
-      str = str.."<td>"..v.subgroup.."</td>"
+      str = str.."<td>"..((tonumber(v.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
+      v.position.."</span>("..v.group..")</td>"
+      --str = str.."<td>"..v.subgroup.."</td>"
       str = str.."</tr>\n"
    end
    return str

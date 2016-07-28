@@ -380,21 +380,20 @@ function tableInsertByResult(t,team)
    end
 end
 
-function parseTeamSplits(team_data, group)
-   local team = {}
-   team.group = group
-   team.route = {}
+function parseMemberSplits(member_data)
+   local member = {}
+   member.route = {}
    local prev_secs
-   local team_secs = 0
-   for i,v in ipairs(team_data) do
+   local member_secs = 0
+   for i,v in ipairs(member_data) do
       if (v.xml == "td") then
          if v[1] == nil then
             v[1] = ""
          end
          if sfr_split_field_name_by_index[i] then
-            team[sfr_split_field_name_by_index[i]] = v[1]
+            member[sfr_split_field_name_by_index[i]] = v[1]
             if sfr_split_field_name_by_index[i] == "id" then
-               print(string.format("Parse splits of team No %s...", team.id))
+               print(string.format("Parse splits of member No %s...", member.id))
             end
          else
             local cp = {}
@@ -406,36 +405,36 @@ function parseTeamSplits(team_data, group)
                   cp.split = cp.time
                end
 
-               team_secs = team_secs + timeToSec(cp.split)
+               member_secs = member_secs + timeToSec(cp.split)
 
                --local secs = timeToSec(cp.time)
-               local secs = team_secs
+               local secs = member_secs
                prev_secs = secs
                secs = secs + start_secs
                cp.time = secToTime(secs)
                _,_,cp.local_points = string.find(cp.id,'^(%d+)%d$')
-               table.insert(team.route,cp)
+               table.insert(member.route,cp)
             end
          end
       end
    end
    
-   if not team.result then
+   if not member.result then
       return
    end
 
    local finish = {}
    finish.id = "Ф"
-   local secs = timeToSec(team.time)
+   local secs = timeToSec(member.time)
 
    local split = secs - prev_secs
    secs = secs + start_secs
    finish.time = secToTime(secs)
    finish.split = secToSplit(split)
-   table.insert(team.route,finish)
+   table.insert(member.route,finish)
 
    print("done")
-   return team
+   return member
 end
 
 local teams = {}
@@ -443,8 +442,9 @@ function parseSfrSplitsTable(html_data, group)
    print(group)
    for i,v in ipairs(html_data) do
       if (v.xml == "tr" and i ~= 1) then
-         local team = parseTeamSplits(v, group)
+         local team = parseMemberSplits(v)
          if team then
+            team.group = group
             tableInsertByResult(teams, team)
          end
       end

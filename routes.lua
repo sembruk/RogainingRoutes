@@ -119,6 +119,10 @@ function run(cmd, act)
    ret:close()
 end
 
+function getTeamHtmlName(team_index, team_id)
+   return "team"..(team_index).."_"..(team_id)..".html"
+end
+
 local style = [[
 <style>
 body {font-family:"Arial Narrow"; font-size:12pt;}
@@ -133,8 +137,16 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
 </style>
 ]]
 
+function getTeamMemberListForHtml(team)
+   local str = ""
+   for i,v in ipairs(team) do
+      str = str..v.first_name.." "..v.second_name.."<br>"
+   end
+   return str
+end
 
-function makeTeamHtml(team, cps)
+
+function makeTeamHtml(index, team, cps)
    local function teamTbl()
       local previos = {
          x = 0,
@@ -170,7 +182,7 @@ function makeTeamHtml(team, cps)
          else
             str = str.."<td></td>"
          end
-         print(v.id, v.split)
+         --print(v.id, v.split)
          str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len):gsub('%.',',').."</td>"
          local speed = timeToSec(v.split)/len/60
          str = str..'<td><table width="100%"><tr><td width="40px">'..string.format("%.2f",speed):gsub('%.',',')..
@@ -245,19 +257,19 @@ function makeTeamHtml(team, cps)
    local team_html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 ]]..style..[[
-<title>]]..team.id..". "..(display_team_name and (team.name) or (team.first_name.." "..team.second_name))..
+<title>]]..team.id..". "..team.name --[[(team[1].first_name.." "..team[1].second_name))]]..
 " ("..title..[[, результаты)</title>
 </head>
 <body>
 <h1>]]..title..[[</h1>
 <table class="team">
 <tr><td>Команда</td><td><b>]]..team.id..(display_team_name and ("."..team.name) or (""))..[[</b></td></tr>
-<tr><td>Участники</td><td><b>]]..team.first_name.." "..team.second_name..[[</b></td></tr>
+<tr><td>Участники</td><td><b>]]..getTeamMemberListForHtml(team) --[[team[1].first_name.." "..team[1].second_name]]..[[</b></td></tr>
 <!--<tr><td>Город</td><td>]]..[[</td></tr>-->
 <tr><td>Место</td><td>]]..
-((tonumber(team.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
-team.position..[[</span> (]]..
-team.group..[[)</td></tr>
+((tonumber(team[1].position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
+team[1].position..[[</span> (]]..
+team[1].group..[[)</td></tr>
 <tr><td>Очки</td><td>]]..team.sum..[[</td></tr>
 <tr><td>Штраф</td><td>]]..(team.sum-team.result)..[[</td></tr>
 <tr><td>Время</td><td>]]..team.time..[[</td></tr>
@@ -312,7 +324,7 @@ team.group..[[)</td></tr>
 </script>
 </body></html>
 ]]
-   local team_file = io.open(out_dir.."/team" .. team.id .. ".html","w")
+   local team_file = io.open(out_dir.."/"..getTeamHtmlName(index,team.id),"w")
    team_file:write(team_html)
    team_file:close()
 end
@@ -338,10 +350,10 @@ function makeResultHtml(teams)
       --str = str.."<td>"..v.subgroup.."</td>"
       str = str.."<td>"..v.id.."</td>"
       if display_team_name then
-         str = str..'<td><a href="team'..v.id..'.html">'..v.name..'</a></td>'
-         str = str.."<td>"..v.first_name.." "..v.second_name.."</td>"
+         str = str..'<td><a href="'..getTeamHtmlName(i,v.id)..'">'..v.name..'</a></td>'
+         str = str.."<td>"..getTeamMemberListForHtml(v).."</td>"
       else
-         str = str..'<td><a href="team'..v.id..'.html">'..v.first_name.." "..v.second_name..'</a></td>'
+         str = str..'<td><a href="'..getTeamHtmlName(i,v.id)..'">'..getTeamMemberListForHtml(v)..'</a></td>'
       end
       str = str.."<td>"..v.result.."</td>"
       str = str.."<td>"..v.time.."</td>"
@@ -397,6 +409,7 @@ function parseMemberSplits(member_data)
             member[sfr_split_field_name_by_index[i]] = v[1]
             if sfr_split_field_name_by_index[i] == "id" then
                print(string.format("Parse splits of member No %s...", member.id))
+               _,_,member.team_id = string.find(member.id,"^(%d+)%.-")
             end
          else
             local cp = {}
@@ -442,15 +455,42 @@ end
 
 local teams = {}
 function parseSfrSplitsTable(html_data, group)
-   print(group)
+   print("Group: ",group)
+   local teams_unsort = {}
    for i,v in ipairs(html_data) do
       if (v.xml == "tr" and i ~= 1) then
          local member = parseMemberSplits(v)
          if member then
             member.group = group
-            tableInsertByResult(teams, member)
+            print(member.id,member.team_id)
+            if teams_unsort[member.team_id] == nil then
+               teams_unsort[member.team_id] = {}
+            end
+            table.insert(teams_unsort[member.team_id],member)
          end
       end
+   end
+   for k,v in pairs(teams_unsort) do
+      v.id = v[1].team_id
+      v.name = v[1].name
+      v.group = v[1].group
+      v.result = v[#v].result
+      v.time   = v[#v].time
+      v.route  = v[#v].route
+      v.position = v[1].position
+
+      if not display_team_name or v.name == nil or v.name == "" then
+         v.name = ""
+         if #v == 1 then
+            v.name = v[1].first_name.." "..v[1].second_name
+         else
+            for ii,vv in ipairs(v) do
+               v.name = v.name.." "..vv.second_name
+            end
+         end
+      end
+
+      tableInsertByResult(teams, v)
    end
 end
 
@@ -540,7 +580,7 @@ parseSfrSplitsHtml(splits_filename)
 local check_points = parseIofCourseDataXml(course_data_filename)
 
 for i,v in ipairs(teams) do
-   makeTeamHtml(v,check_points)
+   makeTeamHtml(i,v,check_points)
 end
 makeResultHtml(teams)
 

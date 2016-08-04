@@ -123,6 +123,18 @@ function getTeamHtmlName(team_index, team_id)
    return "team"..(team_index).."_"..(team_id)..".html"
 end
 
+function fixTeamsPositions(teams)
+   local counts = {}
+   for i,v in ipairs(teams) do
+      if not counts[v.group] then
+         counts[v.group] = 1
+      end
+      teams[i].position = counts[v.group]
+      counts[v.group] = counts[v.group] + 1
+   end
+   return teams
+end
+
 local style = [[
 <style>
 body {font-family:"Arial Narrow"; font-size:12pt;}
@@ -144,7 +156,6 @@ function getTeamMemberListForHtml(team)
    end
    return str
 end
-
 
 function makeTeamHtml(index, team, cps)
    local function teamTbl()
@@ -578,6 +589,8 @@ end
 
 parseSfrSplitsHtml(splits_filename)
 local check_points = parseIofCourseDataXml(course_data_filename)
+
+teams = fixTeamsPositions(teams)
 
 for i,v in ipairs(teams) do
    makeTeamHtml(i,v,check_points)

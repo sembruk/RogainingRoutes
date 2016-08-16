@@ -20,19 +20,19 @@
 
 
 --! Configuration
-local map_filename = "ba2016.png"
-local course_data_filename = "../../mega/routes/BA2016.xml"
-local splits_filename = "../../mega/routes/BA2016s_fixed.htm"
+local map_filename = "map_vcg2015.jpg"
+local course_data_filename = "../../mega/vvpg2015/routes/coordinates.txt"
+local splits_filename = "../../mega/vvpg2015/results/splitsGr.htm"
 local out_dir = "./out"
-local title = "BikeAdventure, 28.05.2016."
-local groups = {"24 K","24 M","24 W"}
+local title = "Владимирский велорогейн Конец летa, 29.08.2015."
+--local groups = {"6МОО", "6МОК", "6СО", "6ЖО"}
+local groups = {"6ЖО"}
 local start_time = "12:00:00"
 local map_dpi = 72
---local k = 50/1000
-local javascript_map_scale = 0.5
-local rotateAngle = 0 ---< in degrees
+local javascript_map_scale = 1
+local rotateAngle = 19.5 ---< in degrees
 
-local display_team_name = false
+local display_team_name = true
 
 local sfr_split_field_name_by_index = {
    "number",
@@ -41,6 +41,7 @@ local sfr_split_field_name_by_index = {
    "first_name",
    "name",
    --"subgroup",
+   "city",
    "result",
    "time",
    "position",
@@ -52,6 +53,9 @@ local sfr_split_field_name_by_index = {
 local image = {}
 local meters_in_pixel
 local start = {}
+
+start.x = 575
+start.y = 394
 
 function timeToSec(str)
    local _,_,hour,min,sec= str:find("^(%d+):(%d+):(%d+)")
@@ -283,7 +287,7 @@ function makeTeamHtml(index, team, cps)
 <table class="team">
 <tr><td>Команда</td><td><b>]]..team.id..(display_team_name and ("."..team.name) or (""))..[[</b></td></tr>
 <tr><td>Участники</td><td><b>]]..getTeamMemberListForHtml(team) --[[team[1].first_name.." "..team[1].second_name]]..[[</b></td></tr>
-<!--<tr><td>Город</td><td>]]..[[</td></tr>-->
+<tr><td>Город</td><td>]]..team.city..[[</td></tr>
 <tr><td>Место</td><td>]]..
 ((tonumber(team[1].position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
 team[1].position..[[</span> (]]..
@@ -496,6 +500,7 @@ function parseSfrSplitsTable(html_data, group)
       v.time   = v[#v].time
       v.route  = v[#v].route
       v.position = v[1].position
+      v.city = v[1].city
 
       if not display_team_name or v.name == nil or v.name == "" then
          v.name = ""
@@ -558,6 +563,14 @@ function parseSfrSplitsHtml(splits_filename)
    end
 end
 
+function isIofCourseDataXmlFile(course_data_filename)
+   local data = pcall(xml.loadpath,course_data_filename)
+   if data and data.xml == "CourseData" and xml.find(data,"IOFVersion") then
+      return true
+   end
+   return false
+end
+
 function parseIofCourseDataXml(course_data_filename)
    local cp_data = xml.loadpath(course_data_filename)
    local cps = {}
@@ -594,8 +607,36 @@ function parseIofCourseDataXml(course_data_filename)
    return cps
 end
 
+function parseCourseDataTxt(course_data_filename)
+   local cps = {}
+   start.x = start.x or 0
+   start.y = start.y or 0
+   meters_in_pixel = 35000 * 0.0254 / map_dpi
+   for line in io.lines(course_data_filename) do
+      local _,_,code,x,y = string.find(line,"^(%d+)%s+([%d%-]+)%s+([%d%-]+)$")
+      code = tonumber(code)
+      if code then
+         x = tonumber(x)
+         y = -tonumber(y)
+         cps[code] = {}
+         x, y = rotate(x, y, rotateRadians)
+         cps[code].x = x
+         cps[code].y = y
+      end
+   end
+
+   return cps
+end
+
+function parseCourseDataFile(course_data_filename)
+   if isIofCourseDataXmlFile(course_data_filename) then
+      return parseIofCourseDataXml(course_data_filename)
+   end
+   return parseCourseDataTxt(course_data_filename)
+end
+
 parseSfrSplitsHtml(splits_filename)
-local check_points = parseIofCourseDataXml(course_data_filename)
+local check_points = parseCourseDataFile(course_data_filename)
 
 teams = fixTeamsPositions(teams)
 

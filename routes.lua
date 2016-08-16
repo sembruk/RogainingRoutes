@@ -92,6 +92,10 @@ function degToRadian(angle)
    return angle * math.pi / 180
 end
 
+function floatToString(f)
+   return string.format("%.2f", f):gsub('%.',',')
+end
+
 local rotateRadians = degToRadian(rotateAngle)
 
 function rotate(x,y,radians)
@@ -194,11 +198,11 @@ function makeTeamHtml(index, team, cps)
             str = str.."<td></td>"
          end
          --print(v.id, v.split)
-         str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len):gsub('%.',',').."</td>"
+         str = str.."<td>"..floatToString(len).." / "..floatToString(sum_len).."</td>"
          local speed = len/timeToSec(v.split)*3600
-         str = str.."<td>"..string.format("%.2f", speed):gsub('%.',',').."</td>"
+         str = str.."<td>"..floatToString(speed).."</td>"
          local pace = timeToSec(v.split)/len/60
-         str = str..'<td><table width="100%"><tr><td width="40px">'..string.format("%.2f",pace):gsub('%.',',')..
+         str = str..'<td><table width="100%"><tr><td width="40px">'..floatToString(pace)..
          '</td><td><div class="blue_rectangle" style="width:'..math.floor(pace*3)..
          'px;"></div></td></tr></table></td>'
          if tonumber(v.id) then
@@ -213,10 +217,10 @@ function makeTeamHtml(index, team, cps)
          str = str.."</tr>\n"
       end
       str = str .. "<tr><th>&nbsp;</th><th>&nbsp;</th><th>"..team.time..
-      "</th><th>"..team.sum.."</th><th>"..string.format("%.2f км",sum_len):gsub('%.',',')..
-      "</th><th><strong>"..
-      string.format("%.2f",sum_len/timeToSec(team.time)*3600):gsub('%.',',').."км/ч</strong></th><th><strong>"..
-      string.format("%.2f",timeToSec(team.time)/sum_len/60):gsub('%.',',').." мин/км</strong></th><th>"..
+      "</th><th>"..team.sum.."</th><th>"..floatToString(sum_len)..
+      " км </th><th><strong>"..
+      floatToString(sum_len/timeToSec(team.time)*3600).." км/ч</strong></th><th><strong>"..
+      floatToString(timeToSec(team.time)/sum_len/60).." мин/км</strong></th><th>"..
       secToSplit(timeToSec(team.time)/team.sum).." мин/очко</th></tr>\n"
       local sum_len = sum_len + math.sqrt((0 - previos.x)^2 + (0 - previos.y)^2)
       return str

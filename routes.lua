@@ -163,7 +163,7 @@ function makeTeamHtml(index, team, cps)
          x = 0,
          y = 0,
       }
-      local str = "<tr><td>С</td><td>"..start_time.."</td><td></td><td></td><td></td><td></td><td></td></tr>\n"
+      local str = "<tr><td>С</td><td>"..start_time.."</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>\n"
       local sum_len = 0
       team.sum = 0
       print(string.format("Make HTML for team No %s",team.id))
@@ -195,9 +195,11 @@ function makeTeamHtml(index, team, cps)
          end
          --print(v.id, v.split)
          str = str.."<td>"..string.format("%.2f / %.2f",len,sum_len):gsub('%.',',').."</td>"
-         local speed = timeToSec(v.split)/len/60
-         str = str..'<td><table width="100%"><tr><td width="40px">'..string.format("%.2f",speed):gsub('%.',',')..
-         '</td><td><div class="blue_rectangle" style="width:'..math.floor(speed*3)..
+         local speed = len/timeToSec(v.split)*3600
+         str = str.."<td>"..string.format("%.2f", speed):gsub('%.',',').."</td>"
+         local pace = timeToSec(v.split)/len/60
+         str = str..'<td><table width="100%"><tr><td width="40px">'..string.format("%.2f",pace):gsub('%.',',')..
+         '</td><td><div class="blue_rectangle" style="width:'..math.floor(pace*3)..
          'px;"></div></td></tr></table></td>'
          if tonumber(v.id) then
             local effectiv = timeToSec(v.split)/v.local_points
@@ -213,6 +215,7 @@ function makeTeamHtml(index, team, cps)
       str = str .. "<tr><th>&nbsp;</th><th>&nbsp;</th><th>"..team.time..
       "</th><th>"..team.sum.."</th><th>"..string.format("%.2f км",sum_len):gsub('%.',',')..
       "</th><th><strong>"..
+      string.format("%.2f",sum_len/timeToSec(team.time)*3600):gsub('%.',',').."км/ч</strong></th><th><strong>"..
       string.format("%.2f",timeToSec(team.time)/sum_len/60):gsub('%.',',').." мин/км</strong></th><th>"..
       secToSplit(timeToSec(team.time)/team.sum).." мин/очко</th></tr>\n"
       local sum_len = sum_len + math.sqrt((0 - previos.x)^2 + (0 - previos.y)^2)
@@ -282,12 +285,12 @@ function makeTeamHtml(index, team, cps)
 team[1].position..[[</span> (]]..
 team[1].group..[[)</td></tr>
 <tr><td>Очки</td><td>]]..team.sum..[[</td></tr>
-<tr><td>Штраф</td><td>]]..(team.sum-team.result)..[[</td></tr>
+<tr><td>Штраф</td><td>]]..(team.sum > tonumber(team.result) and team.sum-team.result or 0)..[[</td></tr>
 <tr><td>Время</td><td>]]..team.time..[[</td></tr>
 <tr><td>Результат</td><td><b>]]..team.result..[[</b></td></tr>
 </table>
 <table class="result">
-<tr><th>КП</th><th>Время</th><th>Сплит</th><th>Очки</th><th>Расстояние (км)</th><th>Скорость (мин/км)</th><th>Мин/очко</th></tr>
+<tr><th>КП</th><th>Время</th><th>Сплит</th><th>Очки</th><th>Расстояние, км</th><th>Скорость, км/ч</th><th>Темп, мин/км</th><th>Мин/очко</th></tr>
 ]]..team_tbl..
 [[</table><br>
 <canvas id="map"></canvas>

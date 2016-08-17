@@ -26,9 +26,9 @@ local splits_filename = "../../mega/vvpg2015/results/splitsGr.htm"
 local out_dir = "./out"
 local title = "Владимирский велорогейн Конец летa, 29.08.2015."
 --local groups = {"6МОО", "6МОК", "6СО", "6ЖО"}
-local groups = {"6ЖО"}
+local groups = {"6МОО", "6МОК", "6СО", "6ЖО"}
 local start_time = "12:00:00"
-local map_dpi = 72
+local map_dpi = 75
 local javascript_map_scale = 1
 local rotateAngle = 19.5 ---< in degrees
 

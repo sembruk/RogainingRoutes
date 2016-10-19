@@ -26,7 +26,7 @@ local map_filename = "map_vcg2015.jpg"
 local course_data_filename = "../../mega/vvpg2015/routes/coordinates.txt"
 local splits_filename = "../../mega/vvpg2015/results/splitsGr.htm"
 local out_dir = "./out"
-local title = "Владимирский велорогейн Конец летa, 29.08.2015."
+local title = nil
 local groups = {"6МОО", "6МОК", "6СО", "6ЖО"}
 local start_time = "12:00:00"
 local map_dpi = 75
@@ -52,6 +52,7 @@ local sfr_split_field_name_by_index = {
 
 package.path = package.path .. ";./lib/slaxml/?.lua"
 local slaxml = require "slaxdom"
+local os2 = require("os2")
 
 
 local image = {}
@@ -350,7 +351,7 @@ team[1].group..[[)</td></tr>
 </script>
 </body></html>
 ]]
-   local team_file = io.open(out_dir.."/"..getTeamHtmlName(index,team.id),"w")
+   local team_file = assert(io.open(out_dir.."/"..getTeamHtmlName(index,team.id),"w"))
    team_file:write(team_html)
    team_file:close()
 end
@@ -562,7 +563,7 @@ function parseSfrSplitsHtml(splits_filename)
    local e = xml_find(splits_data,"h1")
    e = e.kids[1]
    local text = e.type == "text" and e.value
-   title = text:gsub("%s+Протокол.+$","") or title
+   title = title or text:gsub("%s+Протокол.+$","")
 
    for i,v in ipairs(splits_data.el) do
       if (v.name == 'h2') then
@@ -656,6 +657,9 @@ function parseCourseDataFile(course_data_filename)
    end
    return parseCourseDataTxt(course_data_filename)
 end
+
+os2.rm(out_dir)
+os2.mkdir(out_dir)
 
 parseSfrSplitsHtml(splits_filename)
 local check_points = parseCourseDataFile(course_data_filename)

@@ -428,7 +428,7 @@ function parseMemberSplits(member_data)
    local member_secs = 0
    for i,v in ipairs(member_data.el) do
       if (v.name == "td") then
-         local text = v.kids[1].value
+         local text = v.kids[1] and v.kids[1].value
          text = text or ""
          if sfr_split_field_name_by_index[i] then
             member[sfr_split_field_name_by_index[i]] = text

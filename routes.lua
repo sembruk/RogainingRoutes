@@ -19,13 +19,14 @@
 --]]
 
 
+--------------------------------------------
 --! Configuration
+--------------------------------------------
 local map_filename = "map_vcg2015.jpg"
 local course_data_filename = "../../mega/vvpg2015/routes/coordinates.txt"
 local splits_filename = "../../mega/vvpg2015/results/splitsGr.htm"
 local out_dir = "./out"
 local title = "Владимирский велорогейн Конец летa, 29.08.2015."
---local groups = {"6МОО", "6МОК", "6СО", "6ЖО"}
 local groups = {"6МОО", "6МОК", "6СО", "6ЖО"}
 local start_time = "12:00:00"
 local map_dpi = 75
@@ -47,8 +48,11 @@ local sfr_split_field_name_by_index = {
    "position",
    --"_"
 }
+--------------------------------------------
 
----
+package.path = package.path .. ";./lib/slaxml/?.lua"
+local slaxml = require "slaxdom"
+
 
 local image = {}
 local meters_in_pixel
@@ -422,23 +426,22 @@ function parseMemberSplits(member_data)
    member.route = {}
    local prev_secs = 0
    local member_secs = 0
-   for i,v in ipairs(member_data) do
-      if (v.xml == "td") then
-         if v[1] == nil then
-            v[1] = ""
-         end
+   for i,v in ipairs(member_data.el) do
+      if (v.name == "td") then
+         local text = v.kids[1].value
+         text = text or ""
          if sfr_split_field_name_by_index[i] then
-            member[sfr_split_field_name_by_index[i]] = v[1]
+            member[sfr_split_field_name_by_index[i]] = text
             if sfr_split_field_name_by_index[i] == "id" then
                print(string.format("Parse splits of member No %s...", member.id))
                _,_,member.team_id = string.find(member.id,"^(%d+)%.-")
             end
          else
             local cp = {}
-            _,_,cp.time,cp.id = string.find(v[1],'^(%d+:%d+)%[(%d+)%]')
+            _,_,cp.time,cp.id = string.find(text,'^(%d+:%d+)%[(%d+)%]')
             cp.id = tonumber(cp.id)
             if cp.id and cp.id ~= 0 then
-               _,_,cp.split = string.find(v[1],'(%d+:%d+)$')
+               _,_,cp.split = string.find(text,'(%d+:%d+)$')
                if cp.split == nil then
                   cp.split = cp.time
                end
@@ -479,8 +482,8 @@ local teams = {}
 function parseSfrSplitsTable(html_data, group)
    print("Group: ",group)
    local teams_unsort = {}
-   for i,v in ipairs(html_data) do
-      if (v.xml == "tr" and i ~= 1) then
+   for i,v in ipairs(html_data.el) do
+      if (v.name == "tr" and i ~= 1) then
          local member = parseMemberSplits(v)
          if member then
             member.group = group
@@ -524,8 +527,6 @@ function getGroup(str)
       end
    end
 end
-
-local slaxml = require "slaxdom"
 
 function xml_find(xml_data, name)
    for _,v in pairs(xml_data.el or xml_data.kids) do
@@ -649,7 +650,9 @@ end
 
 function parseCourseDataFile(course_data_filename)
    if isIofCourseDataXmlFile(course_data_filename) then
-      return parseIofCourseDataXml(course_data_filename)
+      print("Not implemented for new XML parser!")
+      return nil
+      --return parseIofCourseDataXml(course_data_filename)
    end
    return parseCourseDataTxt(course_data_filename)
 end

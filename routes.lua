@@ -525,7 +525,16 @@ function getGroup(str)
    end
 end
 
-local xml = require "xml" -- sudo luarocks install xml
+local slaxml = require "slaxdom"
+
+function xml_find(xml_data, name)
+   for _,v in pairs(xml_data.el or xml_data.kids) do
+      if v.type == "element" and v.name == name then
+         return v
+      end
+   end
+   return nil
+end
 
 function parseSfrSplitsHtml(splits_filename)
    local file = io.open(splits_filename)
@@ -546,17 +555,20 @@ function parseSfrSplitsHtml(splits_filename)
    docstr = docstr:gsub("</tbody>","")
    docstr = "<document>"..docstr.."</document>"
 
-   local splits_data = xml.load(docstr)
+   local splits_data = slaxml:dom(docstr)
+   splits_data = splits_data.root
 
-   local e = xml.find(splits_data,"title")
-   title = (e and e[1]) or title
+   local e = xml_find(splits_data,"h1")
+   e = e.kids[1]
+   local text = e.type == "text" and e.value
+   title = text:gsub("%s+Протокол.+$","") or title
 
-   for i,v in ipairs(splits_data) do
-      if (v.xml == 'h2') then
-         local group = getGroup(v[1])
+   for i,v in ipairs(splits_data.el) do
+      if (v.name == 'h2') then
+         local group = getGroup(v.kids[1].value)
          if group then
-            if (splits_data[i+1].xml == "table") then
-               parseSfrSplitsTable(splits_data[i+1], group)
+            if (splits_data.el[i+1].name == "table") then
+               parseSfrSplitsTable(splits_data.el[i+1], group)
             end
          end
       end
@@ -564,30 +576,37 @@ function parseSfrSplitsHtml(splits_filename)
 end
 
 function isIofCourseDataXmlFile(course_data_filename)
+   --[[
    local data = pcall(xml.loadpath,course_data_filename)
    if data and data.xml == "CourseData" and xml.find(data,"IOFVersion") then
       return true
    end
+   --]]
+   local data = slaxml:dom(io.open(course_data_filename):read("*all"))
+   if data and data.root then
+      return true
+   end
+
    return false
 end
 
 function parseIofCourseDataXml(course_data_filename)
-   local cp_data = xml.loadpath(course_data_filename)
+   local cp_data = slaxml:dom(io.open(course_data_filename):read("*all"))
    local cps = {}
    local start_position = {}
    local map_position = {}
    local scale_factor
    do
-      local e =  assert(xml.find(cp_data,"Map"))
-      scale_factor = tonumber(assert(xml.find(e,"Scale"))[1])
+      local e =  assert(xml_find(cp_data,"Map"))
+      scale_factor = tonumber(assert(xml_find(e,"Scale"))[1])
       meters_in_pixel = scale_factor * 0.0254 / map_dpi
-      local position = assert(xml.find(e,"MapPosition"))
+      local position = assert(xml_find(e,"MapPosition"))
       map_position.x = assert(tonumber(position.x))
       map_position.y = assert(tonumber(position.y))
    end
    do
-      local e = assert(xml.find(cp_data,"StartPoint"))
-      local position = assert(xml.find(e,"MapPosition"))
+      local e = assert(xml_find(cp_data,"StartPoint"))
+      local position = assert(xml_find(e,"MapPosition"))
       start_position.x = assert(tonumber(position.x))
       start_position.y = assert(tonumber(position.y))
       start.x = math.floor((map_position.x + start_position.x) * scale_factor / 1000 / meters_in_pixel)
@@ -597,9 +616,9 @@ function parseIofCourseDataXml(course_data_filename)
       if v.xml == "IOFVersion" then
          assert(v.version == "2.0.3","Unsupported IOF Course Data version")
       elseif v.xml == "Control" then
-         local code = assert(tonumber(xml.find(v,"ControlCode")[1]))
+         local code = assert(tonumber(xml_find(v,"ControlCode")[1]))
          cps[code] = {}
-         local position = assert(xml.find(v,"MapPosition"))
+         local position = assert(xml_find(v,"MapPosition"))
          cps[code].x = (assert(tonumber(position.x)) - start_position.x) * scale_factor / 1000
          cps[code].y = -(assert(tonumber(position.y)) - start_position.y) * scale_factor / 1000
       end

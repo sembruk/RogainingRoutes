@@ -39,6 +39,7 @@ function _M.mkdir(dir)
 end
 
 function _M.copy(from,to)
+   print(string.format("Copy from '%s' to '%s'", from, to))
    os.execute(cp .. convertpath(string.format("%s %s ",from,to)).." > ".. null)
 end
 

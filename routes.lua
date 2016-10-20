@@ -18,42 +18,11 @@
    along with RogainingRoutes.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
-
---------------------------------------------
---! Configuration
---------------------------------------------
-local map_filename = "map_vcg2015.jpg"
-local course_data_filename = "../../mega/vvpg2015/routes/coordinates.txt"
-local splits_filename = "../../mega/vvpg2015/results/splitsGr.htm"
-local out_dir = "./out"
-local title = nil
-local groups = {"6МОО", "6МОК", "6СО", "6ЖО"}
-local start_time = "12:00:00"
-local map_dpi = 75
-local javascript_map_scale = 1
-local rotateAngle = 19.5 ---< in degrees
-
-local display_team_name = true
-
-local sfr_split_field_name_by_index = {
-   "number",
-   "id",
-   "second_name",
-   "first_name",
-   "name",
-   --"subgroup",
-   "city",
-   "result",
-   "time",
-   "position",
-   --"_"
-}
---------------------------------------------
-
 package.path = package.path .. ";./lib/slaxml/?.lua"
 local slaxml = require "slaxdom"
 local os2 = require("os2")
 
+local config = require "config"
 
 local image = {}
 local meters_in_pixel
@@ -73,7 +42,7 @@ function timeToSec(str)
    end
 end
 
-local start_secs = timeToSec(start_time)
+local start_secs = timeToSec(config.start_time)
 
 function secToTime(sec)
    local hour = math.floor(sec/3600)
@@ -105,7 +74,7 @@ function floatToString(f)
    return string.format("%.2f", f):gsub('%.',',')
 end
 
-local rotateRadians = degToRadian(rotateAngle)
+local rotateRadians = degToRadian(config.rotateAngle)
 
 function rotate(x,y,radians)
    local retX = x * math.cos(radians) - y * math.sin(radians)
@@ -176,7 +145,7 @@ function makeTeamHtml(index, team, cps)
          x = 0,
          y = 0,
       }
-      local str = "<tr><td>С</td><td>"..start_time.."</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>\n"
+      local str = "<tr><td>С</td><td>"..config.start_time.."</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>\n"
       local sum_len = 0
       team.sum = 0
       print(string.format("Make HTML for team No %s",team.id))
@@ -285,12 +254,12 @@ function makeTeamHtml(index, team, cps)
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 ]]..style..[[
 <title>]]..team.id..". "..team.name --[[(team[1].first_name.." "..team[1].second_name))]]..
-" ("..title..[[, результаты)</title>
+" ("..config.title..[[, результаты)</title>
 </head>
 <body>
-<h1>]]..title..[[</h1>
+<h1>]]..config.title..[[</h1>
 <table class="team">
-<tr><td>Команда</td><td><b>]]..team.id..(display_team_name and ("."..team.name) or (""))..[[</b></td></tr>
+<tr><td>Команда</td><td><b>]]..team.id..(config.display_team_name and ("."..team.name) or (""))..[[</b></td></tr>
 <tr><td>Участники</td><td><b>]]..getTeamMemberListForHtml(team) --[[team[1].first_name.." "..team[1].second_name]]..[[</b></td></tr>
 <tr><td>Город</td><td>]]..team.city..[[</td></tr>
 <tr><td>Место</td><td>]]..
@@ -315,11 +284,11 @@ team[1].group..[[)</td></tr>
    var context = canvas.getContext("2d");
    var map = new Image();
    var s = []]..start.x..','..start.y..[[];
-   map.src = "]]..map_filename..[[";
+   map.src = "map.jpg";
    map.onload = function() {
       canvas.width = this.naturalWidth;
       canvas.height = this.naturalHeight;
-      context.scale(]]..javascript_map_scale..","..javascript_map_scale..[[);
+      context.scale(]]..config.javascript_map_scale..","..config.javascript_map_scale..[[);
       context.drawImage(map, 0, 0);
       context.strokeStyle = "rgba(255,0,0,0.5)";
       context.fillStyle = "rgba(255,0,0,0.5)";
@@ -351,7 +320,7 @@ team[1].group..[[)</td></tr>
 </script>
 </body></html>
 ]]
-   local team_file = assert(io.open(out_dir.."/"..getTeamHtmlName(index,team.id),"w"))
+   local team_file = assert(io.open(config.out_dir.."/"..getTeamHtmlName(index,team.id),"w"))
    team_file:write(team_html)
    team_file:close()
 end
@@ -360,13 +329,13 @@ function makeResultHtml(teams)
    local html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 ]]..style..[[
-<title>]]..title..[[ Результаты</title>
+<title>]]..config.title..[[ Результаты</title>
 </head>
 <body>
-<h1>]]..title..[[ Результаты</h1>
+<h1>]]..config.title..[[ Результаты</h1>
 <table class="result">
 <tr><th>Абсолют</th><th>Номер</th>]]..
-(display_team_name and "<th>Название</th>" or "")..
+(config.display_team_name and "<th>Название</th>" or "")..
 [[<th>Участники</th><th>Результат</th><th>Время</th><th>Место в группе</th></tr>
 ]]..
 (function()
@@ -376,7 +345,7 @@ function makeResultHtml(teams)
       str = str.."<td>"..i.."</td>"
       --str = str.."<td>"..v.subgroup.."</td>"
       str = str.."<td>"..v.id.."</td>"
-      if display_team_name then
+      if config.display_team_name then
          str = str..'<td><a href="'..getTeamHtmlName(i,v.id)..'">'..v.name..'</a></td>'
          str = str.."<td>"..getTeamMemberListForHtml(v).."</td>"
       else
@@ -395,7 +364,7 @@ end)()
 </table>
 </body></html>
 ]]
-   local results_file = io.open(out_dir.."/results.html","w")
+   local results_file = io.open(config.out_dir.."/results.html","w")
    results_file:write(html)
    results_file:close()
 end
@@ -431,9 +400,9 @@ function parseMemberSplits(member_data)
       if (v.name == "td") then
          local text = v.kids[1] and v.kids[1].value
          text = text or ""
-         if sfr_split_field_name_by_index[i] then
-            member[sfr_split_field_name_by_index[i]] = text
-            if sfr_split_field_name_by_index[i] == "id" then
+         if config.sfr_split_field_name_by_index[i] then
+            member[config.sfr_split_field_name_by_index[i]] = text
+            if config.sfr_split_field_name_by_index[i] == "id" then
                print(string.format("Parse splits of member No %s...", member.id))
                _,_,member.team_id = string.find(member.id,"^(%d+)%.-")
             end
@@ -506,7 +475,7 @@ function parseSfrSplitsTable(html_data, group)
       v.position = v[1].position
       v.city = v[1].city
 
-      if not display_team_name or v.name == nil or v.name == "" then
+      if not config.display_team_name or v.name == nil or v.name == "" then
          v.name = ""
          if #v == 1 then
             v.name = v[1].first_name.." "..v[1].second_name
@@ -522,7 +491,7 @@ function parseSfrSplitsTable(html_data, group)
 end
 
 function getGroup(str)
-   for i,v in ipairs(groups) do
+   for i,v in ipairs(config.groups) do
       if str == v then
          return v
       end
@@ -563,7 +532,7 @@ function parseSfrSplitsHtml(splits_filename)
    local e = xml_find(splits_data,"h1")
    e = e.kids[1]
    local text = e.type == "text" and e.value
-   title = title or text:gsub("%s+Протокол.+$","")
+   config.title = config.title or text:gsub("%s+Протокол.+$","")
 
    for i,v in ipairs(splits_data.el) do
       if (v.name == 'h2') then
@@ -601,7 +570,7 @@ function parseIofCourseDataXml(course_data_filename)
    do
       local e =  assert(xml_find(cp_data,"Map"))
       scale_factor = tonumber(assert(xml_find(e,"Scale"))[1])
-      meters_in_pixel = scale_factor * 0.0254 / map_dpi
+      meters_in_pixel = scale_factor * 0.0254 / config.map_dpi
       local position = assert(xml_find(e,"MapPosition"))
       map_position.x = assert(tonumber(position.x))
       map_position.y = assert(tonumber(position.y))
@@ -632,7 +601,7 @@ function parseCourseDataTxt(course_data_filename)
    local cps = {}
    start.x = start.x or 0
    start.y = start.y or 0
-   meters_in_pixel = 35000 * 0.0254 / map_dpi
+   meters_in_pixel = 35000 * 0.0254 / config.map_dpi
    for line in io.lines(course_data_filename) do
       local _,_,code,x,y = string.find(line,"^(%d+)%s+([%d%-]+)%s+([%d%-]+)$")
       code = tonumber(code)
@@ -658,11 +627,12 @@ function parseCourseDataFile(course_data_filename)
    return parseCourseDataTxt(course_data_filename)
 end
 
-os2.rm(out_dir)
-os2.mkdir(out_dir)
+os2.rm(config.out_dir)
+os2.mkdir(config.out_dir)
+os2.copy(config.map_filename, config.out_dir.."/map.jpg")
 
-parseSfrSplitsHtml(splits_filename)
-local check_points = parseCourseDataFile(course_data_filename)
+parseSfrSplitsHtml(config.splits_filename)
+local check_points = parseCourseDataFile(config.course_data_filename)
 
 teams = fixTeamsPositions(teams)
 

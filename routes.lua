@@ -28,8 +28,8 @@ local image = {}
 local meters_in_pixel
 local start = {}
 
-start.x = 575
-start.y = 394
+start.x = config.start_x or 0
+start.y = config.start_y or 0
 
 function timeToSec(str)
    local _,_,hour,min,sec= str:find("^(%d+):(%d+):(%d+)")
@@ -145,7 +145,7 @@ function makeTeamHtml(index, team, cps)
          x = 0,
          y = 0,
       }
-      local str = "<tr><td>С</td><td>"..config.start_time.."</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>\n"
+      local str = "<tr><td>РЎ</td><td>"..config.start_time.."</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>\n"
       local sum_len = 0
       team.sum = 0
       print(string.format("Make HTML for team No %s",team.id))
@@ -196,10 +196,10 @@ function makeTeamHtml(index, team, cps)
       end
       str = str .. "<tr><th>&nbsp;</th><th>&nbsp;</th><th>"..team.time..
       "</th><th>"..team.sum.."</th><th>"..floatToString(sum_len)..
-      " км </th><th><strong>"..
-      floatToString(sum_len/timeToSec(team.time)*3600).." км/ч</strong></th><th><strong>"..
-      floatToString(timeToSec(team.time)/sum_len/60).." мин/км</strong></th><th>"..
-      secToSplit(timeToSec(team.time)/team.sum).." мин/очко</th></tr>\n"
+      " РєРј </th><th><strong>"..
+      floatToString(sum_len/timeToSec(team.time)*3600).." РєРј/С‡</strong></th><th><strong>"..
+      floatToString(timeToSec(team.time)/sum_len/60).." РјРёРЅ/РєРј</strong></th><th>"..
+      secToSplit(timeToSec(team.time)/team.sum).." РјРёРЅ/РѕС‡РєРѕ</th></tr>\n"
       local sum_len = sum_len + math.sqrt((0 - previos.x)^2 + (0 - previos.y)^2)
       return str
    end
@@ -251,28 +251,28 @@ function makeTeamHtml(index, team, cps)
    end
 
    local team_html = [[
-<html><head><meta http-equiv="Content-Type" content="text/html" charset="windows-1251">
+<html><head><meta http-equiv="Content-Type" content="text/html" charset="utf-8">
 ]]..style..[[
 <title>]]..team.id..". "..team.name --[[(team[1].first_name.." "..team[1].second_name))]]..
-" ("..config.title..[[, результаты)</title>
+" ("..config.title..[[, СЂРµР·СѓР»СЊС‚Р°С‚С‹)</title>
 </head>
 <body>
 <h1>]]..config.title..[[</h1>
 <table class="team">
-<tr><td>Команда</td><td><b>]]..team.id..(config.display_team_name and ("."..team.name) or (""))..[[</b></td></tr>
-<tr><td>Участники</td><td><b>]]..getTeamMemberListForHtml(team) --[[team[1].first_name.." "..team[1].second_name]]..[[</b></td></tr>
-<tr><td>Город</td><td>]]..team.city..[[</td></tr>
-<tr><td>Место</td><td>]]..
-((tonumber(team[1].position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
-team[1].position..[[</span> (]]..
-team[1].group..[[)</td></tr>
-<tr><td>Очки</td><td>]]..team.sum..[[</td></tr>
-<tr><td>Штраф</td><td>]]..(team.sum > tonumber(team.result) and team.sum-team.result or 0)..[[</td></tr>
-<tr><td>Время</td><td>]]..team.time..[[</td></tr>
-<tr><td>Результат</td><td><b>]]..team.result..[[</b></td></tr>
+<tr><td>РљРѕРјР°РЅРґР°</td><td><b>]]..team.id..(config.display_team_name and ("."..team.name) or (""))..[[</b></td></tr>
+<tr><td>РЈС‡Р°СЃС‚РЅРёРєРё</td><td><b>]]..getTeamMemberListForHtml(team) --[[team[1].first_name.." "..team[1].second_name]]..[[</b></td></tr>
+<!--<tr><td>Р“РѕСЂРѕРґ</td><td>]]..(team.city or '')..[[</td></tr>-->
+<tr><td>РњРµСЃС‚Рѕ</td><td>]]..
+((tonumber(team.position) < 4) and '<span style="color:#f00; font-weight:bold;">' or '<span>')..
+team.position..[[</span> (]]..
+team.group..[[)</td></tr>
+<tr><td>РћС‡РєРё</td><td>]]..team.sum..[[</td></tr>
+<tr><td>РЁС‚СЂР°С„</td><td>]]..(team.sum > tonumber(team.result) and team.sum-team.result or 0)..[[</td></tr>
+<tr><td>Р’СЂРµРјСЏ</td><td>]]..team.time..[[</td></tr>
+<tr><td>Р РµР·СѓР»СЊС‚Р°С‚</td><td><b>]]..team.result..[[</b></td></tr>
 </table>
 <table class="result">
-<tr><th>КП</th><th>Время</th><th>Сплит</th><th>Очки</th><th>Расстояние, км</th><th>Скорость, км/ч</th><th>Темп, мин/км</th><th>Мин/очко</th></tr>
+<tr><th>РљРџ</th><th>Р’СЂРµРјСЏ</th><th>РЎРїР»РёС‚</th><th>РћС‡РєРё</th><th>Р Р°СЃСЃС‚РѕСЏРЅРёРµ, РєРј</th><th>РЎРєРѕСЂРѕСЃС‚СЊ, РєРј/С‡</th><th>РўРµРјРї, РјРёРЅ/РєРј</th><th>РњРёРЅ/РѕС‡РєРѕ</th></tr>
 ]]..team_tbl..
 [[</table><br>
 <canvas id="map"></canvas>
@@ -327,16 +327,16 @@ end
 
 function makeResultHtml(teams)
    local html = [[
-<html><head><meta http-equiv="Content-Type" content="text/html" charset="windows-1251">
+<html><head><meta http-equiv="Content-Type" content="text/html" charset="utf-8">
 ]]..style..[[
-<title>]]..config.title..[[ Результаты</title>
+<title>]]..config.title..[[ Р РµР·СѓР»СЊС‚Р°С‚С‹</title>
 </head>
 <body>
-<h1>]]..config.title..[[ Результаты</h1>
+<h1>]]..config.title..[[ Р РµР·СѓР»СЊС‚Р°С‚С‹</h1>
 <table class="result">
-<tr><th>Абсолют</th><th>Номер</th>]]..
-(config.display_team_name and "<th>Название</th>" or "")..
-[[<th>Участники</th><th>Результат</th><th>Время</th><th>Место в группе</th></tr>
+<tr><th>РђР±СЃРѕР»СЋС‚</th><th>РќРѕРјРµСЂ</th>]]..
+(config.display_team_name and "<th>РќР°Р·РІР°РЅРёРµ</th>" or "")..
+[[<th>РЈС‡Р°СЃС‚РЅРёРєРё</th><th>Р РµР·СѓР»СЊС‚Р°С‚</th><th>Р’СЂРµРјСЏ</th><th>РњРµСЃС‚Рѕ РІ РіСЂСѓРїРїРµ</th></tr>
 ]]..
 (function()
    local str = ""
@@ -435,14 +435,15 @@ function parseMemberSplits(member_data)
    end
 
    local finish = {}
-   finish.id = "Ф"
+   finish.id = "Р¤"
    local secs = timeToSec(member.time)
 
    local split = secs - prev_secs
    secs = secs + start_secs
    finish.time = secToTime(secs)
    finish.split = secToSplit(split)
-   table.insert(member.route,finish)
+   -- FIXME Finish split
+   --table.insert(member.route,finish)
 
    print("done")
    return member
@@ -472,7 +473,7 @@ function parseSfrSplitsTable(html_data, group)
       v.result = v[#v].result
       v.time   = v[#v].time
       v.route  = v[#v].route
-      v.position = v[1].position
+      --v.position = v[1].position
       v.city = v[1].city
 
       if not config.display_team_name or v.name == nil or v.name == "" then
@@ -532,7 +533,7 @@ function parseSfrSplitsHtml(splits_filename)
    local e = xml_find(splits_data,"h1")
    e = e.kids[1]
    local text = e.type == "text" and e.value
-   config.title = config.title or text:gsub("%s+Протокол.+$","")
+   config.title = config.title or text:gsub("%s+РџСЂРѕС‚РѕРєРѕР».+$","")
 
    for i,v in ipairs(splits_data.el) do
       if (v.name == 'h2') then
@@ -601,9 +602,12 @@ function parseCourseDataTxt(course_data_filename)
    local cps = {}
    start.x = start.x or 0
    start.y = start.y or 0
-   meters_in_pixel = 35000 * 0.0254 / config.map_dpi
+   meters_in_pixel = config.map_scale_factor * 0.0254 / config.map_dpi
    for line in io.lines(course_data_filename) do
       local _,_,code,x,y = string.find(line,"^(%d+)%s+([%d%-]+)%s+([%d%-]+)$")
+      if not code then
+         _,_,code,x,y = string.find(line,"^(%d+),([%d%-]+),([%d%-]+)$")
+      end
       code = tonumber(code)
       if code then
          x = tonumber(x)

@@ -7,7 +7,7 @@ return {
    splits_filename = "../../mega/vvpg2015/results/splitsGr.htm",
    out_dir = "./out",
    title = nil,
-   groups = {"6–ú–û–û", "6–ú–û–ö", "6–°–û", "6–ñ–û"},
+   groups = {"6ÃŒŒ", "6ÃŒ ", "6—Œ", "6∆Œ"},
    start_time = "12:00:00",
    map_dpi = 75,
    javascript_map_scale = 1,

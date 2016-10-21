@@ -31,6 +31,24 @@ local start = {}
 start.x = config.start_x or 0
 start.y = config.start_y or 0
 
+function pairsByKeys(t, f)
+   local a = {}
+   for k in pairs(t) do
+      table.insert(a, k)
+   end
+   table.sort(a, f)
+   local i = 0      -- iterator variable
+   local iter = function ()   -- iterator function
+      i = i + 1
+      if a[i] == nil then
+         return nil
+      else
+         return a[i], t[a[i]]
+      end
+   end
+   return iter
+end
+
 function timeToSec(str)
    local _,_,hour,min,sec= str:find("^(%d+):(%d+):(%d+)")
    if not hour then
@@ -374,8 +392,8 @@ function makeResultHtml(teams)
 <h1>]]..config.title..[[ Результаты</h1>]]..
 (function()
    local str = ""
-   for k,v in pairs(teams) do
-      str = str..makeClassResultTable(k,v)
+   for k,v in pairsByKeys(teams) do
+      str = makeClassResultTable(k,v)..str
    end
    return str
 end) ()
@@ -515,10 +533,10 @@ function parseSfrSplitsTable(html_data, group, class)
 end
 
 function getGroup(str)
-   for class,v in pairs(config.groups) do
-      for _,group in pairs(v) do
+   for class_name,class in pairs(config.groups) do
+      for _,group in ipairs(class) do
          if str == group then
-            return group, class
+            return group, class_name
          end
       end
    end
@@ -562,10 +580,10 @@ function parseSfrSplitsHtml(splits_filename)
 
    for i,v in ipairs(splits_data.el) do
       if (v.name == 'h2') then
-         local group,class = getGroup(v.kids[1].value)
+         local group,class_name = getGroup(v.kids[1].value)
          if group then
             if (splits_data.el[i+1].name == "table") then
-               parseSfrSplitsTable(splits_data.el[i+1], group, class)
+               parseSfrSplitsTable(splits_data.el[i+1], group, class_name)
             end
          end
       end

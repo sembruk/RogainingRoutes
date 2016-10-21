@@ -107,24 +107,27 @@ end
 
 function fixTeamsPositions(teams)
    local counts = {}
-   for i,v in ipairs(teams) do
-      if not counts[v.group] then
-         counts[v.group] = 1
+   for k,v in pairs(teams) do
+      for ii,vv in ipairs(v) do
+         if not counts[vv.group] then
+            counts[vv.group] = 1
+         end
+         teams[k][ii].position = counts[vv.group]
+         counts[vv.group] = counts[vv.group] + 1
       end
-      teams[i].position = counts[v.group]
-      counts[v.group] = counts[v.group] + 1
    end
    return teams
 end
 
 local style = [[
 <style>
-body {font-family:"Arial Narrow"; font-size:12pt;}
+body {font-family:Arial Narrow; font-size:12pt;}
 table {text-align:center;}
 table.team {text-align:left;}
-table.result {font-family:"Arial Narrow"; font-size:12pt; border:1px AA0055; background:#ddd;}
+table.result {font-family:Arial Narrow; font-size:12pt; border:1px AA0055; background:#ddd;}
 table td{ margin:O; padding:0 2px; background:#fff;}
-h1 {font-size:16pt; font-weight:bold; text-align:left;}
+h1 {font-size:18pt; font-weight:bold; text-align:left;}
+h2 {font-size:16pt; font-weight:bold; text-align:left;}
 div {max-width: 800px;}
 div.blue_rectangle {background: blue; height: 10px; width: 0px;}
 div.green_rectangle {background: green; height: 10px; width: 0px;}
@@ -325,14 +328,9 @@ team.group..[[)</td></tr>
    team_file:close()
 end
 
-function makeResultHtml(teams)
-   local html = [[
-<html><head><meta http-equiv="Content-Type" content="text/html" charset="utf-8">
-]]..style..[[
-<title>]]..config.title..[[ Результаты</title>
-</head>
-<body>
-<h1>]]..config.title..[[ Результаты</h1>
+function makeClassResultTable(class_name, class)
+   return [[
+<h2>]]..class_name..[[</h2>
 <table class="result">
 <tr><th>Абсолют</th><th>Номер</th>]]..
 (config.display_team_name and "<th>Название</th>" or "")..
@@ -340,7 +338,7 @@ function makeResultHtml(teams)
 ]]..
 (function()
    local str = ""
-   for i,v in ipairs(teams) do
+   for i,v in ipairs(class) do
       str = str.."<tr>"
       str = str.."<td>"..i.."</td>"
       --str = str.."<td>"..v.subgroup.."</td>"
@@ -362,6 +360,26 @@ function makeResultHtml(teams)
 end)()
 ..[[
 </table>
+]]
+end
+
+function makeResultHtml(teams)
+   print("Make result HTML")
+   local html = [[
+<html><head><meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+]]..style..[[
+<title>]]..config.title..[[ Результаты</title>
+</head>
+<body>
+<h1>]]..config.title..[[ Результаты</h1>]]..
+(function()
+   local str = ""
+   for k,v in pairs(teams) do
+      str = str..makeClassResultTable(k,v)
+   end
+   return str
+end) ()
+..[[
 </body></html>
 ]]
    local results_file = io.open(config.out_dir.."/results.html","w")
@@ -430,7 +448,7 @@ function parseMemberSplits(member_data)
       end
    end
    
-   if not member.result then
+   if not member.result or member.result == '' then
       return
    end
 
@@ -450,14 +468,14 @@ function parseMemberSplits(member_data)
 end
 
 local teams = {}
-function parseSfrSplitsTable(html_data, group)
+function parseSfrSplitsTable(html_data, group, class)
+   print("Class: ",class)
    print("Group: ",group)
    local teams_unsort = {}
    for i,v in ipairs(html_data.el) do
       if (v.name == "tr" and i ~= 1) then
          local member = parseMemberSplits(v)
          if member then
-            member.group = group
             print(member.id,member.team_id)
             if teams_unsort[member.team_id] == nil then
                teams_unsort[member.team_id] = {}
@@ -469,12 +487,13 @@ function parseSfrSplitsTable(html_data, group)
    for k,v in pairs(teams_unsort) do
       v.id = v[1].team_id
       v.name = v[1].name
-      v.group = v[1].group
       v.result = v[#v].result
       v.time   = v[#v].time
       v.route  = v[#v].route
       --v.position = v[1].position
       v.city = v[1].city
+
+      v.group = group
 
       if not config.display_team_name or v.name == nil or v.name == "" then
          v.name = ""
@@ -487,14 +506,20 @@ function parseSfrSplitsTable(html_data, group)
          end
       end
 
-      tableInsertByResult(teams, v)
+      if teams[class] == nil then
+         teams[class] = {}
+      end
+
+      tableInsertByResult(teams[class], v)
    end
 end
 
 function getGroup(str)
-   for i,v in ipairs(config.groups) do
-      if str == v then
-         return v
+   for class,v in pairs(config.groups) do
+      for _,group in pairs(v) do
+         if str == group then
+            return group, class
+         end
       end
    end
 end
@@ -537,10 +562,10 @@ function parseSfrSplitsHtml(splits_filename)
 
    for i,v in ipairs(splits_data.el) do
       if (v.name == 'h2') then
-         local group = getGroup(v.kids[1].value)
+         local group,class = getGroup(v.kids[1].value)
          if group then
             if (splits_data.el[i+1].name == "table") then
-               parseSfrSplitsTable(splits_data.el[i+1], group)
+               parseSfrSplitsTable(splits_data.el[i+1], group, class)
             end
          end
       end
@@ -640,8 +665,10 @@ local check_points = parseCourseDataFile(config.course_data_filename)
 
 teams = fixTeamsPositions(teams)
 
-for i,v in ipairs(teams) do
-   makeTeamHtml(i,v,check_points)
+for _,class in pairs(teams) do
+   for i,v in ipairs(class) do
+      makeTeamHtml(i,v,check_points)
+   end
 end
 makeResultHtml(teams)
 

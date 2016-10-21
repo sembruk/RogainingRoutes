@@ -60,8 +60,6 @@ function timeToSec(str)
    end
 end
 
-local start_secs = timeToSec(config.start_time)
-
 function secToTime(sec)
    local hour = math.floor(sec/3600)
    sec = sec - hour*3600
@@ -166,7 +164,7 @@ function makeTeamHtml(index, team, cps)
          x = 0,
          y = 0,
       }
-      local str = "<tr><td>Ñ</td><td>"..config.start_time.."</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>\n"
+      local str = "<tr><td>Ñ</td><td>"..team.start_time.."</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>\n"
       local sum_len = 0
       team.sum = 0
       print(string.format("Make HTML for team No %s",team.id))
@@ -427,7 +425,7 @@ function tableInsertByResult(t,team)
    end
 end
 
-function parseMemberSplits(member_data)
+function parseMemberSplits(member_data, start_time)
    local member = {}
    member.route = {}
    local prev_secs = 0
@@ -457,7 +455,7 @@ function parseMemberSplits(member_data)
                --local secs = timeToSec(cp.time)
                local secs = member_secs
                prev_secs = secs
-               secs = secs + start_secs
+               secs = secs + timeToSec(start_time)
                cp.time = secToTime(secs)
                _,_,cp.local_points = string.find(cp.id,'^(%d+)%d$')
                table.insert(member.route,cp)
@@ -475,7 +473,7 @@ function parseMemberSplits(member_data)
    local secs = timeToSec(member.time)
 
    local split = secs - prev_secs
-   secs = secs + start_secs
+   secs = secs + timeToSec(start_time)
    finish.time = secToTime(secs)
    finish.split = secToSplit(split)
    -- FIXME Finish split
@@ -486,13 +484,13 @@ function parseMemberSplits(member_data)
 end
 
 local teams = {}
-function parseSfrSplitsTable(html_data, group, class)
+function parseSfrSplitsTable(html_data, group, class, start)
    print("Class: ",class)
    print("Group: ",group)
    local teams_unsort = {}
    for i,v in ipairs(html_data.el) do
       if (v.name == "tr" and i ~= 1) then
-         local member = parseMemberSplits(v)
+         local member = parseMemberSplits(v,start)
          if member then
             print(member.id,member.team_id)
             if teams_unsort[member.team_id] == nil then
@@ -512,6 +510,7 @@ function parseSfrSplitsTable(html_data, group, class)
       v.city = v[1].city
 
       v.group = group
+      v.start_time = start
 
       if not config.display_team_name or v.name == nil or v.name == "" then
          v.name = ""
@@ -536,7 +535,7 @@ function getGroup(str)
    for class_name,class in pairs(config.groups) do
       for _,group in ipairs(class) do
          if str == group then
-            return group, class_name
+            return group, class_name, class.start
          end
       end
    end
@@ -580,10 +579,10 @@ function parseSfrSplitsHtml(splits_filename)
 
    for i,v in ipairs(splits_data.el) do
       if (v.name == 'h2') then
-         local group,class_name = getGroup(v.kids[1].value)
+         local group,class_name,start = getGroup(v.kids[1].value)
          if group then
             if (splits_data.el[i+1].name == "table") then
-               parseSfrSplitsTable(splits_data.el[i+1], group, class_name)
+               parseSfrSplitsTable(splits_data.el[i+1], group, class_name, start)
             end
          end
       end
@@ -677,6 +676,8 @@ end
 os2.rm(config.out_dir)
 os2.mkdir(config.out_dir)
 os2.copy(config.map_filename, config.out_dir.."/map.jpg")
+os2.copy(config.splits_filename, config.out_dir.."/splits.htm")
+os2.copy(config.course_data_filename, config.out_dir.."/coords.txt")
 
 parseSfrSplitsHtml(config.splits_filename)
 local check_points = parseCourseDataFile(config.course_data_filename)

@@ -1,7 +1,7 @@
 local _M = {}
 
 local function inLinux()
-   if io.popen("uname"):read("*all") then
+   if pcall(function() io.popen("uname"):read('*all') end) then
       return true
    end
 end
@@ -10,6 +10,7 @@ function selectByOs(winVariant, unixVariant)
    if(inLinux()) then
       return unixVariant
    end
+   print('> win variant')
    return winVariant
 end
 

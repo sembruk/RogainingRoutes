@@ -137,9 +137,9 @@ end
 
 local style = [[
 <style>
-body {font-family:"Times New Roman", Times, serif; font-size:12pt;}
-table {text-align:center;}
-table.team {text-align:left;}
+body {font-family:"Times New Roman", Times, serif; font-size:14pt;}
+table {font-size:12pt; text-align:center;}
+table.team {font-size:14pt; text-align:left;}
 table.result {border:1px AA0055; background:#ddd;}
 table td{ margin:O; padding:0 2px; background:#fff;}
 h1 {font-size:18pt; font-weight:bold; text-align:left;}

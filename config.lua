@@ -5,13 +5,14 @@ return {
    course_data_filename = "./in/coords.csv",
    splits_filename      = "./in/splits.htm",
    map_filename         = "./in/map.jpg",
-   map_dpi              = 120,
-   map_scale_factor     = 14170,
+   map_dpi              = 71,
+   map_scale_factor     = 25000,
+   rotateAngle          = -10.5, ---< in degrees
    out_dir              = "./out",
    title                = nil, -- if nil from splits html
 
-   start_x              = 1211,
-   start_y              = 1943,
+   start_x              = 569,
+   start_y              = 467,
 
    groups = {
       ["8 ÷àñîâ áåãîì"]         = {start = "10:45:00", "Ì8ÁÎ","Æ8ÁÎ","ÌÌ8ÁÊ","ÌÆ8ÁÊ","ÆÆ8ÁÊ",},
@@ -26,8 +27,7 @@ return {
       ["1 ÷àñ íà âåëîñèïåäå"]   = {start = "10:30:00", "1ÂÎ",},
    },
 
-   javascript_map_scale = 0.8,
-   rotateAngle          = -10, ---< in degrees
+   javascript_map_scale = 1,
 
    display_team_name    = true,
 

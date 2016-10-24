@@ -278,7 +278,7 @@ function makeTeamHtml(index, team, cps)
 <body>
 <h1>]]..config.title..[[</h1>
 <table class="team">
-<tr><td>Команда</td><td><b>]]..team.id..(config.display_team_name and ("."..team.name) or (""))..[[</b></td></tr>
+<tr><td>Команда</td><td><b>]]..team.id..(config.display_team_name and (". "..team.name) or (""))..[[</b></td></tr>
 <tr><td>Участники</td><td><b>]]..getTeamMemberListForHtml(team) --[[team[1].first_name.." "..team[1].second_name]]..[[</b></td></tr>
 <!--<tr><td>Город</td><td>]]..(team.city or '')..[[</td></tr>-->
 <tr><td>Место</td><td>]]..
@@ -297,7 +297,7 @@ team.group..[[)</td></tr>
 <canvas id="map"></canvas>
 <script>
    ]]..cp_list..
-   "\n   "..makeArrow(cps[team.route[1].id])..[[
+   "\n   "..(team.route[1] and makeArrow(cps[team.route[1].id]) or '')..[[
 
    var canvas = document.getElementById("map");
    var context = canvas.getContext("2d");
@@ -502,7 +502,6 @@ function parseSfrSplitsTable(html_data, group, class, start)
    end
    for k,v in pairs(teams_unsort) do
       v.id = v[1].team_id
-      v.name = v[1].name
       v.result = v[#v].result
       v.time   = v[#v].time
       v.route  = v[#v].route
@@ -511,6 +510,15 @@ function parseSfrSplitsTable(html_data, group, class, start)
 
       v.group = group
       v.start_time = start
+
+      local names = {}
+      v.name = nil
+      for ii,vv in ipairs(v) do
+         if not names[vv.name] then
+            names[vv.name] = true
+            v.name = v.name and (v.name..' - '..vv.name) or vv.name
+         end
+      end
 
       if not config.display_team_name or v.name == nil or v.name == "" then
          v.name = ""

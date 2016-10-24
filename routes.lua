@@ -31,6 +31,8 @@ local start = {}
 start.x = config.start_x or 0
 start.y = config.start_y or 0
 
+local finish_id = "Ô"
+
 function pairsByKeys(t, f)
    local a = {}
    for k in pairs(t) do
@@ -432,7 +434,6 @@ end
 function parseMemberSplits(member_data, start_time)
    local member = {}
    member.route = {}
-   local prev_secs = 0
    local member_secs = 0
    for i,v in ipairs(member_data.el) do
       if (v.name == "td") then
@@ -456,11 +457,8 @@ function parseMemberSplits(member_data, start_time)
 
                member_secs = member_secs + timeToSec(cp.split)
 
-               --local secs = timeToSec(cp.time)
-               local secs = member_secs
-               prev_secs = secs
-               secs = secs + timeToSec(start_time)
-               cp.time = secToTime(secs)
+               cp.secs = member_secs
+               cp.time = secToTime(member_secs + timeToSec(start_time))
                _,_,cp.local_points = string.find(cp.id,'^(%d+)%d$')
                table.insert(member.route,cp)
             end
@@ -468,20 +466,27 @@ function parseMemberSplits(member_data, start_time)
       end
    end
    
-   if not member.result or member.result == '' then
+   if not member.result or member.result == '' or #member.route < 1 then
       return
    end
 
    local finish = {}
-   finish.id = "Ô"
+   finish.id = finish_id
    local secs = timeToSec(member.time)
 
-   local split = secs - prev_secs
+   local split
+   -- FIXME
+   for i = 0,100 do
+      split = secs - member.route[#member.route-i].secs
+      if split > 0 then
+         break
+      end
+   end
    secs = secs + timeToSec(start_time)
    finish.time = secToTime(secs)
    finish.split = secToSplit(split)
    -- FIXME Finish split
-   --table.insert(member.route,finish)
+   table.insert(member.route,finish)
 
    print("done")
    return member
@@ -618,6 +623,10 @@ function parseBrokenCps(filename)
       team_id = tonumber(team_id)
       broken_cp = tonumber(broken_cp)
       after = tonumber(after)
+      --FIXME
+      if after == 240 then
+         after = finish_id
+      end
       if team_id then
          if not broken_cps_tbl[team_id] then
             broken_cps_tbl[team_id] = {}
@@ -633,7 +642,6 @@ function fixSplits(team, broken_cps)
    if type(broken_cps) ~= "table" then
       return team
    end
-   print(team.id)
    for _,v in ipairs(broken_cps) do
       for i,vv in ipairs(team.route) do
          if vv.id == v.cp_id then
@@ -644,7 +652,6 @@ function fixSplits(team, broken_cps)
          if vv.id == v.after then
             local cp = {}
             cp.id = v.cp_id
-            cp.no_info = true
             _,_,cp.local_points = string.find(cp.id,'^(%d+)%d$')
             table.insert(team.route, i, cp)
             break
@@ -744,8 +751,8 @@ os2.copy(config.map_filename, config.out_dir.."/map.jpg")
 os2.copy(config.splits_filename, config.out_dir.."/splits.htm")
 os2.copy(config.course_data_filename, config.out_dir.."/coords.txt")
 
+broken_cps_tbl = parseBrokenCps(config.broken_cps)
 parseSfrSplitsHtml(config.splits_filename)
-local broken_cps_tbl = parseBrokenCps(config.broken_cps)
 
 local check_points = parseCourseDataFile(config.course_data_filename)
 

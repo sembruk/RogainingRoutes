@@ -187,8 +187,8 @@ function makeTeamHtml(index, team, cps)
 
          str = str.."<tr>"
          str = str.."<td>"..v.id.."</td>"
-         str = str.."<td>"..v.time.."</td>"
-         str = str.."<td>"..v.split.."</td>"
+         str = str.."<td>"..(v.time or '-').."</td>"
+         str = str.."<td>"..(v.split or '-').."</td>"
          if tonumber(v.id) then
             str = str.."<td>"..v.local_points.." / "..team.sum.."</td>"
          else
@@ -196,20 +196,24 @@ function makeTeamHtml(index, team, cps)
          end
          --print(v.id, v.split)
          str = str.."<td>"..floatToString(len).." / "..floatToString(sum_len).."</td>"
-         local speed = len/timeToSec(v.split)*3600
-         str = str.."<td>"..floatToString(speed).."</td>"
-         local pace = timeToSec(v.split)/len/60
-         str = str..'<td><table width="100%"><tr><td width="40px">'..floatToString(pace)..
-         '</td><td><div class="blue_rectangle" style="width:'..math.floor(pace*3)..
-         'px;"></div></td></tr></table></td>'
-         if tonumber(v.id) then
+         if v.split then
+            local speed = len/timeToSec(v.split)*3600
+            str = str.."<td>"..floatToString(speed).."</td>"
+            local pace = timeToSec(v.split)/len/60
+            str = str..'<td><table width="100%"><tr><td width="40px">'..floatToString(pace)..
+                  '</td><td><div class="blue_rectangle" style="width:'..math.floor(pace*3)..
+                  'px;"></div></td></tr></table></td>'
+         else
+            str = str..'<td>-</td><td>-</td>'
+         end
+         if tonumber(v.id) and v.split then
             local effectiv = timeToSec(v.split)/v.local_points
             str = str..'<td><table width="100%"><tr><td width="40px">'..
             secToSplit(effectiv)..
             '</td><td><div class="green_rectangle" style="width:'..math.floor(effectiv/10)..
             'px;"></div></td></tr></table></td>'
          else
-            str = str.."<td></td>"
+            str = str.."<td>-</td>"
          end
          str = str.."</tr>\n"
       end
@@ -245,7 +249,7 @@ function makeTeamHtml(index, team, cps)
       c[1] = {}
       c[2] = {}
       c[3] = {}
-      local a = 30
+      local a = 20
       local b = 6
       local l = math.sqrt(x^2 + y^2)
       c[1].x = l - a 
@@ -309,8 +313,8 @@ team.group..[[)</td></tr>
       canvas.height = this.naturalHeight;
       context.scale(]]..config.javascript_map_scale..","..config.javascript_map_scale..[[);
       context.drawImage(map, 0, 0);
-      context.strokeStyle = "rgba(255,0,0,0.5)";
-      context.fillStyle = "rgba(255,0,0,0.5)";
+      context.strokeStyle = "rgba(255,0,0,0.6)";
+      context.fillStyle = "rgba(255,0,0,0.6)";
       for (i=0; i<cp_list.length; i++) {
          context.beginPath();
          context.arc(s[0] + cp_list[i][0], s[1] + cp_list[i][1], 3, 0, Math.PI * 2, false);
@@ -492,7 +496,7 @@ function parseSfrSplitsTable(html_data, group, class, start)
       if (v.name == "tr" and i ~= 1) then
          local member = parseMemberSplits(v,start)
          if member then
-            print(member.id,member.team_id)
+            --print(member.id,member.team_id)
             if teams_unsort[member.team_id] == nil then
                teams_unsort[member.team_id] = {}
             end
@@ -501,7 +505,7 @@ function parseSfrSplitsTable(html_data, group, class, start)
       end
    end
    for k,v in pairs(teams_unsort) do
-      v.id = v[1].team_id
+      v.id = tonumber(v[1].team_id)
       v.result = v[#v].result
       v.time   = v[#v].time
       v.route  = v[#v].route
@@ -537,6 +541,7 @@ function parseSfrSplitsTable(html_data, group, class, start)
 
       tableInsertByResult(teams[class], v)
    end
+   return teams
 end
 
 function getGroup(str)
@@ -595,6 +600,58 @@ function parseSfrSplitsHtml(splits_filename)
          end
       end
    end
+end
+
+function parseBrokenCps(filename)
+   local broken_cps_tbl = {}
+   if not filename then
+      return
+   end
+   local f = io.open(filename)
+   if not f then
+      return
+   end
+   for line in f:lines() do
+      local _,_,team_id,broken_cp,after = string.find(line,"^(%d+)%.-%d-,%s-(%d+),%s-(%w+)$")
+      --print('>',line)
+      --print('>',team_id,broken_cp, after)
+      team_id = tonumber(team_id)
+      broken_cp = tonumber(broken_cp)
+      after = tonumber(after)
+      if team_id then
+         if not broken_cps_tbl[team_id] then
+            broken_cps_tbl[team_id] = {}
+         end
+         table.insert(broken_cps_tbl[team_id],{cp_id = broken_cp, after = after}) 
+      end
+   end
+   f:close()
+   return broken_cps_tbl
+end
+
+function fixSplits(team, broken_cps)
+   if type(broken_cps) ~= "table" then
+      return team
+   end
+   print(team.id)
+   for _,v in ipairs(broken_cps) do
+      for i,vv in ipairs(team.route) do
+         if vv.id == v.cp_id then
+            table.remove(team.route,i)
+         end
+      end
+      for i,vv in ipairs(team.route) do
+         if vv.id == v.after then
+            local cp = {}
+            cp.id = v.cp_id
+            cp.no_info = true
+            _,_,cp.local_points = string.find(cp.id,'^(%d+)%d$')
+            table.insert(team.route, i, cp)
+            break
+         end
+      end
+   end
+   return team
 end
 
 function isIofCourseDataXmlFile(course_data_filename)
@@ -688,12 +745,15 @@ os2.copy(config.splits_filename, config.out_dir.."/splits.htm")
 os2.copy(config.course_data_filename, config.out_dir.."/coords.txt")
 
 parseSfrSplitsHtml(config.splits_filename)
+local broken_cps_tbl = parseBrokenCps(config.broken_cps)
+
 local check_points = parseCourseDataFile(config.course_data_filename)
 
 teams = fixTeamsPositions(teams)
 
 for _,class in pairs(teams) do
    for i,v in ipairs(class) do
+      v = fixSplits(v, broken_cps_tbl[v.id])
       makeTeamHtml(i,v,check_points)
    end
 end

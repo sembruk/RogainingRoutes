@@ -5,6 +5,7 @@ return {
    course_data_filename = "./in/coords.csv",
    splits_filename      = "./in/splits.htm",
    map_filename         = "./in/map.jpg",
+   broken_cps           = "./in/broken.csv",
    map_dpi              = 71,
    map_scale_factor     = 25000,
    rotateAngle          = -10.5, ---< in degrees

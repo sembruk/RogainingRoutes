@@ -751,7 +751,7 @@ os2.copy(config.map_filename, config.out_dir.."/map.jpg")
 os2.copy(config.splits_filename, config.out_dir.."/splits.htm")
 os2.copy(config.course_data_filename, config.out_dir.."/coords.txt")
 
-broken_cps_tbl = parseBrokenCps(config.broken_cps)
+local broken_cps_tbl = parseBrokenCps(config.broken_cps)
 parseSfrSplitsHtml(config.splits_filename)
 
 local check_points = parseCourseDataFile(config.course_data_filename)
@@ -760,7 +760,9 @@ teams = fixTeamsPositions(teams)
 
 for _,class in pairs(teams) do
    for i,v in ipairs(class) do
-      v = fixSplits(v, broken_cps_tbl[v.id])
+      if broken_cps_tbl then
+         v = fixSplits(v, broken_cps_tbl[v.id])
+      end
       makeTeamHtml(i,v,check_points)
    end
 end

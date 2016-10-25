@@ -6,14 +6,14 @@ return {
    splits_filename      = "./in/splits.htm",
    map_filename         = "./in/map.jpg",
    broken_cps           = "./in/broken.csv",
-   map_dpi              = 71,
-   map_scale_factor     = 25000,
-   rotateAngle          = -10.5, ---< in degrees
+   map_dpi              = 72,
+   map_scale_factor     = 14170,
+   rotateAngle          = -10, ---< in degrees
    out_dir              = "./out",
    title                = nil, -- if nil from splits html
 
-   start_x              = 569,
-   start_y              = 467,
+   start_x              = 728,
+   start_y              = 1167,
 
    groups = {
       ["8 ÷àñîâ áåãîì"]         = {start = "10:45:00", "Ì8ÁÎ","Æ8ÁÎ","ÌÌ8ÁÊ","ÌÆ8ÁÊ","ÆÆ8ÁÊ",},

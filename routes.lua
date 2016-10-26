@@ -602,7 +602,7 @@ end
 
 function parseSfrSplitsHtml(splits_filename)
    local file = io.open(splits_filename)
-   local docstr = file:read("*a")
+   local docstr = util.ansiToUtf8(file:read("*a"))
    file:close()
 
    docstr = docstr:gsub("<meta.->","")

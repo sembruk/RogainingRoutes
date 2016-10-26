@@ -1,5 +1,3 @@
-local _M = {}
-
 local function inLinux()
    if pcall(function() io.popen("uname"):read('*all') end) then
       return true
@@ -10,7 +8,6 @@ function selectByOs(winVariant, unixVariant)
    if(inLinux()) then
       return unixVariant
    end
-   print('> win variant')
    return winVariant
 end
 
@@ -27,26 +24,24 @@ local function convertpath(path)
    return string.gsub(path,"/",slash)
 end
 
-function _M.rm(path)
+function os.rm(path)
    if path then
       print(string.format("Remove '%s'",path))
       os.execute(rm .. convertpath(path).." > ".. null)
    end
 end
 
-function _M.mkdir(dir)
+function os.mkdir(dir)
    print(string.format("Make dir '%s'",dir))
    os.execute(mkdir .. convertpath(dir).." > ".. null)
 end
 
-function _M.copy(from,to)
+function os.copy(from,to)
    print(string.format("Copy from '%s' to '%s'", from, to))
    os.execute(cp .. convertpath(string.format("%s %s ",from,to)).." > ".. null)
 end
 
-function _M.move(from,to)
+function os.move(from,to)
    os.execute(mv .. convertpath(string.format("%s %s ",from,to)).." > ".. null)
 end
-
-return _M
 

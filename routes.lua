@@ -20,8 +20,8 @@
 
 package.path = package.path .. ";./lib/slaxml/?.lua"
 local slaxml = require "slaxdom"
-local os2 = require("os2")
 local util = require("util")
+require("os2")
 
 local config = require "config"
 
@@ -277,7 +277,7 @@ function makeTeamHtml(index, team, cps)
    end
 
    local team_html = [[
-<html><head><meta http-equiv="Content-Type" content="text/html" charset="windows-1251">
+<html><head><meta http-equiv="Content-Type" content="text/html" charset="utf-8">
 ]]..style..[[
 <title>]]..team.id..". "..team.name --[[(team[1].first_name.." "..team[1].second_name))]]..
 " ("..config.title..[[, результаты)</title>
@@ -389,7 +389,7 @@ end
 function makeResultHtml(teams)
    print("Make result HTML")
    local html = [[
-<html><head><meta http-equiv="Content-Type" content="text/html" charset="windows-1251">
+<html><head><meta http-equiv="Content-Type" content="text/html" charset="utf-8">
 ]]..style..[[
 <title>]]..config.title..[[. Результаты</title>
 </head>
@@ -778,11 +778,11 @@ function parseCourseDataFile(course_data_filename)
    return parseCourseDataTxt(course_data_filename)
 end
 
-os2.rm(config.out_dir)
-os2.mkdir(config.out_dir)
-os2.copy(config.map_filename, config.out_dir.."/map.jpg")
-os2.copy(config.splits_filename, config.out_dir.."/splits.htm")
-os2.copy(config.course_data_filename, config.out_dir.."/coords.txt")
+os.rm(config.out_dir)
+os.mkdir(config.out_dir)
+os.copy(config.map_filename, config.out_dir.."/map.jpg")
+os.copy(config.splits_filename, config.out_dir.."/splits.htm")
+os.copy(config.course_data_filename, config.out_dir.."/coords.txt")
 
 local broken_cps_tbl = parseBrokenCps(config.broken_cps)
 parseSfrSplitsHtml(config.splits_filename)

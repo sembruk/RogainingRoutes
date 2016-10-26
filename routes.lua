@@ -20,8 +20,7 @@
 
 package.path = package.path .. ";./lib/slaxml/?.lua"
 local slaxml = require "slaxdom"
-local util = require("util")
-require("os2")
+require("util")
 
 local config = require "config"
 

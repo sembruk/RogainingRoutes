@@ -33,9 +33,9 @@ local nmdc = {
   [124] = '|'
 }
 
-local _M = {}
+util = {}
 
-function _M.ansiToUtf8(s)
+function util.ansiToUtf8(s)
   local r, b = ''
   for i = 1, s and s:len() or 0 do
     b = s:byte(i)
@@ -56,7 +56,7 @@ function _M.ansiToUtf8(s)
   return r
 end
 
-function _M.utf8ToAnsi(s)
+function util.utf8ToAnsi(s)
   local a, j, r, b = 0, 0, ''
   for i = 1, s and s:len() or 0 do
     b = s:byte(i)
@@ -81,7 +81,7 @@ function _M.utf8ToAnsi(s)
   return r
 end
 
-function _M.toName(s)
+function util.toName(s)
    local ret = ''
    for i = 1,(s and s:utf8len() or 0) do
       local c = s:utf8sub(i,i)
@@ -95,5 +95,50 @@ function _M.toName(s)
    return ret
 end
 
-return _M
+local function inLinux()
+   if pcall(function() io.popen("uname"):read('*all') end) then
+      return true
+   end
+end
+
+local function selectByOs(winVariant, unixVariant)
+   if(inLinux()) then
+      return unixVariant
+   end
+   return winVariant
+end
+
+local pwd   = selectByOs("cd ",         "pwd ")
+local rm    = selectByOs("rmdir /S /Q ","rm -rf ")
+local mkdir = selectByOs("mkdir ",      "mkdir -p ")
+local ls    = selectByOs("dir /B /S ",  "find ")
+local cp    = selectByOs("copy ",       "cp -rf ")
+local mv    = selectByOs("move /Y ",    "mv -f ")
+local null  = selectByOs("nul",         "/dev/null")
+local slash = selectByOs( "\\",         "/")
+
+local function convertpath(path)
+   return string.gsub(path,"/",slash)
+end
+
+function os.rm(path)
+   if path then
+      print(string.format("Remove '%s'",path))
+      os.execute(rm .. convertpath(path).." > ".. null)
+   end
+end
+
+function os.mkdir(dir)
+   print(string.format("Make dir '%s'",dir))
+   os.execute(mkdir .. convertpath(dir).." > ".. null)
+end
+
+function os.copy(from,to)
+   print(string.format("Copy from '%s' to '%s'", from, to))
+   os.execute(cp .. convertpath(string.format("%s %s ",from,to)).." > ".. null)
+end
+
+function os.move(from,to)
+   os.execute(mv .. convertpath(string.format("%s %s ",from,to)).." > ".. null)
+end
 

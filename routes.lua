@@ -21,6 +21,7 @@
 package.path = package.path .. ";./lib/slaxml/?.lua"
 local slaxml = require "slaxdom"
 local os2 = require("os2")
+local util = require("util")
 
 local config = require "config"
 
@@ -496,6 +497,9 @@ function parseMemberSplits(member_data, start_time)
    finish.split = secToSplit(split)
    -- FIXME Finish split
    table.insert(member.route,finish)
+
+   --member.first_name = util.toName(member.first_name)
+   --member.second_name = util.toName(member.second_name)
 
    print("done")
    return member

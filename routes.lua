@@ -501,6 +501,25 @@ function parseMemberSplits(member_data, start_time)
    return member
 end
 
+function makeTableForRating(teams)
+   local t = {}
+   for class_name, class in pairs(teams) do
+      for _,team in ipairs(class) do
+         for i,v in ipairs(team) do
+            table.insert(t,string.format("%s %s\t%d\t%d\t%d",
+                                         v.second_name,
+                                         v.first_name,
+                                         v.year_of_birth,
+                                         #team,
+                                         v.result))
+         end
+      end
+   end
+   local f = io.open("out/for_rating.tsv",'w')
+   f:write(table.concat(t,'\n'))
+   f:close()
+end
+
 local teams = {}
 function parseSfrSplitsTable(html_data, group, class, start)
    print("Class: ",class)
@@ -767,6 +786,8 @@ parseSfrSplitsHtml(config.splits_filename)
 local check_points = parseCourseDataFile(config.course_data_filename)
 
 teams = fixTeamsPositions(teams)
+
+makeTableForRating(teams)
 
 for _,class in pairs(teams) do
    for i,v in ipairs(class) do

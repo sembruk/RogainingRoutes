@@ -390,10 +390,10 @@ function makeResultHtml(teams)
    local html = [[
 <html><head><meta http-equiv="Content-Type" content="text/html" charset="windows-1251">
 ]]..style..[[
-<title>]]..config.title..[[ Результаты</title>
+<title>]]..config.title..[[. Результаты</title>
 </head>
 <body>
-<h1>]]..config.title..[[ Результаты</h1>]]..
+<h1>]]..config.title..[[. Результаты</h1>]]..
 (function()
    local str = ""
    for k,v in pairsByKeys(teams) do
@@ -449,7 +449,16 @@ function parseMemberSplits(member_data, start_time)
             local cp = {}
             _,_,cp.time,cp.id = string.find(text,'^(%d+:%d+)%[(%d+)%]')
             cp.id = tonumber(cp.id)
-            if cp.id and cp.id ~= 0 then
+            local in_ignore = false
+            if config.ignore_list then
+               for k,v in pairs(config.ignore_list) do
+                  if cp.id == v then
+                     in_ignore = true
+                     break
+                  end
+               end
+            end
+            if cp.id and cp.id ~= 0 and not in_ignore then
                _,_,cp.split = string.find(text,'(%d+:%d+)$')
                if cp.split == nil then
                   cp.split = cp.time
@@ -594,6 +603,7 @@ function parseSfrSplitsHtml(splits_filename)
    e = e.kids[1]
    local text = e.type == "text" and e.value
    config.title = config.title or text:gsub("%s+Протокол.+$","")
+   config.title = config.title:gsub("%.$","")
 
    for i,v in ipairs(splits_data.el) do
       if (v.name == 'h2') then

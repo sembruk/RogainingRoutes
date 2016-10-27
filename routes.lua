@@ -701,14 +701,9 @@ function fixSplits(team, broken_cps)
 end
 
 function isIofCourseDataXmlFile(course_data_filename)
-   --[[
-   local data = pcall(xml.loadpath,course_data_filename)
-   if data and data.xml == "CourseData" and xml.find(data,"IOFVersion") then
-      return true
-   end
-   --]]
    local data = slaxml:dom(io.open(course_data_filename):read("*all"))
-   if data and data.root then
+   data = data and data.root
+   if data.name == "CourseData" and xml_find(data,"IOFVersion") then
       return true
    end
 
@@ -717,35 +712,39 @@ end
 
 function parseIofCourseDataXml(course_data_filename)
    local cp_data = slaxml:dom(io.open(course_data_filename):read("*all"))
+   cp_data = cp_data.root
    local cps = {}
    local start_position = {}
    local map_position = {}
    local scale_factor
    do
+      local e = assert(xml_find(cp_data,"IOFVersion"))
+      assert(e.attr.version == "2.0.3","Unsupported IOF Course Data version: "..(e.attr.version or ''))
+   end
+   do
       local e =  assert(xml_find(cp_data,"Map"))
-      scale_factor = tonumber(assert(xml_find(e,"Scale"))[1])
+      scale_factor = assert(tonumber(xml_find(e,"Scale").kids[1].value))
+
       meters_in_pixel = scale_factor * 0.0254 / config.map_dpi
       local position = assert(xml_find(e,"MapPosition"))
-      map_position.x = assert(tonumber(position.x))
-      map_position.y = assert(tonumber(position.y))
+      map_position.x = assert(tonumber(position.attr.x))
+      map_position.y = assert(tonumber(position.attr.y))
    end
    do
       local e = assert(xml_find(cp_data,"StartPoint"))
       local position = assert(xml_find(e,"MapPosition"))
-      start_position.x = assert(tonumber(position.x))
-      start_position.y = assert(tonumber(position.y))
+      start_position.x = assert(tonumber(position.attr.x))
+      start_position.y = assert(tonumber(position.attr.y))
       start.x = math.floor((map_position.x + start_position.x) * scale_factor / 1000 / meters_in_pixel)
       start.y = math.floor((map_position.y - start_position.y) * scale_factor / 1000 / meters_in_pixel)
    end
-   for i,v in ipairs(cp_data) do
-      if v.xml == "IOFVersion" then
-         assert(v.version == "2.0.3","Unsupported IOF Course Data version")
-      elseif v.xml == "Control" then
-         local code = assert(tonumber(xml_find(v,"ControlCode")[1]))
+   for i,v in ipairs(cp_data.el) do
+      if v.name == "Control" then
+         local code = assert(tonumber(xml_find(v,"ControlCode").kids[1].value))
          cps[code] = {}
          local position = assert(xml_find(v,"MapPosition"))
-         cps[code].x = (assert(tonumber(position.x)) - start_position.x) * scale_factor / 1000
-         cps[code].y = -(assert(tonumber(position.y)) - start_position.y) * scale_factor / 1000
+         cps[code].x = (assert(tonumber(position.attr.x)) - start_position.x) * scale_factor / 1000
+         cps[code].y = -(assert(tonumber(position.attr.y)) - start_position.y) * scale_factor / 1000
       end
    end
    return cps
@@ -777,9 +776,8 @@ end
 
 function parseCourseDataFile(course_data_filename)
    if isIofCourseDataXmlFile(course_data_filename) then
-      print("Not implemented for new XML parser!")
-      return nil
-      --return parseIofCourseDataXml(course_data_filename)
+      --print("Not implemented for new XML parser!")
+      return parseIofCourseDataXml(course_data_filename)
    end
    return parseCourseDataTxt(course_data_filename)
 end

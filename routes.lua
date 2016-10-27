@@ -600,8 +600,15 @@ function xml_find(xml_data, name)
 end
 
 function parseSfrSplitsHtml(splits_filename)
-   local file = io.open(splits_filename)
-   local docstr = util.ansiToUtf8(file:read("*a"))
+   local file = assert(io.open(splits_filename))
+   local first_str = file:read("*l")
+   local docstr
+   if first_str:find("1251") then
+      docstr = util.ansiToUtf8(file:read("*a"))
+   else
+      docstr = file:read("*a")
+   end
+
    file:close()
 
    docstr = docstr:gsub("<meta.->","")

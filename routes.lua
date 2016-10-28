@@ -407,6 +407,10 @@ end) ()
    local results_file = io.open(config.out_dir.."/results.html","w")
    results_file:write(html)
    results_file:close()
+
+   local f = io.open(config.out_dir.."/.htaccess","w")
+   f:write("AddDefaultCharset utf-8\n")
+   f:close()
 end
 
 function tableInsertByResult(t,team)
@@ -703,7 +707,7 @@ end
 function isIofCourseDataXmlFile(course_data_filename)
    local data = slaxml:dom(io.open(course_data_filename):read("*all"))
    data = data and data.root
-   if data.name == "CourseData" and xml_find(data,"IOFVersion") then
+   if data and data.name == "CourseData" and xml_find(data,"IOFVersion") then
       return true
    end
 

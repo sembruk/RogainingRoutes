@@ -14,4 +14,9 @@
    along with RogainingRoutes.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from jinja2 import Template
+
+html = open('templates/results.html').read()
+template = Template(html)
+print(template.render(title='Results'))
 

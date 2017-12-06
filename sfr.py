@@ -13,19 +13,20 @@
    along with RogainingRoutes.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-sfr_spit_field_name_by_index = (
-    'number',
-    'bib',
-    'last_name',
-    'first_name',
-    'year_of_birth',
-    'team_name',
-    'points',
-    'time',
-    '_'
-)
+sfr_spit_field_name = {
+    'Номер': 'bib',
+    'Фамилия': 'last_name',
+    'Имя': 'first_name',
+    'Г.р.': 'year_of_birth',
+    'Команда': 'team_name',
+    '***': 'points',
+    'Результат': 'time',
+}
+
+column_name = list()
 
 import re
+from datetime import timedelta
 from lxml import etree
 
 def extract_event_title(title):
@@ -35,20 +36,35 @@ def parse_member_splits(tr_element):
     member = dict()
     i = 0
     for e in list(tr_element):
-        if e.tag == 'td':
-            text = e.text or e[0].text
-            if i < len(sfr_spit_field_name_by_index):
-                print(text)
-                member[sfr_spit_field_name_by_index[i]] = text
-            #else:
-            #TODO
+        text = e.text or e[0].text
+        if e.tag == 'th':
+            if i == 0:
+                column_name.clear()
+            match = re.match('\S+', text)
+            if match:
+                text = match.group(0)
+            column_name.append(text)
+        elif e.tag == 'td':
+            if (i < len(column_name)
+                    and sfr_spit_field_name.get(column_name[i])):
+                key = sfr_spit_field_name[column_name[i]]
+                member[key] = text
+                if key == 'bib':
+                    match = re.match('\d+', text)
+                    if match:
+                        member['team_bib'] = int(match.group(0))
+            elif text is not None:
+                cp = {}
+                match = re.match('(\d+):(\d+)\[(\d+)\]', text)
+                if match:
+                    cp['time'] = timedelta(minutes=int(match.group(1)), seconds=int(match.group(2)))
+                    cp['id'] = int(match.group(3))
         i += 1
-    print(member)
 
 def parse_SFR_splits_table(table_element, group):
     print('Parse splits for:', group)
     for e in list(table_element):
-        if e.tag == 'tr' and e[0].tag != 'th':
+        if e.tag == 'tr':
             parse_member_splits(e)
 
 def parse_SFR_splits_html(splits_filename):

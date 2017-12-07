@@ -34,6 +34,8 @@ def extract_event_title(title):
 
 def parse_member_splits(tr_element):
     member = dict()
+    member['route'] = list()
+    current_time = timedelta()
     i = 0
     for e in list(tr_element):
         text = e.text or e[0].text
@@ -50,6 +52,7 @@ def parse_member_splits(tr_element):
                 key = sfr_spit_field_name[column_name[i]]
                 member[key] = text
                 if key == 'bib':
+                    print('Parse splits for member N {}...'.format(member['bib']), end='')
                     match = re.match('\d+', text)
                     if match:
                         member['team_bib'] = int(match.group(0))
@@ -57,9 +60,35 @@ def parse_member_splits(tr_element):
                 cp = {}
                 match = re.match('(\d+):(\d+)\[(\d+)\]', text)
                 if match:
-                    cp['time'] = timedelta(minutes=int(match.group(1)), seconds=int(match.group(2)))
+                    cp_time = timedelta(minutes=int(match.group(1)), seconds=int(match.group(2)))
                     cp['id'] = int(match.group(3))
+                if cp.get('id') is not None:
+                    match = re.search('(\d+):(\d+)$', text)
+                    if match:
+                        cp['split'] = timedelta(minutes=int(match.group(1)), seconds=int(match.group(2)))
+                    else:
+                        cp['split'] = cp_time
+                    current_time += cp['split']
+                    cp['time'] = current_time
+
+                    member['route'].append(cp)
         i += 1
+
+    if len(member['route']) < 1:
+        return
+
+    match = re.match('(\d+):(\d+):(\d+)', member['time'])
+    if match:
+        member['time'] = timedelta(hours=int(match.group(1)), minutes=int(match.group(2)), seconds=int(match.group(3)))
+
+    finish = dict()
+    nCps = len(member['route'])
+    for i in range(nCps):
+        finish['split'] = member['time'] - member['route'][nCps - i - 1]['time']
+        if finish['split'] > timedelta():
+            break
+    member['route'].append(finish)
+    print('done')
 
 def parse_SFR_splits_table(table_element, group):
     print('Parse splits for:', group)

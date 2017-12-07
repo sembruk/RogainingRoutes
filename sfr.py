@@ -132,7 +132,7 @@ def parse_SFR_splits_table(table_element, group):
         nMembers = len(team['members'])
         member = team['members'][nMembers-1]
         team['bib'] = bib
-        team['points'] = member['points']
+        team['points'] = int(member['points'])
         team['time'] = member['time']
         team['route'] = member['route']
         team['group'] = group

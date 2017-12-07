@@ -29,6 +29,14 @@ import re
 from datetime import timedelta
 from lxml import etree
 
+def strToTime(s):
+    match = re.match('(\d*):{,1}(\d{1,2}):(\d\d)',s)
+    if match:
+        h = int(match.group(1) or 0)
+        m = int(match.group(2))
+        s = int(match.group(3))
+        return timedelta(hours=h, minutes=m, seconds=s)
+
 def extract_event_title(title):
     return re.sub('\s+Протокол.+$', '', title)
 
@@ -58,14 +66,14 @@ def parse_member_splits(tr_element):
                         member['team_bib'] = int(match.group(0))
             elif text is not None:
                 cp = {}
-                match = re.match('(\d+):(\d+)\[(\d+)\]', text)
+                match = re.match('(\d+:\d+)\[(\d+)\]', text)
                 if match:
-                    cp_time = timedelta(minutes=int(match.group(1)), seconds=int(match.group(2)))
-                    cp['id'] = int(match.group(3))
+                    cp_time = strToTime(match.group(1))
+                    cp['id'] = int(match.group(2))
                 if cp.get('id') is not None:
-                    match = re.search('(\d+):(\d+)$', text)
+                    match = re.search('\d+:\d+$', text)
                     if match:
-                        cp['split'] = timedelta(minutes=int(match.group(1)), seconds=int(match.group(2)))
+                        cp['split'] = strToTime(match.group(0))
                     else:
                         cp['split'] = cp_time
                     current_time += cp['split']
@@ -77,9 +85,7 @@ def parse_member_splits(tr_element):
     if len(member['route']) < 1:
         return
 
-    match = re.match('(\d+):(\d+):(\d+)', member['time'])
-    if match:
-        member['time'] = timedelta(hours=int(match.group(1)), minutes=int(match.group(2)), seconds=int(match.group(3)))
+    member['time'] = strToTime(member['time'])
 
     finish = dict()
     nCps = len(member['route'])

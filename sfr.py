@@ -29,7 +29,7 @@ import re
 from datetime import timedelta
 from lxml import etree
 
-def strToTime(s):
+def str_to_time(s):
     match = re.match('(\d*):{,1}(\d{1,2}):(\d\d)',s)
     if match:
         h = int(match.group(1) or 0)
@@ -60,7 +60,7 @@ def parse_member_splits(tr_element):
                 key = sfr_spit_field_name[column_name[i]]
                 member[key] = text
                 if key == 'bib':
-                    print('Parse splits for member N {}...'.format(member['bib']), end='')
+                    print('{}, '.format(member['bib']), end='')
                     match = re.match('\d+', text)
                     if match:
                         member['team_bib'] = int(match.group(0))
@@ -68,12 +68,12 @@ def parse_member_splits(tr_element):
                 cp = {}
                 match = re.match('(\d+:\d+)\[(\d+)\]', text)
                 if match:
-                    cp_time = strToTime(match.group(1))
+                    cp_time = str_to_time(match.group(1))
                     cp['id'] = int(match.group(2))
                 if cp.get('id') is not None:
                     match = re.search('\d+:\d+$', text)
                     if match:
-                        cp['split'] = strToTime(match.group(0))
+                        cp['split'] = str_to_time(match.group(0))
                     else:
                         cp['split'] = cp_time
                     current_time += cp['split']
@@ -85,7 +85,7 @@ def parse_member_splits(tr_element):
     if len(member['route']) < 1:
         return
 
-    member['time'] = strToTime(member['time'])
+    member['time'] = str_to_time(member['time'])
 
     finish = dict()
     nCps = len(member['route'])
@@ -94,13 +94,56 @@ def parse_member_splits(tr_element):
         if finish['split'] > timedelta():
             break
     member['route'].append(finish)
-    print('done')
+    return member
+
+def insertByResult(l, team):
+    if len(l) < 1:
+        l.append(team)
+        return
+    for i in range(len(l)):
+        if team['points'] > l[i]['points']:
+            l.insert(i, team)
+            break
+        elif team['points'] == l[i]['points']:
+            if team['time'] < l[i]['time']:
+                l.insert(i, team)
+                break
+        if i == len(l):
+            l.append(team)
+            break
 
 def parse_SFR_splits_table(table_element, group):
     print('Parse splits for:', group)
+    teams_unsort = dict()
+    print('Parse splits for members: ', end='')
     for e in list(table_element):
         if e.tag == 'tr':
-            parse_member_splits(e)
+            member = parse_member_splits(e)
+            if member:
+                bib = member['team_bib']
+                if teams_unsort.get(bib) is None:
+                    teams_unsort[bib] = dict()
+                    teams_unsort[bib]['members'] = list()
+                teams_unsort[bib]['members'].append(member)
+    print('')
+    teams = list()
+    for bib in teams_unsort:
+        team = teams_unsort[bib]
+        nMembers = len(team['members'])
+        member = team['members'][nMembers-1]
+        team['bib'] = bib
+        team['points'] = member['points']
+        team['time'] = member['time']
+        team['route'] = member['route']
+        team['group'] = group
+        team['name'] = list()
+        team['name'].append(team['members'][0]['team_name'])
+        for m in team['members']:
+            if m['team_name'] != team['name'][0]:
+                team['name'].append(m['team_name'])
+
+        insertByResult(teams, team)
+    return teams
 
 def parse_SFR_splits_html(splits_filename):
     parser = etree.HTMLParser()
@@ -109,6 +152,7 @@ def parse_SFR_splits_html(splits_filename):
     body = root.find('body')
     event_title = body.find('h1').text
     event_title = extract_event_title(event_title)
+    teams = dict()
     for e in list(body):
         if e.tag == 'h2':
             group = e.text
@@ -117,7 +161,7 @@ def parse_SFR_splits_html(splits_filename):
             if match:
                 duration = match.group(0)
         elif e.tag == 'table':
-            parse_SFR_splits_table(e, group)
+            teams[group] = parse_SFR_splits_table(e, group)
 
     
 parse_SFR_splits_html('in/splits.htm')

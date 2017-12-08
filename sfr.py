@@ -13,6 +13,10 @@
    along with RogainingRoutes.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import re
+from datetime import timedelta
+from lxml import etree
+
 sfr_spit_field_name = {
     'Номер': 'bib',
     'Фамилия': 'last_name',
@@ -24,10 +28,6 @@ sfr_spit_field_name = {
 }
 
 column_name = list()
-
-import re
-from datetime import timedelta
-from lxml import etree
 
 def str_to_time(s):
     match = re.match('(\d*):{,1}(\d{1,2}):(\d\d)',s)
@@ -60,7 +60,7 @@ def parse_member_splits(tr_element):
                 key = sfr_spit_field_name[column_name[i]]
                 member[key] = text
                 if key == 'bib':
-                    print('{}, '.format(member['bib']), end='')
+                    print('{} '.format(member['bib']), end='')
                     match = re.match('\d+', text)
                     if match:
                         member['team_bib'] = int(match.group(0))
@@ -162,7 +162,5 @@ def parse_SFR_splits_html(splits_filename):
                 duration = match.group(0)
         elif e.tag == 'table':
             teams[group] = parse_SFR_splits_table(e, group)
-
-    
-parse_SFR_splits_html('in/splits.htm')
+    return teams
 

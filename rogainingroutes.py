@@ -28,7 +28,7 @@ input_dir = 'input'
 output_dir = 'output'
 
 #teams = sfr.parse_SFR_splits_html(os.path.join(input_dir, 'splits.htm'))
-coursedata.parse_course_data_file(os.path.join(input_dir, 'coords.csv'))
+cps = coursedata.parse_course_data_file(os.path.join(input_dir, 'coords.csv'))
 
 shutil.rmtree(output_dir, ignore_errors=True)
 os.mkdir(output_dir)

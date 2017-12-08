@@ -28,9 +28,14 @@ def is_IOF_course_data_xml_file(data):
     return False
 
 def parse_course_csv(data):
+    cps = dict()
     csvreader = csv.reader(StringIO(data))
     for row in csvreader:
-        print(row)
+        code = int(row[0])
+        x = int(row[1])
+        y = -int(row[2])
+        cps[code] = [x, y]
+    return cps
     
 
 def parse_course_data_file(filename):

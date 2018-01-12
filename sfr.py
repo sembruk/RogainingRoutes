@@ -162,5 +162,5 @@ def parse_SFR_splits_html(splits_filename):
                 duration = match.group(0)
         elif e.tag == 'table':
             teams[group] = parse_SFR_splits_table(e, group)
-    return teams
+    return teams, event_title
 

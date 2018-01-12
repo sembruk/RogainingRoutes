@@ -20,17 +20,34 @@ from jinja2 import Template
 import sfr
 import coursedata
 
-#html = open('templates/results.html').read()
-#template = Template(html)
-#print(template.render(title='Results'))
+def make_result_html(teams):
+    print('Make result HTML')
+
+    data = dict()
+    for group in teams:
+        data[group] = [];
+        for team in teams[group]:
+            t = [team['bib'],
+                 team['name'],
+                 'members',
+                 team['points'],
+                 team['time']
+                ]
+            data[group].append(t)
+
+    html = open('templates/results.html').read()
+    template = Template(html)
+    with open(os.path.join(output_dir, 'results.html'), 'w') as fd:
+        fd.write(template.render(title='Results', data=data))
 
 input_dir = 'input'
 output_dir = 'output'
 
-#teams = sfr.parse_SFR_splits_html(os.path.join(input_dir, 'splits.htm'))
+teams = sfr.parse_SFR_splits_html(os.path.join(input_dir, 'splits.htm'))
 cps = coursedata.parse_course_data_file(os.path.join(input_dir, 'coords.csv'))
 
 shutil.rmtree(output_dir, ignore_errors=True)
 os.mkdir(output_dir)
 shutil.copy(os.path.join(input_dir, 'map.jpg'), os.path.join(output_dir, 'map.jpg'))
 
+make_result_html(teams)

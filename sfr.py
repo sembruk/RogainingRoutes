@@ -14,6 +14,7 @@
 """
 
 import re
+from member import Member
 from datetime import timedelta
 from lxml import etree
 
@@ -41,8 +42,8 @@ def extract_event_title(title):
     return re.sub('\s+Протокол.+$', '', title)
 
 def parse_member_splits(tr_element):
-    member = dict()
-    member['route'] = list()
+    member = Member()
+    #member['route'] = list()
     current_time = timedelta()
     i = 0
     for e in list(tr_element):
@@ -60,10 +61,10 @@ def parse_member_splits(tr_element):
                 key = sfr_spit_field_name[column_name[i]]
                 member[key] = text
                 if key == 'bib':
-                    print('{} '.format(member['bib']), end='')
+                    print('{} '.format(member.bib), end='')
                     match = re.match('\d+', text)
                     if match:
-                        member['team_bib'] = int(match.group(0))
+                        member.team_bib = int(match.group(0))
             elif text is not None:
                 cp = {}
                 match = re.match('(\d+:\d+)\[(\d+)\]', text)
@@ -79,21 +80,21 @@ def parse_member_splits(tr_element):
                     current_time += cp['split']
                     cp['time'] = current_time
 
-                    member['route'].append(cp)
+                    member.route.append(cp)
         i += 1
 
-    if len(member['route']) < 1:
+    if len(member.route) < 1:
         return
 
-    member['time'] = str_to_time(member['time'])
+    member.time = str_to_time(member.time)
 
     finish = dict()
-    nCps = len(member['route'])
+    nCps = len(member.route)
     for i in range(nCps):
-        finish['split'] = member['time'] - member['route'][nCps - i - 1]['time']
+        finish['split'] = member.time - member.route[nCps - i - 1]['time']
         if finish['split'] > timedelta():
             break
-    member['route'].append(finish)
+    member.route.append(finish)
     return member
 
 def insertByResult(l, team):
@@ -120,7 +121,7 @@ def parse_SFR_splits_table(table_element, group):
         if e.tag == 'tr':
             member = parse_member_splits(e)
             if member:
-                bib = member['team_bib']
+                bib = member.team_bib
                 if teams_unsort.get(bib) is None:
                     teams_unsort[bib] = dict()
                     teams_unsort[bib]['members'] = list()
@@ -132,15 +133,15 @@ def parse_SFR_splits_table(table_element, group):
         nMembers = len(team['members'])
         member = team['members'][nMembers-1]
         team['bib'] = bib
-        team['points'] = int(member['points'])
-        team['time'] = member['time']
-        team['route'] = member['route']
+        team['points'] = int(member.points)
+        team['time'] = member.time
+        team['route'] = member.route
         team['group'] = group
         team['name'] = list()
-        team['name'].append(team['members'][0]['team_name'])
+        team['name'].append(team['members'][0].team_name)
         for m in team['members']:
-            if m['team_name'] != team['name'][0]:
-                team['name'].append(m['team_name'])
+            if m.team_name != team['name'][0]:
+                team['name'].append(m.team_name)
 
         insertByResult(teams, team)
     return teams

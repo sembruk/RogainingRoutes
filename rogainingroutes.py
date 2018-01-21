@@ -27,11 +27,11 @@ def make_result_html(teams, event_title):
     for group in teams:
         data[group] = [];
         for team in teams[group]:
-            t = [team['bib'],
-                 team['name'],
+            t = [team.bib,
+                 team.get_team_name(),
                  'members',
-                 team['points'],
-                 team['time']
+                 team.points,
+                 team.time
                 ]
             data[group].append(t)
 

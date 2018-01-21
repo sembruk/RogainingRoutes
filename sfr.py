@@ -18,6 +18,15 @@ from member import Member
 from datetime import timedelta
 from lxml import etree
 
+class Team:
+    def __init__(self):
+        self.members = []
+        self.names = []
+
+    def get_team_name(self):
+        return ' - '.join(self.names)
+
+
 sfr_spit_field_name = {
     'Номер': 'bib',
     'Фамилия': 'last_name',
@@ -102,11 +111,11 @@ def insertByResult(l, team):
         l.append(team)
         return
     for i in range(len(l)):
-        if team['points'] > l[i]['points']:
+        if team.points > l[i].points:
             l.insert(i, team)
             break
-        elif team['points'] == l[i]['points']:
-            if team['time'] < l[i]['time']:
+        elif team.points == l[i].points:
+            if team.time < l[i].time:
                 l.insert(i, team)
                 break
         if i == len(l):
@@ -123,25 +132,23 @@ def parse_SFR_splits_table(table_element, group):
             if member:
                 bib = member.team_bib
                 if teams_unsort.get(bib) is None:
-                    teams_unsort[bib] = dict()
-                    teams_unsort[bib]['members'] = list()
-                teams_unsort[bib]['members'].append(member)
+                    teams_unsort[bib] = Team()
+                teams_unsort[bib].members.append(member)
     print('')
     teams = list()
     for bib in teams_unsort:
         team = teams_unsort[bib]
-        nMembers = len(team['members'])
-        member = team['members'][nMembers-1]
-        team['bib'] = bib
-        team['points'] = int(member.points)
-        team['time'] = member.time
-        team['route'] = member.route
-        team['group'] = group
-        team['name'] = list()
-        team['name'].append(team['members'][0].team_name)
-        for m in team['members']:
-            if m.team_name != team['name'][0]:
-                team['name'].append(m.team_name)
+        nMembers = len(team.members)
+        member = team.members[nMembers-1]
+        team.bib = bib
+        team.points = int(member.points)
+        team.time = member.time
+        team.route = member.route
+        team.group = group
+        team.names.append(team.members[0].team_name)
+        for m in team.members:
+            if m.team_name != team.names[0]:
+                team.names.append(m.team_name)
 
         insertByResult(teams, team)
     return teams

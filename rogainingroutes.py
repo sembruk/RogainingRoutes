@@ -29,7 +29,7 @@ def make_result_html(teams, event_title):
         for team in teams[group]:
             t = [team.bib,
                  team.get_team_name(),
-                 'members',
+                 team.get_members_str(),
                  team.points,
                  team.time
                 ]

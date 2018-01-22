@@ -26,6 +26,9 @@ class Team:
     def get_team_name(self):
         return ' - '.join(self.names)
 
+    def get_members_str(self):
+        return ", ".join(["%s" % m for m in self.members])
+
 
 sfr_spit_field_name = {
     'Номер': 'bib',

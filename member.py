@@ -22,4 +22,9 @@ class Member:
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
+    def get_full_name(self):
+        return self.first_name + ' ' + self.last_name
+
+    def __str__(self):
+        return self.get_full_name()
 

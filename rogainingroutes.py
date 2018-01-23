@@ -28,7 +28,7 @@ def make_result_html(teams, event_title):
         data[group] = [];
         for team in teams[group]:
             t = [team.bib,
-                 team.get_team_name(),
+                 '<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_name()),
                  team.get_members_str(),
                  team.points,
                  team.time
@@ -51,3 +51,5 @@ os.mkdir(output_dir)
 shutil.copy(os.path.join(input_dir, 'map.jpg'), os.path.join(output_dir, 'map.jpg'))
 
 make_result_html(teams, event_title)
+
+

@@ -1,1 +1,42 @@
-
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+    <title>{{ title }}</title>
+    <style>
+body {font-family: monospace; font-size:10pt;}
+table {font-size:10pt; text-align:center;}
+table.team {font-size:10pt; text-align:left;}
+table.result {border:1px AA0055; background:#ddd;}
+table td{ margin:O; padding:0 2px; background:#fff;}
+h1 {font-size:16pt; font-weight:bold; text-align:left;}
+h2 {font-size:14pt; font-weight:bold; text-align:left;}
+div {max-width: 800px;}
+div.blue_rectangle {background: blue; height: 10px; width: 0px;}
+div.green_rectangle {background: green; height: 10px; width: 0px;}
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <table class="team">
+        <tr><td>Команда</td><td><b>{{ team.full_name }}</b></td></tr>
+        <tr><td>Участники</td><td><b>{{ team.get_members_str() }}</b></td></tr>
+        <tr><td>Место</td><td>{{ team.pos }}</td></tr>
+        <tr><td>Очки</td><td>{{ team.sum }}</td></tr>
+        <tr><td>Штраф</td><td>{{ team.penalty }}</td></tr>
+        <tr><td>Время</td><td>{{ team.time }}</td></tr>
+        <tr><td>Результат</td><td><b>{{ team.points }}</b></td></tr>
+    </table>
+    <table class="result">
+        <tr>
+		    <th>№</th>
+            {% for i in range(table_titles|length) %}
+                <th>{{ table_titles[i] }}</th>
+            {% endfor %}
+        </tr>
+    </table>
+    <canvas id="map"></canvas>
+    <script>
+    </script>
+</body>
+</html>

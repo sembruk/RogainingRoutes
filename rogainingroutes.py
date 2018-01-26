@@ -20,6 +20,29 @@ from jinja2 import Template
 import sfr
 import coursedata
 
+def make_team_html(team):
+    title = '{}. {}'.format(team.bib, team.get_team_name())
+    team.full_name = team.get_team_name()
+    team.pos = -1
+    team.penalty = -1
+    team.sum = -1
+    table_titles = [
+        'КП',
+        'Время',
+        'Сплит',
+        'Очки',
+        'Расстояние, км',
+        'Скорость, км/ч',
+        'Темп, мин/км',
+        'Мин/очко'
+    ]
+
+    html = open('templates/team.html').read()
+    template = Template(html)
+    with open(os.path.join(output_dir, team.get_team_html_name()), 'w') as fd:
+        fd.write(template.render(title=title, team=team, table_titles=table_titles))
+
+
 def make_result_html(teams, event_title):
     print('Make result HTML')
 
@@ -27,6 +50,7 @@ def make_result_html(teams, event_title):
     for group in teams:
         data[group] = [];
         for team in teams[group]:
+            make_team_html(team)
             t = [team.bib,
                  '<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_name()),
                  team.get_members_str(),
@@ -39,6 +63,7 @@ def make_result_html(teams, event_title):
     template = Template(html)
     with open(os.path.join(output_dir, 'results.html'), 'w') as fd:
         fd.write(template.render(title=event_title, data=data))
+
 
 input_dir = 'input'
 output_dir = 'output'

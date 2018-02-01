@@ -6,7 +6,7 @@
     <style>
 body {font-family: monospace; font-size:10pt;}
 table {font-size:10pt; text-align:center;}
-table.team {font-size:10pt; text-align:left;}
+table.team {font-size:12pt; text-align:left;}
 table.result {border:1px AA0055; background:#ddd;}
 table td{ margin:O; padding:0 2px; background:#fff;}
 h1 {font-size:16pt; font-weight:bold; text-align:left;}
@@ -17,16 +17,16 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
     </style>
 </head>
 <body>
-    <h1>{{ title }}</h1>
+    <h1>{{ team.full_name }}</h1>
+    <h2>{{ team.get_members_str() }}</h2>
     <table class="team">
-        <tr><td>Команда</td><td><b>{{ team.full_name }}</b></td></tr>
-        <tr><td>Участники</td><td><b>{{ team.get_members_str() }}</b></td></tr>
-        <tr><td>Место</td><td>{{ team.pos }}</td></tr>
+        <tr><td>Место</td><td>{{ team.place }}</td></tr>
         <tr><td>Очки</td><td>{{ team.sum }}</td></tr>
         <tr><td>Штраф</td><td>{{ team.penalty }}</td></tr>
         <tr><td>Время</td><td>{{ team.time }}</td></tr>
         <tr><td>Результат</td><td><b>{{ team.points }}</b></td></tr>
     </table>
+    <canvas id="map"></canvas>
     <table class="result">
         <tr>
 		    <th>№</th>
@@ -35,8 +35,12 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
             {% endfor %}
         </tr>
     </table>
-    <canvas id="map"></canvas>
     <script>
+       var cp_list = [
+       {% for cp in cp_list %}
+          [{{ cp[0] }},{{ cp[1] }}],
+       {% endfor %}
+       ]
        var canvas = document.getElementById("map");
        var context = canvas.getContext("2d");
        var map = new Image();

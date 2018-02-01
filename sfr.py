@@ -14,24 +14,9 @@
 """
 
 import re
-from member import Member
+from classes import Member, Team, Checkpoint
 from datetime import timedelta
 from lxml import etree
-
-class Team:
-    def __init__(self):
-        self.members = []
-        self.names = []
-
-    def get_team_name(self):
-        return ' - '.join(self.names)
-
-    def get_team_html_name(self):
-        return 'team{}.html'.format(self.bib)
-
-    def get_members_str(self):
-        return ", ".join(["%s" % m for m in self.members])
-
 
 sfr_spit_field_name = {
     'Номер': 'bib',
@@ -58,7 +43,6 @@ def extract_event_title(title):
 
 def parse_member_splits(tr_element):
     member = Member()
-    #member['route'] = list()
     current_time = timedelta()
     i = 0
     for e in list(tr_element):
@@ -81,19 +65,21 @@ def parse_member_splits(tr_element):
                     if match:
                         member.team_bib = int(match.group(0))
             elif text is not None:
-                cp = {}
+                cp = Checkpoint()
                 match = re.match('(\d+:\d+)\[(\d+)\]', text)
                 if match:
                     cp_time = str_to_time(match.group(1))
-                    cp['id'] = int(match.group(2))
-                if cp.get('id') is not None:
+                    cp.id = int(match.group(2))
+                if cp.id is not None:
+                    cp.points = cp.id//10
+                    member.sum += cp.points
                     match = re.search('\d+:\d+$', text)
                     if match:
-                        cp['split'] = str_to_time(match.group(0))
+                        cp.split = str_to_time(match.group(0))
                     else:
-                        cp['split'] = cp_time
-                    current_time += cp['split']
-                    cp['time'] = current_time
+                        cp.split = cp_time
+                    current_time += cp.split
+                    cp.time = current_time
 
                     member.route.append(cp)
         i += 1
@@ -102,15 +88,20 @@ def parse_member_splits(tr_element):
         return
 
     member.time = str_to_time(member.time)
+    member.first_name = member.first_name.capitalize()
+    member.last_name = member.last_name.capitalize()
 
-    finish = dict()
+    finish = Checkpoint()
+    finish.points = 0
     nCps = len(member.route)
     for i in range(nCps):
-        finish['split'] = member.time - member.route[nCps - i - 1]['time']
-        if finish['split'] > timedelta():
+        finish.split = member.time - member.route[nCps - i - 1].time
+        if finish.split > timedelta():
             break
     member.route.append(finish)
+
     return member
+
 
 def insertByResult(l, team):
     if len(l) < 1:
@@ -150,6 +141,7 @@ def parse_SFR_splits_table(table_element, group):
         team.points = int(member.points)
         team.time = member.time
         team.route = member.route
+        team.sum = member.sum
         team.group = group
         team.names.append(team.members[0].team_name)
         for m in team.members:
@@ -157,6 +149,10 @@ def parse_SFR_splits_table(table_element, group):
                 team.names.append(m.team_name)
 
         insertByResult(teams, team)
+
+    for i in range(len(teams)):
+        teams[i].place = i+1
+
     return teams
 
 def parse_SFR_splits_html(splits_filename):

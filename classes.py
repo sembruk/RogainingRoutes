@@ -15,9 +15,9 @@
 """
 
 class Member:
-    
     def __init__(self):
         self.route = []
+        self.sum = 0
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
@@ -27,4 +27,27 @@ class Member:
 
     def __str__(self):
         return self.get_full_name()
+
+
+class Team:
+    def __init__(self):
+        self.members = []
+        self.names = []
+
+    def get_team_name(self):
+        return ' - '.join(self.names)
+
+    def get_team_full_name(self):
+        return '{} {}'.format(self.bib, self.get_team_name())
+
+    def get_team_html_name(self):
+        return 'team{}.html'.format(self.bib)
+
+    def get_members_str(self):
+        return ", ".join(["%s" % m for m in self.members])
+
+
+class Checkpoint:
+    def __init__(self):
+        self.id = None
 

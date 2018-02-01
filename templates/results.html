@@ -6,8 +6,7 @@
     <style>
 body {font-family: monospace; font-size:10pt;}
 table {font-size:10pt; text-align:center;}
-table.team {font-size:10pt; text-align:left;}
-table.result {border:1px AA0055; background:#ddd;}
+table.result {border:1px AA0055; background:#ddd; width:95%; text-align:left;}
 table td{ margin:O; padding:0 2px; background:#fff;}
 h1 {font-size:16pt; font-weight:bold; text-align:left;}
 h2 {font-size:14pt; font-weight:bold; text-align:left;}
@@ -24,14 +23,12 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
     <h2 id = "{{group}}">{{group}}</h2>
     <table class="result">
         <tr>
-		    <th>№</th>
             {% for i in range(table_titles|length) %}
                 <th>{{ table_titles[i] }}</th>
             {% endfor %}
         </tr>
         {% for i in range(data[group]|length) %}
         <tr>
-			<td>{{ i+1 }}</td>
             {% for j in range(data[group][i]|length) %}
                 <td>{{ data[group][i][j] }}</td>
             {% endfor %}

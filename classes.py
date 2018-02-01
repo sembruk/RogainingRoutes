@@ -14,6 +14,8 @@
    along with RogainingRoutes.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from datetime import timedelta
+
 class Member:
     def __init__(self):
         self.route = []
@@ -50,4 +52,16 @@ class Team:
 class Checkpoint:
     def __init__(self):
         self.id = None
+        self.points = 0
+        self.time = timedelta()
+
+class Startpoint(Checkpoint):
+    def __init__(self):
+        Checkpoint.__init__(self)
+        self.id = 'S'
+
+class Finishpoint(Checkpoint):
+    def __init__(self):
+        Checkpoint.__init__(self)
+        self.id = 'F'
 

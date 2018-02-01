@@ -21,10 +21,14 @@ import sfr
 import coursedata
 
 
+map_dpi = 72
+map_scale_factor = 15000
+start_x = 251
+start_y = 654
 javascript_map_scale = 1
-start_x = 500
-start_y = 500
 
+
+meters_in_pixel = map_scale_factor * 0.0254 / map_dpi
 
 def make_team_html(team, cp_coords):
     title = team.full_name = team.get_team_full_name()
@@ -42,15 +46,17 @@ def make_team_html(team, cp_coords):
 
     cp_list = []
     for cp in team.route:
-        if cp.id is not None:
-            x = cp_coords[cp.id][0]
-            y = cp_coords[cp.id][1]
-            cp_list.append([x, y]) # FIXME
+        x = start_x
+        y = start_y
+        if isinstance(cp.id, int):
+            x += cp_coords[cp.id][0]//meters_in_pixel
+            y += cp_coords[cp.id][1]//meters_in_pixel
+        cp_list.append([x, y])
 
     html = open('templates/team.html').read()
     template = Template(html)
     with open(os.path.join(output_dir, team.get_team_html_name()), 'w') as fd:
-        fd.write(template.render(title=title, team=team, table_titles=table_titles, map_scale=javascript_map_scale, cp_list=cp_list, start_x=start_x, start_y=start_y))
+        fd.write(template.render(title=title, team=team, table_titles=table_titles, map_scale=javascript_map_scale, cp_list=cp_list))
 
 
 def make_result_html(teams, event_title, cp_coords):

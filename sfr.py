@@ -14,7 +14,7 @@
 """
 
 import re
-from classes import Member, Team, Checkpoint
+from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
 from datetime import timedelta
 from lxml import etree
 
@@ -91,8 +91,10 @@ def parse_member_splits(tr_element):
     member.first_name = member.first_name.capitalize()
     member.last_name = member.last_name.capitalize()
 
-    finish = Checkpoint()
-    finish.points = 0
+    start = Startpoint()
+    member.route.insert(0, start)
+
+    finish = Finishpoint()
     nCps = len(member.route)
     for i in range(nCps):
         finish.split = member.time - member.route[nCps - i - 1].time

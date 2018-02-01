@@ -20,6 +20,10 @@ from jinja2 import Template
 import sfr
 import coursedata
 
+javascript_map_scale = 1
+start_x = 500
+start_y = 500
+
 def make_team_html(team):
     title = '{}. {}'.format(team.bib, team.get_team_name())
     team.full_name = team.get_team_name()
@@ -40,7 +44,7 @@ def make_team_html(team):
     html = open('templates/team.html').read()
     template = Template(html)
     with open(os.path.join(output_dir, team.get_team_html_name()), 'w') as fd:
-        fd.write(template.render(title=title, team=team, table_titles=table_titles))
+        fd.write(template.render(title=title, team=team, table_titles=table_titles, map_scale=javascript_map_scale))
 
 
 def make_result_html(teams, event_title):

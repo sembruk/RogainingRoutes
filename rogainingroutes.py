@@ -42,12 +42,15 @@ def make_team_html(team, cp_coords):
 
     cp_list = []
     for cp in team.route:
-        cp_list.append(cp_coords[cp.id])
+        if cp.id is not None:
+            x = cp_coords[cp.id][0]
+            y = cp_coords[cp.id][1]
+            cp_list.append([x, y]) # FIXME
 
     html = open('templates/team.html').read()
     template = Template(html)
     with open(os.path.join(output_dir, team.get_team_html_name()), 'w') as fd:
-        fd.write(template.render(title=title, team=team, table_titles=table_titles, map_scale=javascript_map_scale, cp_list=cp_list))
+        fd.write(template.render(title=title, team=team, table_titles=table_titles, map_scale=javascript_map_scale, cp_list=cp_list, start_x=start_x, start_y=start_y))
 
 
 def make_result_html(teams, event_title, cp_coords):

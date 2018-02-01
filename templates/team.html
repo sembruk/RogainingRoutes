@@ -37,9 +37,7 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
     </table>
     <script>
        var cp_list = [
-       {% for cp in cp_list %}
-          [{{ cp[0] }},{{ cp[1] }}],
-       {% endfor %}
+          {% for cp in cp_list %}[{{ cp[0] }},{{ cp[1] }}],{% endfor %}
        ]
        var canvas = document.getElementById("map");
        var context = canvas.getContext("2d");
@@ -70,6 +68,7 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
              old_x = cp_list[i][0];
              old_y = cp_list[i][1];
           }
+          /*
           context.beginPath();
           context.moveTo(s[0] + arrow[0][0], s[1] + arrow[0][1]);
           for (i=1; i<arrow.length; i++) {
@@ -77,6 +76,7 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
           }
           context.stroke();
           context.fill();
+          */
        };
     </script>
 </body>

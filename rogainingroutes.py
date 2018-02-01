@@ -32,7 +32,9 @@ meters_in_pixel = map_scale_factor * 0.0254 / map_dpi
 
 def make_team_html(team, cp_coords):
     title = team.full_name = team.get_team_full_name()
-    team.penalty = team.sum -team.points
+    team.penalty = team.sum - team.points
+    if team.penalty < 0:
+        team.penalty = 0
     table_titles = [
         'КП',
         'Время',

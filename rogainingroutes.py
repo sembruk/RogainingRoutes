@@ -108,7 +108,8 @@ def make_result_html(teams, event_title, cp_coords):
         'Время'
     ]
 
-    data = dict()
+    group_list = sorted(teams)
+    data = {}
     for group in teams:
         data[group] = [];
         for team in teams[group]:
@@ -125,7 +126,7 @@ def make_result_html(teams, event_title, cp_coords):
     html = open('templates/results.html').read()
     template = Template(html)
     with open(os.path.join(output_dir, 'results.html'), 'w') as fd:
-        fd.write(template.render(title=event_title, table_titles=table_titles, data=data))
+        fd.write(template.render(title=event_title, table_titles=table_titles, group_list=group_list, data=data))
 
 
 input_dir = 'input'

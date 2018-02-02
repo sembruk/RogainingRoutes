@@ -15,6 +15,7 @@
 """
 
 import os
+import math
 import shutil
 from jinja2 import Template
 import sfr
@@ -47,25 +48,45 @@ def make_team_html(team, cp_coords):
 
     cp_list = []
     data = []
-    sum = 0
-    for cp in team.route:
+    total_points = 0
+    previos = [start_x, start_y]
+    total_distance = 0
+
+    for i in range(len(team.route)):
+        cp = team.route[i]
         x = start_x
         y = start_y
         if isinstance(cp.id, int):
-            x += cp_coords[cp.id][0]//meters_in_pixel
-            y += cp_coords[cp.id][1]//meters_in_pixel
+            x += int(cp_coords[cp.id][0]/meters_in_pixel)
+            y += int(cp_coords[cp.id][1]/meters_in_pixel)
         cp_list.append([x, y])
 
-        sum += cp.points
+        total_points += cp.points
+
+        leg_distance = math.sqrt((x - previos[0])**2 + (y - previos[1])**2)
+        leg_distance /= 1000 # km
+        total_distance += leg_distance
+
+        previos[0] = x
+        previos[1] = y
+
+        pace = 0
+        if cp.split:
+            pace = cp.split.total_seconds()/leg_distance/60
+
+        minToPoints = 0
+        if cp.points:
+            minToPoints = cp.split.total_seconds()/cp.points/60
+
         d = [
-            0,
+            i,
             cp.id,
-            cp.time,
-            cp.split,
-            '{} / {}'.format(cp.points, sum),
-            0,
-            0,
-            0
+            cp.time or '',
+            cp.split or '',
+            '{} / {}'.format(cp.points, total_points) if cp.points > 0 else '',
+            '{:.2f} / {:.2f}'.format(leg_distance, total_distance) if leg_distance > 0 else '',
+            '{:.2f}'.format(pace) if pace else '',
+            '{:.2f}'.format(minToPoints) if minToPoints else ''
         ]
         data.append(d)
 

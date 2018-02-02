@@ -31,12 +31,18 @@ sfr_spit_field_name = {
 column_name = list()
 
 def str_to_time(s):
-    match = re.match('(\d*):{,1}(\d{1,2}):(\d\d)',s)
+    match = re.match('(\d+):(\d\d):(\d\d)',s)
+
+    if not match:
+        match = re.match('()(\d+):(\d\d)',s)
+
     if match:
         h = int(match.group(1) or 0)
         m = int(match.group(2))
         s = int(match.group(3))
         return timedelta(hours=h, minutes=m, seconds=s)
+    else:
+        raise Exception(s)
 
 def extract_event_title(title):
     return re.sub('\s+Протокол.+$', '', title)
@@ -47,6 +53,8 @@ def parse_member_splits(tr_element):
     i = 0
     for e in list(tr_element):
         text = e.text or e[0].text
+        tail = e[0][0].tail if len(e)>0 and len(e[0])>0 else ''
+        tail = tail or ''
         if e.tag == 'th':
             if i == 0:
                 column_name.clear()
@@ -73,7 +81,7 @@ def parse_member_splits(tr_element):
                 if cp.id is not None:
                     cp.points = cp.id//10
                     member.sum += cp.points
-                    match = re.search('\d+:\d+$', text)
+                    match = re.search('\d+:\d+$', tail)
                     if match:
                         cp.split = str_to_time(match.group(0))
                     else:
@@ -97,8 +105,9 @@ def parse_member_splits(tr_element):
     finish = Finishpoint()
     nCps = len(member.route)
     for i in range(nCps):
-        finish.split = member.time - member.route[nCps - i - 1].time
+        finish.split = member.time - member.route[nCps - 1 - i].time
         if finish.split > timedelta():
+            finish.time = member.time
             break
     member.route.append(finish)
 

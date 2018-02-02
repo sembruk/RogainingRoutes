@@ -41,12 +41,13 @@ def make_team_html(team, cp_coords):
         'Сплит',
         'Очки',
         'Расстояние, км',
-        'Скорость, км/ч',
         'Темп, мин/км',
         'Мин/очко'
     ]
 
     cp_list = []
+    data = []
+    sum = 0
     for cp in team.route:
         x = start_x
         y = start_y
@@ -55,10 +56,23 @@ def make_team_html(team, cp_coords):
             y += cp_coords[cp.id][1]//meters_in_pixel
         cp_list.append([x, y])
 
+        sum += cp.points
+        d = [
+            0,
+            cp.id,
+            cp.time,
+            cp.split,
+            '{} / {}'.format(cp.points, sum),
+            0,
+            0,
+            0
+        ]
+        data.append(d)
+
     html = open('templates/team.html').read()
     template = Template(html)
     with open(os.path.join(output_dir, team.get_team_html_name()), 'w') as fd:
-        fd.write(template.render(title=title, team=team, table_titles=table_titles, map_scale=javascript_map_scale, cp_list=cp_list))
+        fd.write(template.render(title=title, team=team, table_titles=table_titles, map_scale=javascript_map_scale, cp_list=cp_list, data=data))
 
 
 def make_result_html(teams, event_title, cp_coords):

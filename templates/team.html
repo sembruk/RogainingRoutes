@@ -34,6 +34,13 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
                 <th>{{ table_titles[i] }}</th>
             {% endfor %}
         </tr>
+        {% for i in range(data|length) %}
+        <tr>
+            {% for j in range(data[i]|length) %}
+                <td>{{ data[i][j] }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
     </table>
     <script>
        var cp_list = [

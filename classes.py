@@ -53,6 +53,7 @@ class Checkpoint:
     def __init__(self):
         self.id = None
         self.points = 0
+        self.split = timedelta()
         self.time = timedelta()
 
 class Startpoint(Checkpoint):

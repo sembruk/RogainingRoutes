@@ -31,8 +31,9 @@ javascript_map_scale = 1
 
 meters_in_pixel = map_scale_factor * 0.0254 / map_dpi
 
-def make_team_html(team, cp_coords):
-    title = team.full_name = team.get_team_full_name()
+def make_team_html(team, event_title, cp_coords):
+    team.full_name = team.get_team_full_name()
+    title = '{} | {}'.format(team.full_name, event_title)
     team.penalty = team.sum - team.points
     if team.penalty < 0:
         team.penalty = 0
@@ -111,7 +112,7 @@ def make_result_html(teams, event_title, cp_coords):
     for group in teams:
         data[group] = [];
         for team in teams[group]:
-            make_team_html(team, cp_coords)
+            make_team_html(team, event_title, cp_coords)
             t = [
                 team.place,
                 '<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_full_name()),

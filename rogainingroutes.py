@@ -17,6 +17,7 @@
 import os
 import math
 import shutil
+import argparse
 from jinja2 import Template
 import sfr
 import coursedata
@@ -128,17 +129,31 @@ def make_result_html(teams, event_title, cp_coords):
     with open(os.path.join(output_dir, 'results.html'), 'w') as fd:
         fd.write(template.render(title=event_title, table_titles=table_titles, group_list=group_list, data=data))
 
+def make_parser():
+    parser = argparse.ArgumentParser(
+        description='Command line utility to generate routes.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-s', '--splits-file', default='splits.html',
+        help='splits HTML file')
+    parser.add_argument('-c', '--coords-file', default='coords.csv',
+        help='coords CSV file')
+    parser.add_argument('-m', '--map-file', default='map.jpg',
+        help='map file')
+    parser.add_argument('-o', '--output-dir', default='output',
+        help='output directory')
+    return parser
 
-input_dir = 'input'
-output_dir = 'output'
+if __name__ == '__main__':
+    args = make_parser().parse_known_args()
+    #process_file(args.file, args.output, args.speed_threshold)
 
-teams, event_title = sfr.parse_SFR_splits_html(os.path.join(input_dir, 'splits.htm'))
-cp_coords = coursedata.parse_course_data_file(os.path.join(input_dir, 'coords.csv'))
+    teams, event_title = sfr.parse_SFR_splits_html(args.splits_file)
+    cp_coords = coursedata.parse_course_data_file(args.coords_file)
 
-shutil.rmtree(output_dir, ignore_errors=True)
-os.mkdir(output_dir)
-shutil.copy(os.path.join(input_dir, 'map.jpg'), os.path.join(output_dir, 'map.jpg'))
+    shutil.rmtree(args.output_dir, ignore_errors=True)
+    os.mkdir(args.output_dir)
+    shutil.copy(args.map_file, os.path.join(args.output_dir, 'map.jpg'))
 
-make_result_html(teams, event_title, cp_coords)
+    make_result_html(teams, event_title, cp_coords)
 
 

@@ -34,10 +34,10 @@ class Member:
 class Team:
     def __init__(self):
         self.members = []
-        self.names = []
+        self.team_name = ''
 
     def get_team_name(self):
-        return ' - '.join(self.names)
+        return self.team_name
 
     def get_team_full_name(self):
         return '{} {}'.format(self.bib, self.get_team_name())

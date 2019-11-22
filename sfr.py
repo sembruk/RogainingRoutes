@@ -52,7 +52,7 @@ def parse_member_splits(tr_element):
     current_time = timedelta()
     i = 0
     for e in list(tr_element):
-        text = e.text or e[0].text
+        text = e.text or e[0].text or ''
         tail = e[0][0].tail if len(e)>0 and len(e[0])>0 else ''
         tail = tail or ''
         if e.tag == 'th':
@@ -154,10 +154,11 @@ def parse_SFR_splits_table(table_element, group):
         team.route = member.route
         team.sum = member.sum
         team.group = group
-        team.names.append(team.members[0].team_name)
+        team_name = team.members[0].team_name
+        team.team_name = team_name
         for m in team.members:
-            if m.team_name != team.names[0]:
-                team.names.append(m.team_name)
+            if m.team_name != team_name:
+                team.team_name += ' - ' + m.team_name
 
         insertByResult(teams, team)
 

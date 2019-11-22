@@ -44,7 +44,7 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
        var canvas = document.getElementById("map");
        var context = canvas.getContext("2d");
        var map = new Image();
-       map.src = "map.jpg";
+       map.src = "{{ map_file }}";
        map.onload = function() {
           canvas.width = this.naturalWidth;
           canvas.height = this.naturalHeight;

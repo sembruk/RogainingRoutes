@@ -40,7 +40,7 @@ def parse_course_csv(data):
         if code > 0:
             # FIXME coords in mkm at the map
             x = (x - start_mm[0])*20000/1000000
-            y = -(y - start_mm[1])*20000/1000000
+            y = (y - start_mm[1])*20000/1000000
         cps[code] = [x, y]
     return cps
     

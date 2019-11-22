@@ -137,7 +137,7 @@ def make_parser():
         help='map file')
     parser.add_argument('-d', '--map-dpi', type=int, default='72',
         help='map DPI')
-    parser.add_argument('-f', '--map-scale', type=int, default='25000',
+    parser.add_argument('-l', '--map-scale', type=int, default='25000',
         help='map scale')
     parser.add_argument('-o', '--output-dir', default='output',
         help='output directory')

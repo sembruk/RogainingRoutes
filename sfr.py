@@ -14,6 +14,7 @@
 """
 
 import re
+import operator
 from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
 from datetime import timedelta
 from lxml import etree
@@ -114,38 +115,22 @@ def parse_member_splits(tr_element):
     return member
 
 
-def insertByResult(l, team):
-    if len(l) < 1:
-        l.append(team)
-        return
-    for i in range(len(l)):
-        if team.points > l[i].points:
-            l.insert(i, team)
-            break
-        elif team.points == l[i].points:
-            if team.time < l[i].time:
-                l.insert(i, team)
-                break
-        if i == len(l):
-            l.append(team)
-            break
-
 def parse_SFR_splits_table(table_element, group):
     print('Parse splits for:', group)
-    teams_unsort = dict()
+    teams = dict()
     print('Parse splits for members: ', end='')
     for e in list(table_element):
         if e.tag == 'tr':
             member = parse_member_splits(e)
             if member:
                 bib = member.team_bib
-                if teams_unsort.get(bib) is None:
-                    teams_unsort[bib] = Team()
-                teams_unsort[bib].members.append(member)
+                if teams.get(bib) is None:
+                    teams[bib] = Team()
+                teams[bib].members.append(member)
     print('')
-    teams = list()
-    for bib in teams_unsort:
-        team = teams_unsort[bib]
+    teams_list = list()
+    for bib in teams:
+        team = teams[bib]
         nMembers = len(team.members)
         member = team.members[nMembers-1]
         team.bib = bib
@@ -160,12 +145,15 @@ def parse_SFR_splits_table(table_element, group):
             if m.team_name != team_name:
                 team.team_name += ' - ' + m.team_name
 
-        insertByResult(teams, team)
+        teams_list.append(team)
 
-    for i in range(len(teams)):
-        teams[i].place = i+1
+    teams_list.sort(reverse=False, key=operator.attrgetter('time'))
+    teams_list.sort(reverse=True, key=operator.attrgetter('points'))
 
-    return teams
+    for i in range(len(teams_list)):
+        teams_list[i].place = i+1
+
+    return teams_list
 
 def parse_SFR_splits_html(splits_filename):
     parser = etree.HTMLParser()

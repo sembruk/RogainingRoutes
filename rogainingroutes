@@ -16,10 +16,12 @@
 
 import os
 import math
+import math
 import shutil
 import argparse
 from jinja2 import Template
 import sfr
+import sportorg
 import coursedata
 
 
@@ -150,8 +152,8 @@ def make_parser():
     parser = argparse.ArgumentParser(
         description='Command line utility to generate routes.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-s', '--splits-file', default='splits.html',
-        help='splits HTML file')
+    parser.add_argument('file', nargs='?', default='splits.html',
+        help='splits SFR HTML file')
     parser.add_argument('-c', '--coords-file', default='coords.csv',
         help='coords CSV file')
     parser.add_argument('-m', '--map-file', default='map.jpg',
@@ -167,7 +169,11 @@ def make_parser():
 if __name__ == '__main__':
     args,_ = make_parser().parse_known_args()
 
-    teams, event_title = sfr.parse_SFR_splits_html(args.splits_file)
+    input_filename_extension = os.path.splitext(args.file)[1]
+    if input_filename_extension == '.json':
+        teams, event_title = sportorg.parse_sportorg_result_json(args.file)
+    else:
+        teams, event_title = sfr.parse_SFR_splits_html(args.file)
     cp_coords = coursedata.parse_course_data_file(args.coords_file)
 
     shutil.rmtree(args.output_dir, ignore_errors=True)

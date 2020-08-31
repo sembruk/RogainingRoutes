@@ -15,14 +15,66 @@
 
 import re
 import json
+import operator
 from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
 from datetime import timedelta
+
+def str_to_time(s):
+    match = re.match('(\d+):(\d\d):(\d\d)',s)
+
+    if not match:
+        match = re.match('()(\d+):(\d\d)',s)
+
+    if match:
+        h = int(match.group(1) or 0)
+        m = int(match.group(2))
+        s = int(match.group(3))
+        return timedelta(hours=h, minutes=m, seconds=s)
+    else:
+        raise Exception(s)
 
 def parse_member_splits(race_obj, person):
     member = Member()
     for r in race_obj['results']:
         if r['person_id'] == person['id']:
-            pass
+            member.bib = person['bib']
+            print('{} '.format(member.bib), end='')
+            member.team_bib = member.bib//10
+            member.team_name = ''
+            member.first_name = person['name'].capitalize()
+            member.last_name = person['surname'].capitalize()
+            member.year_of_birth = person['year']
+            member.points = r['scores']
+            member.time = str_to_time(re.search('\d+:\d\d:\d\d', r['result']).group(0))
+
+            current_time = timedelta()
+            for splt in r['splits']:
+                cp = Checkpoint()
+                cp.id = int(splt['code'])
+                if cp.id is not None:
+                    cp.points = cp.id//10
+                    cp.split = timedelta(seconds=splt['leg_time']//1000)
+                    current_time += cp.split
+                    cp.time = current_time
+                    member.sum += cp.points
+                    member.route.append(cp)
+
+            if len(member.route) < 1:
+                return
+
+            start = Startpoint()
+            member.route.insert(0, start)
+
+            finish = Finishpoint()
+            nCps = len(member.route)
+            for i in range(nCps):
+                finish.split = member.time - member.route[nCps - 1 - i].time
+                if finish.split > timedelta():
+                    finish.time = member.time
+                    break
+            member.route.append(finish)
+
+            return member
 
 def parse_sportorg_group(race_obj, group):
     print('Parse splits for:', group['name'])
@@ -30,7 +82,7 @@ def parse_sportorg_group(race_obj, group):
     print('Parse splits for members: ', end='')
     for person in race_obj['persons']:
         if person['group_id'] == group['id']:
-            member = parse_member_splits(person)
+            member = parse_member_splits(race_obj, person)
             if member:
                 bib = member.team_bib
                 if bib not in teams:

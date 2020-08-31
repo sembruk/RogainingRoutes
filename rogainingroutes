@@ -71,7 +71,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
         previos[1] = y
 
         pace = 0
-        if cp.split:
+        if cp.split and leg_distance != 0:
             pace = cp.split.total_seconds()/leg_distance/60
 
         minToPoints = 0

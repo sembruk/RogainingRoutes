@@ -29,15 +29,15 @@ div.green_rectangle {background: green; height: 10px; width: 0px;}
     <canvas id="map"></canvas>
     <table class="result">
         <tr>
-		    <th>№</th>{% for i in range(table_titles|length) %}<th>{{ table_titles[i] }}</th>{% endfor %}
+		    {% for i in range(table_titles|length) %}<th>{{ table_titles[i] }}</th>{% endfor %}
         </tr>
         {% for i in range(data|length) %}
         <tr>
-            {% for j in range(data[i]|length) %}<td>{{ data[i][j] }}</td>{% endfor %}
+            {% for j in range(1, data[i]|length) %}<td>{{ data[i][j] }}</td>{% endfor %}
         </tr>
         {% endfor %}
         <tr>
-		    {% for i in range(table_summary|length) %}<th>{{ table_summary[i] }}</th>{% endfor %}
+		    {% for i in range(1, table_summary|length) %}<th>{{ table_summary[i] }}</th>{% endfor %}
         </tr>
     </table>
     <script>

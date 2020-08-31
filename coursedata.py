@@ -30,17 +30,12 @@ def is_IOF_course_data_xml_file(data):
 def parse_course_csv(data):
     cps = dict()
     csvreader = csv.reader(StringIO(data))
-    start_mm = [0, 0]
     for row in csvreader:
-        code = int(row[0])
-        x = int(row[1])
-        y = int(row[2])
-        if code < 0:
-            start_mm = [x, y]
-        if code > 0:
-            # FIXME coords in mkm at the map
-            x = (x - start_mm[0])*20000/1000000
-            y = (y - start_mm[1])*20000/1000000
+        code = row[0]
+        if code.isdigit():
+            code = int(code)
+        x = int(float(row[1]))
+        y = int(float(row[2]))
         cps[code] = [x, y]
     return cps
     

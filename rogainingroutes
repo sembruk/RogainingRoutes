@@ -16,7 +16,6 @@
 
 import os
 import math
-import math
 import shutil
 import argparse
 from jinja2 import Template
@@ -28,6 +27,17 @@ import coursedata
 javascript_map_scale = 1
 
 
+def rotate(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+    """
+    angle = math.radians(angle)
+    ox, oy = origin
+    px, py = point
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return qx, qy
 
 def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, output_dir):
     team.full_name = team.get_team_full_name()
@@ -45,7 +55,8 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
         'Мин/очко'
     ]
 
-    start_x, start_y = cp_coords[0]
+    start_x, start_y = cp_coords['start']
+    start_offset_in_pixels = cp_coords['start_offset_in_pixels']
     cp_list = []
     data = []
     total_points = 0
@@ -54,16 +65,18 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
 
     for i in range(len(team.route)):
         cp = team.route[i]
-        x = start_x
-        y = start_y
         if isinstance(cp.id, int):
-            x += int(cp_coords[cp.id][0]/meters_in_pixel)
-            y += int(cp_coords[cp.id][1]/meters_in_pixel)
-        cp_list.append([x, y])
+            x, y = cp_coords[cp.id]
+        else:
+            x = start_x
+            y = start_y
+        x_pixels = int((x - start_x)/meters_in_pixel) + start_offset_in_pixels[0]
+        y_pixels = -int((y - start_y)/meters_in_pixel) + start_offset_in_pixels[1]
+        cp_list.append(rotate(start_offset_in_pixels, (x_pixels, y_pixels), -11.66))
 
         total_points += cp.points
 
-        leg_distance = math.sqrt((x - previos[0])**2 + (y - previos[1])**2)*meters_in_pixel
+        leg_distance = math.sqrt((x - previos[0])**2 + (y - previos[1])**2)
         leg_distance /= 1000 # km
         total_distance += leg_distance
 
@@ -145,7 +158,7 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
 
     html = open('templates/results.html').read()
     template = Template(html)
-    with open(os.path.join(output_dir, 'results.html'), 'w') as fd:
+    with open(os.path.join(output_dir, 'routes.html'), 'w') as fd:
         fd.write(template.render(title=event_title, table_titles=table_titles, group_list=group_list, data=data))
 
 def make_parser():
@@ -184,6 +197,7 @@ if __name__ == '__main__':
     shutil.copy(args.map_file, os.path.join(args.output_dir, output_map_filename))
 
     meters_in_pixel = args.map_scale*0.0254/args.map_dpi
+    print('Meters in pixel:', meters_in_pixel)
     make_result_html(teams, event_title, cp_coords, meters_in_pixel, output_map_filename, args.output_dir)
 
 

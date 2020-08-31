@@ -40,7 +40,9 @@ def parse_member_splits(race_obj, person):
             member.bib = person['bib']
             print('{} '.format(member.bib), end='')
             member.team_bib = member.bib//10
-            member.team_name = ''
+            for org in race_obj['organizations']:
+                if org['id'] == person['organization_id']:
+                    member.team_name = org['name']
             member.first_name = person['name'].capitalize()
             member.last_name = person['surname'].capitalize()
             member.year_of_birth = person['year']
@@ -119,7 +121,7 @@ def parse_sportorg_group(race_obj, group):
 def parse_sportorg_result_json(json_filename):
     with open(json_filename) as json_file:
         sportorg_race_obj = json.load(json_file)
-        event_title = sportorg_race_obj['data']['title']
+        event_title = sportorg_race_obj['data']['title'] + sportorg_race_obj['data']['location']
         teams = {}
         for group in sportorg_race_obj['groups']:
             group_name = group['name']

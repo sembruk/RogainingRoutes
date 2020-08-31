@@ -121,7 +121,7 @@ def parse_sportorg_group(race_obj, group):
 def parse_sportorg_result_json(json_filename):
     with open(json_filename) as json_file:
         sportorg_race_obj = json.load(json_file)
-        event_title = sportorg_race_obj['data']['title'] + sportorg_race_obj['data']['location']
+        event_title = sportorg_race_obj['data']['title'] + ' ' + sportorg_race_obj['data']['location']
         teams = {}
         for group in sportorg_race_obj['groups']:
             group_name = group['name']

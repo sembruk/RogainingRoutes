@@ -32,6 +32,9 @@ def parse_course_csv(data):
     csvreader = csv.reader(StringIO(data))
     for row in csvreader:
         code = row[0]
+        if code == 'rotate_angle':
+            cps[code] = float(row[1])
+            continue
         if code.isdigit():
             code = int(code)
         x = int(float(row[1]))

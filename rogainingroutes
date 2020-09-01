@@ -57,6 +57,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
 
     start_x, start_y = cp_coords['start']
     start_offset_in_pixels = cp_coords['start_offset_in_pixels']
+    rotate_angle = cp_coords.get('rotate_angle', 0)
     cp_list = []
     data = []
     total_points = 0
@@ -72,7 +73,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             y = start_y
         x_pixels = int((x - start_x)/meters_in_pixel) + start_offset_in_pixels[0]
         y_pixels = -int((y - start_y)/meters_in_pixel) + start_offset_in_pixels[1]
-        cp_list.append(rotate(start_offset_in_pixels, (x_pixels, y_pixels), -11.66))
+        cp_list.append(rotate(start_offset_in_pixels, (x_pixels, y_pixels), rotate_angle))
 
         total_points += cp.points
 

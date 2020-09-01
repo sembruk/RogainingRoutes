@@ -1,7 +1,6 @@
 *.o
 *.swp
-*.htm
-*.html
-*.jpg
 tags
-out
+output
+input
+__pycache__

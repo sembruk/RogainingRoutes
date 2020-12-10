@@ -21,6 +21,7 @@ import argparse
 from jinja2 import Template
 import sfr
 import sportorg
+import splits_csv
 import coursedata
 
 
@@ -186,6 +187,8 @@ if __name__ == '__main__':
     input_filename_extension = os.path.splitext(args.file)[1]
     if input_filename_extension == '.json':
         teams, event_title = sportorg.parse_sportorg_result_json(args.file)
+    elif input_filename_extension == '.csv':
+        teams, event_title = splits_csv.parse_splits_csv(args.file)
     else:
         teams, event_title = sfr.parse_SFR_splits_html(args.file)
     cp_coords = coursedata.parse_course_data_file(args.coords_file)

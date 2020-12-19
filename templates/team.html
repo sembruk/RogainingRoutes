@@ -25,6 +25,11 @@ table.team {font-size:12pt; text-align:left;}
 		    {% for i in range(table_titles|length) %}<th>{{ table_titles[i] }}</th>{% endfor %}
         </tr>
         </thead>
+        <tfoot>
+        <tr>
+		    {% for i in range(1, table_summary|length) %}<th>{{ table_summary[i] }}</th>{% endfor %}
+        </tr>
+        </tfoot>
         <tbody>
         {% for i in range(data|length) %}
         <tr>
@@ -32,11 +37,6 @@ table.team {font-size:12pt; text-align:left;}
         </tr>
         {% endfor %}
         </tbody>
-        <tfoot>
-        <tr>
-		    {% for i in range(1, table_summary|length) %}<th>{{ table_summary[i] }}</th>{% endfor %}
-        </tr>
-        </tfoot>
     </table>
     <script>
        var cp_list = [

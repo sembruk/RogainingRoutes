@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-   Copyright 2017 Semyon Yakimov
+   Copyright 2017-2020 Semyon Yakimov
    This file is part of RogainingRoutes.
    RogainingRoutes is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@ import os
 import math
 import shutil
 import argparse
-from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader, Template
 import sfr
 import sportorg
 import splits_csv
@@ -27,6 +27,10 @@ import coursedata
 
 javascript_map_scale = 1
 
+env = Environment(
+    loader=FileSystemLoader('templates'),
+    trim_blocks=True,
+    lstrip_blocks=True)
 
 def rotate(origin, point, angle):
     """
@@ -118,8 +122,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
         '{:.2f}'.format(team.time.total_seconds()/total_points/60) if total_points != 0 else ''
     ]
 
-    html = open('templates/team.html').read()
-    template = Template(html)
+    template = env.get_template('team.html')
     with open(os.path.join(output_dir, team.get_team_html_name()), 'w') as fd:
         fd.write(template.render(
             title=title,
@@ -139,8 +142,10 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
         'Место',
         'Команда',
         'Участники',
-        'Результат',
-        'Время'
+        'Время',
+        'Очки',
+        'Штраф',
+        'Итог'
     ]
 
     group_list = sorted(teams)
@@ -153,13 +158,14 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
                 team.place,
                 '<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_full_name()),
                 team.get_members_str(),
-                team.points,
-                team.time
+                team.time,
+                team.sum,
+                team.penalty if team.penalty > 0 else '',
+                '<b>{}</b>'.format(team.points),
             ]
             data[group].append(t)
 
-    html = open('templates/results.html').read()
-    template = Template(html)
+    template = env.get_template('results.html')
     with open(os.path.join(output_dir, 'routes.html'), 'w') as fd:
         fd.write(template.render(title=event_title, table_titles=table_titles, group_list=group_list, data=data))
 
@@ -199,6 +205,7 @@ if __name__ == '__main__':
     output_map_filename = 'map' + os.path.splitext(args.map_file)[1]
 
     shutil.copy(args.map_file, os.path.join(args.output_dir, output_map_filename))
+    shutil.copy('templates/style.css', args.output_dir)
 
     meters_in_pixel = args.map_scale*0.0254/args.map_dpi
     print('Meters in pixel:', meters_in_pixel)

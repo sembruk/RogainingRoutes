@@ -23,14 +23,44 @@ import sfr
 import sportorg
 import splits_csv
 import coursedata
+from datetime import timedelta
+from string import Template
 
 
 javascript_map_scale = 1
+
 
 env = Environment(
     loader=FileSystemLoader('templates'),
     trim_blocks=True,
     lstrip_blocks=True)
+
+class DeltaTemplate(Template):
+    delimiter = "%"
+
+def strfdelta(tdelta):
+    d = {}
+    hours, rem = divmod(tdelta.seconds, 3600)
+    mins, secs = divmod(rem, 60)
+    fmt = '%H%M:%S'
+    d['H'] = hours
+    if hours > 0:
+        d['M'] = '{:02d}'.format(mins)
+    else:
+        d['M'] = mins
+        fmt = '%M:%S'
+    d['S'] = '{:02d}'.format(secs)
+    t = DeltaTemplate(fmt)
+    return t.substitute(**d)
+
+def tohhmmss(value):
+    """value in minuts"""
+    if value is None:
+        return ''
+    td = timedelta(minutes=value)
+    return strfdelta(td)
+
+env.filters['tohhmmss'] = tohhmmss
 
 def rotate(origin, point, angle):
     """
@@ -104,8 +134,8 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             cp.split or '',
             '{} / {}'.format(cp.points, total_points) if cp.points > 0 else '',
             '{:.2f} / {:.2f}'.format(leg_distance, total_distance) if leg_distance > 0 else '',
-            '{:.2f}'.format(pace) if pace else '',
-            '{:.2f}'.format(minToPoints) if minToPoints else ''
+            tohhmmss(pace) if pace else '',
+            tohhmmss(minToPoints) if minToPoints else ''
         ]
         data.append(d)
 
@@ -119,8 +149,8 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
         '',
         total_points,
         '{:.2f}'.format(total_distance),
-        '{:.2f}'.format(avr_pace) if avr_pace else '',
-        '{:.2f}'.format(total_effectiveness) if total_effectiveness else ''
+        tohhmmss(avr_pace) if avr_pace else '',
+        tohhmmss(total_effectiveness) if total_effectiveness else ''
     ]
     team.total_distance = total_distance
     team.avr_pace = avr_pace

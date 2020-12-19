@@ -110,6 +110,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
         data.append(d)
 
     avr_pace = team.time.total_seconds()/total_distance/60 if total_distance != 0 else 0
+    total_effectiveness= team.time.total_seconds()/total_points/60 if total_points != 0 else 0 
 
     table_summary = [
         '',
@@ -119,8 +120,12 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
         total_points,
         '{:.2f}'.format(total_distance),
         '{:.2f}'.format(avr_pace) if avr_pace else '',
-        '{:.2f}'.format(team.time.total_seconds()/total_points/60) if total_points != 0 else ''
+        '{:.2f}'.format(total_effectiveness) if total_effectiveness else ''
     ]
+    team.total_distance = total_distance
+    team.avr_pace = avr_pace
+    team.total_effectiveness = total_effectiveness
+    team.planning_effectiveness = total_points/total_distance if total_distance != 0 else 0
 
     template = env.get_template('team.html')
     with open(os.path.join(output_dir, team.get_team_html_name()), 'w') as fd:
@@ -133,6 +138,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             map_scale=javascript_map_scale,
             cp_list=cp_list,
             data=data))
+    return team
 
 
 def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filename, output_dir):
@@ -148,12 +154,12 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
         'Итог'
     ]
 
-    group_list = sorted(teams)
     data = {}
     for group in teams:
         data[group] = [];
-        for team in teams[group]:
-            make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, output_dir)
+        for i in range(len(teams[group])):
+            team = teams[group][i]
+            teams[group][i] = make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, output_dir)
             t = [
                 team.place,
                 '<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_full_name()),
@@ -167,6 +173,7 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
 
     template = env.get_template('results.html')
     with open(os.path.join(output_dir, 'routes.html'), 'w') as fd:
+        group_list = sorted(teams, reverse=True)
         fd.write(template.render(title=event_title, table_titles=table_titles, group_list=group_list, data=data))
 
 def make_parser():

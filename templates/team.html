@@ -18,7 +18,11 @@ table.team {font-size:12pt; text-align:left;}
         <tr><td>Время</td><td>{{ team.time }}</td><td>Эффективность</td><td>{{ team.total_effectiveness|tohhmmss + " мин/очк" }}</td></tr>
         <tr><td>Результат</td><td><b>{{ team.points }}</b></td></tr>
     </table>
-    <canvas id="map"></canvas>
+    {#<canvas id="map"></canvas>#}
+    <svg width="{{ map_width }}px" height="{{ map_height }}px">
+        <image xlink:href="{{ map_file }}" />
+        <polyline stroke="red" stroke-opacity="0.8" stroke-width="4" stroke-linejoin="round" fill="none" points="{% for cp in cp_list %}{{ cp[0] }} {{ cp[1] }}, {% endfor %}" />
+    </svg>
     <table class="blueTable">
         <thead>
         <tr>
@@ -38,6 +42,7 @@ table.team {font-size:12pt; text-align:left;}
         {% endfor %}
         </tbody>
     </table>
+{#
     <script>
        var cp_list = [
           {% for cp in cp_list %}[{{ cp[0] }},{{ cp[1] }}],{% endfor %}
@@ -81,5 +86,6 @@ table.team {font-size:12pt; text-align:left;}
           #}
        };
     </script>
+#}
 </body>
 </html>

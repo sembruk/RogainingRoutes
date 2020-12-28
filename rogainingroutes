@@ -25,6 +25,7 @@ import splits_csv
 import coursedata
 from datetime import timedelta
 from string import Template
+from PIL import Image
 
 
 javascript_map_scale = 1
@@ -108,7 +109,8 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             y = start_y
         x_pixels = int((x - start_x)/meters_in_pixel) + start_offset_in_pixels[0]
         y_pixels = -int((y - start_y)/meters_in_pixel) + start_offset_in_pixels[1]
-        cp_list.append(rotate(start_offset_in_pixels, (x_pixels, y_pixels), rotate_angle))
+        x,y = rotate(start_offset_in_pixels, (x_pixels, y_pixels), rotate_angle)
+        cp_list.append((round(x), round(y)))
 
         total_points += cp.points
 
@@ -157,6 +159,9 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
     team.total_effectiveness = total_effectiveness
     team.planning_effectiveness = total_points/total_distance if total_distance != 0 else 0
 
+    image =  Image.open(os.path.join(output_dir, map_filename))
+    map_width, map_height = image.size
+
     template = env.get_template('team.html')
     with open(os.path.join(output_dir, team.get_team_html_name()), 'w') as fd:
         fd.write(template.render(
@@ -166,6 +171,8 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             table_summary=table_summary,
             map_file=map_filename,
             map_scale=javascript_map_scale,
+            map_width=map_width,
+            map_height=map_height,
             cp_list=cp_list,
             data=data))
     return team

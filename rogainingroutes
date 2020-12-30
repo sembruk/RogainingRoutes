@@ -81,7 +81,7 @@ def make_arrow(start, end):
     dx = end[0] - start[0]
     dy = end[1] - start[1]
     l = math.sqrt(dx**2 + dy**2)
-    arrow_l = min(l*0.8, 30)
+    arrow_l = min(l*0.7, 30)
     arrow_ang = math.atan2(dy, dx)
     arrow = [
         (l, 2),

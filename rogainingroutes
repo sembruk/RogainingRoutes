@@ -92,6 +92,19 @@ def make_arrow(start, end):
     arrow = [_round(rotate(start, (p[0] + start[0], p[1] + start[1]), arrow_ang)) for p in arrow]
     return arrow
 
+def make_start_triangle(start, end):
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+    ang = math.atan2(dy, dx)
+    l = min(math.sqrt(dx**2 + dy**2)*0.3, 15)
+    polyline = (
+        (l, 0),
+        (-l*0.5, l*math.sqrt(3)/2),
+        (-l*0.5, -l*math.sqrt(3)/2),
+        (l, 0)
+    )
+    return [_round(rotate(start, (p[0] + start[0], p[1] + start[1]), ang)) for p in polyline]
+
 def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, output_dir):
     team.full_name = team.get_team_full_name()
     title = '{} | {}'.format(team.full_name, event_title)
@@ -126,8 +139,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             y = start_y
         x_pixels = int((x - start_x)/meters_in_pixel) + start_offset_in_pixels[0]
         y_pixels = -int((y - start_y)/meters_in_pixel) + start_offset_in_pixels[1]
-        x,y = rotate(start_offset_in_pixels, (x_pixels, y_pixels), rotate_angle)
-        cp_list.append((round(x), round(y)))
+        cp_list.append(_round(rotate(start_offset_in_pixels, (x_pixels, y_pixels), rotate_angle)))
 
         total_points += cp.points
 
@@ -179,6 +191,9 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
     image =  Image.open(os.path.join(output_dir, map_filename))
     map_width, map_height = image.size
 
+    start_triangle = make_start_triangle(cp_list[0], cp_list[1])
+    cp_list[0] = start_triangle[0]
+
     template = env.get_template('team.html')
     with open(os.path.join(output_dir, team.get_team_html_name()), 'w') as fd:
         fd.write(template.render(
@@ -192,6 +207,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             map_height=map_height,
             cp_list=cp_list,
             arrow=make_arrow(cp_list[0], cp_list[1]),
+            start_triangle=start_triangle,
             data=data))
     return team
 

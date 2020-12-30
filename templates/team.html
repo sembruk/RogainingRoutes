@@ -22,6 +22,7 @@ table.team {font-size:12pt; text-align:left;}
     <svg width="{{ map_width }}px" height="{{ map_height }}px">
         <image xlink:href="{{ map_file }}" />
         <polyline stroke="red" stroke-opacity="0.8" stroke-width="4" stroke-linejoin="round" fill="none" points="{% for cp in cp_list %}{{ cp[0] }} {{ cp[1] }}, {% endfor %}" />
+        <polyline stroke="red" stroke-opacity="0.8" stroke-width="0" fill="red" points="{% for p in arrow %}{{ p[0] }} {{ p[1] }}, {% endfor %}" />
     </svg>
     <table class="blueTable">
         <thead>

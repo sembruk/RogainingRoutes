@@ -67,13 +67,30 @@ def rotate(origin, point, angle):
     """
     Rotate a point counterclockwise by a given angle around a given origin.
     """
-    angle = math.radians(angle)
     ox, oy = origin
     px, py = point
 
     qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
     qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
     return qx, qy
+
+def _round(p):
+    return round(p[0]), round(p[1])
+
+def make_arrow(start, end):
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+    l = math.sqrt(dx**2 + dy**2)
+    arrow_l = min(l*0.8, 30)
+    arrow_ang = math.atan2(dy, dx)
+    arrow = [
+        (l, 2),
+        (l - arrow_l, 7),
+        (l - arrow_l, -7),
+        (l, -2),
+    ]
+    arrow = [_round(rotate(start, (p[0] + start[0], p[1] + start[1]), arrow_ang)) for p in arrow]
+    return arrow
 
 def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, output_dir):
     team.full_name = team.get_team_full_name()
@@ -93,7 +110,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
 
     start_x, start_y = cp_coords['start']
     start_offset_in_pixels = cp_coords['start_offset_in_pixels']
-    rotate_angle = cp_coords.get('rotate_angle', 0)
+    rotate_angle = math.radians(cp_coords.get('rotate_angle', 0))
     cp_list = []
     data = []
     total_points = 0
@@ -174,6 +191,7 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             map_width=map_width,
             map_height=map_height,
             cp_list=cp_list,
+            arrow=make_arrow(cp_list[0], cp_list[1]),
             data=data))
     return team
 

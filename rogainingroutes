@@ -18,6 +18,7 @@ import os
 import math
 import shutil
 import argparse
+import numpy as np
 from jinja2 import Environment, FileSystemLoader, Template
 import sfr
 import sportorg
@@ -30,6 +31,10 @@ from PIL import Image
 
 javascript_map_scale = 1
 
+course_color_min_speed = np.array((255, 0, 0))
+course_color_avr_speed = np.array((255, 255, 0))
+course_color_max_speed = np.array((0, 255, 0))
+course_color_default = np.array((128, 128, 128))
 
 env = Environment(
     loader=FileSystemLoader('templates'),
@@ -61,14 +66,18 @@ def tohhmmss(value):
     td = timedelta(minutes=value)
     return strfdelta(td)
 
+def torgb(array):
+    return 'rgb({},{},{})'.format(array[0], array[1], array[2])
+
 env.filters['tohhmmss'] = tohhmmss
+env.filters['torgb'] = torgb
 
 def rotate(origin, point, angle):
     """
     Rotate a point counterclockwise by a given angle around a given origin.
     """
-    ox, oy = origin
-    px, py = point
+    ox, oy, *_ = origin
+    px, py, *_ = point
 
     qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
     qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
@@ -76,6 +85,14 @@ def rotate(origin, point, angle):
 
 def _round(p):
     return round(p[0]), round(p[1])
+
+def colorSpeed(pos):
+    ''' Linear interpolate from color course_color_min_speed (pos=0) to course_color_max_speed (pos=1)'''
+    pos *= 2
+    if pos <= 1:
+        return ((1 - pos)*course_color_min_speed + pos*course_color_avr_speed).astype(int)
+    pos -= 1
+    return ((1 - pos)*course_color_avr_speed + pos*course_color_max_speed).astype(int)
 
 def make_arrow(start, end):
     dx = end[0] - start[0]
@@ -129,6 +146,8 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
     total_points = 0
     previos = [start_x, start_y]
     total_distance = 0
+    fastest_pace = None
+    slowest_pace = None
 
     for i in range(len(team.route)):
         cp = team.route[i]
@@ -139,7 +158,6 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             y = start_y
         x_pixels = int((x - start_x)/meters_in_pixel) + start_offset_in_pixels[0]
         y_pixels = -int((y - start_y)/meters_in_pixel) + start_offset_in_pixels[1]
-        cp_list.append(_round(rotate(start_offset_in_pixels, (x_pixels, y_pixels), rotate_angle)))
 
         total_points += cp.points
 
@@ -153,6 +171,11 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
         pace = 0
         if cp.split and leg_distance != 0:
             pace = cp.split.total_seconds()/leg_distance/60
+            if slowest_pace is None or slowest_pace < pace:
+                slowest_pace = pace
+            if fastest_pace is None or fastest_pace > pace:
+                fastest_pace = pace
+        cp_list.append((*_round(rotate(start_offset_in_pixels, (x_pixels, y_pixels), rotate_angle)), pace))
 
         minToPoints = 0
         if cp.points:
@@ -169,6 +192,15 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             tohhmmss(minToPoints) if minToPoints else ''
         ]
         data.append(d)
+
+    cp_list1 = []
+    for i in range(len(cp_list)):
+        cp = cp_list[i]
+        pace = cp[2]
+        color = course_color_default
+        if pace > 0:
+            color = colorSpeed((slowest_pace - pace)/(slowest_pace - fastest_pace))
+        cp_list[i] = cp[0], cp[1], color
 
     avr_pace = team.time.total_seconds()/total_distance/60 if total_distance != 0 else 0
     total_effectiveness= team.time.total_seconds()/total_points/60 if total_points != 0 else 0 
@@ -205,6 +237,9 @@ def make_team_html(team, event_title, cp_coords, meters_in_pixel, map_filename, 
             map_scale=javascript_map_scale,
             map_width=map_width,
             map_height=map_height,
+            course_color_min_speed=course_color_min_speed,
+            course_color_avr_speed=course_color_avr_speed,
+            course_color_max_speed=course_color_max_speed,
             cp_list=cp_list,
             arrow=make_arrow(cp_list[0], cp_list[1]),
             start_triangle=start_triangle,

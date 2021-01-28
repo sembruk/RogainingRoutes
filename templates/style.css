@@ -1,8 +1,4 @@
-body {font-family: monospace; font-size:10pt;}
-/*
-table {font-size:10pt; text-align:center;}
-table.result {border:1px AA0055; width:95%; text-align:left;}
-table td{ margin:0; padding:0 2px; background:#fff;}*/
+body {font-family: monospace; font-size: 13pt;}
 table.blueTable {
   border: 1px solid #1C6EA4;
   background-color: #EEEEEE;
@@ -31,6 +27,9 @@ table.blueTable thead th {
   font-weight: bold;
   color: #FFFFFF;
   border-left: 2px solid #D0E4F5;
+}
+table.blueTable th {
+  font-size: 15px;
 }
 table.blueTable thead th:first-child {
   border-left: none;

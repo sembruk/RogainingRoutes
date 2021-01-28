@@ -257,7 +257,9 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
         'Время',
         'Очки',
         'Штраф',
-        'Итог'
+        'Итог',
+        'Км',
+        'Мин/очк'
     ]
 
     data = {}
@@ -274,6 +276,8 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
                 team.sum,
                 team.penalty if team.penalty > 0 else '',
                 '<b>{}</b>'.format(team.points),
+                '{:.2f}'.format(team.total_distance),
+                '{:.2f}'.format(team.total_effectiveness),
             ]
             data[group].append(t)
 

@@ -101,7 +101,7 @@ def parse_sportorg_group(race_obj, group):
         team.time = member.time
         team.route = member.route
         team.sum = member.sum
-        team.group = group
+        team.group = group['name']
         team_name = team.members[0].team_name
         team.team_name = team_name
         for m in team.members:

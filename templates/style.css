@@ -11,7 +11,7 @@ table.blueTable {
 }
 table.blueTable td, table.blueTable th {
   border: 1px solid #AAAAAA;
-  padding: 3px 2px;
+  padding: 2px 5px;
 }
 table.blueTable tbody td {
   font-size: 13px;
@@ -48,6 +48,9 @@ table.blueTable tfoot {
 table.blueTable tfoot td {
   font-size: 14px;
 }
+table.team {font-size:12pt; text-align:left;}
+table.team tr td {padding: 0px 10px;}
+table.team tr td:nth-child(3) {padding: 0 0 0 50px;}
 h1 {font-size:16pt; font-weight:bold; text-align:left;}
 h2 {font-size:14pt; font-weight:bold; text-align:left;}
 div {max-width: 800px;}

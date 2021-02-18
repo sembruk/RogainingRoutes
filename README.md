@@ -1,5 +1,7 @@
 # RogainingRoutes
 
+![](/example/screenshot.jpg?raw=true)
+
 Display rogainers routes on the competition map.
 
 [Example](https://forestadventure.ru/files/2020/fa/routes.html)

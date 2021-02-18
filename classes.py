@@ -35,6 +35,7 @@ class Team:
     def __init__(self):
         self.members = []
         self.team_name = ''
+        self.bib = None
 
     def get_team_name(self):
         return self.team_name
@@ -53,13 +54,13 @@ class Checkpoint:
     def __init__(self):
         self.id = None
         self.points = 0
+        self.split = None
+        self.time = None
 
 class Startpoint(Checkpoint):
     def __init__(self):
         Checkpoint.__init__(self)
         self.id = 'S'
-        self.split = None
-        self.time = None
 
 class Finishpoint(Checkpoint):
     def __init__(self):

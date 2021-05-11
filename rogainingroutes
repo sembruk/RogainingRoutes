@@ -21,6 +21,7 @@ import argparse
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, Template
 import sfr
+import winorient
 import sportorg
 import splits_csv
 import coursedata
@@ -46,21 +47,22 @@ class DeltaTemplate(Template):
 
 def strfdelta(tdelta):
     d = {}
-    hours, rem = divmod(tdelta.seconds, 3600)
+    hours, rem = divmod(tdelta.total_seconds(), 3600)
     mins, secs = divmod(rem, 60)
-    fmt = '%H%M:%S'
-    d['H'] = hours
+    fmt = '%H:%M:%S'
+    d['H'] = int(hours)
     if hours > 0:
-        d['M'] = '{:02d}'.format(mins)
+        d['M'] = '{:02d}'.format(int(mins))
     else:
-        d['M'] = mins
+        d['M'] = int(mins)
         fmt = '%M:%S'
-    d['S'] = '{:02d}'.format(secs)
+    d['S'] = '{:02d}'.format(int(secs))
     t = DeltaTemplate(fmt)
     return t.substitute(**d)
 
+
 def tohhmmss(value):
-    """value in minuts"""
+    """value in minutes"""
     if value is None:
         return ''
     td = timedelta(minutes=value)
@@ -236,6 +238,7 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
     team.avr_pace = avr_pace
     team.total_effectiveness = total_effectiveness
     team.planning_effectiveness = total_points/total_distance if total_distance != 0 else 0
+    team.time_str = tohhmmss(team.time.total_seconds()/60)
 
     image =  Image.open(os.path.join(output_dir, map_filename))
     map_width, map_height = image.size
@@ -313,7 +316,7 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
                 team.place,
                 '<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_full_name()),
                 team.get_members_str(),
-                team.time,
+                tohhmmss(team.time.total_seconds()/60),
                 team.sum,
                 team.penalty if team.penalty > 0 else '',
                 '<b>{}</b>'.format(team.points),
@@ -353,6 +356,8 @@ if __name__ == '__main__':
         teams, event_title = sportorg.parse_sportorg_result_json(args.file)
     elif input_filename_extension == '.csv':
         teams, event_title = splits_csv.parse_splits_csv(args.file)
+    elif input_filename_extension == '.htm':
+        teams, event_title = winorient.parse_winorient_splits_html(args.file)
     else:
         teams, event_title = sfr.parse_SFR_splits_html(args.file)
     cp_coords = coursedata.parse_course_data_file(args.coords_file)

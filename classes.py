@@ -14,7 +14,22 @@
    along with RogainingRoutes.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import re
 from datetime import timedelta
+
+def str_to_time(s):
+    match = re.match('(\d+):(\d\d):(\d\d)',s)
+
+    if not match:
+        match = re.match('()(\d+):(\d\d)',s)
+
+    if match:
+        h = int(match.group(1) or 0)
+        m = int(match.group(2))
+        s = int(match.group(3))
+        return timedelta(hours=h, minutes=m, seconds=s)
+    else:
+        raise Exception(s)
 
 class Member:
     def __init__(self):

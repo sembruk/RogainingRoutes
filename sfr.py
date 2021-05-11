@@ -15,7 +15,7 @@
 
 import re
 import operator
-from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
+from classes import Member, Team, Checkpoint, Startpoint, Finishpoint, str_to_time
 from datetime import timedelta
 from lxml import etree
 
@@ -30,20 +30,6 @@ sfr_spit_field_name = {
 }
 
 column_name = list()
-
-def str_to_time(s):
-    match = re.match('(\d+):(\d\d):(\d\d)',s)
-
-    if not match:
-        match = re.match('()(\d+):(\d\d)',s)
-
-    if match:
-        h = int(match.group(1) or 0)
-        m = int(match.group(2))
-        s = int(match.group(3))
-        return timedelta(hours=h, minutes=m, seconds=s)
-    else:
-        raise Exception(s)
 
 def extract_event_title(title):
     return re.sub('\s+Протокол.+$', '', title)

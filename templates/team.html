@@ -45,7 +45,10 @@
         <polyline stroke="black" stroke-opacity="0.8" stroke-width="1" fill-opacity="0.8" fill="{{ cp_list[1][2]|torgb }}" points="{% for p in arrow %}{{ p[0] }} {{ p[1] }}, {% endfor %}" />
         <polyline class="shadow" stroke="magenta" stroke-opacity="0.8" stroke-width="3" fill="none" points="{% for p in start_triangle %}{{ p[0] }} {{ p[1] }}, {% endfor %}" />
         {% set finish_point = cp_list[cp_list|length - 1] %}
-        {#<circle stroke="red" stroke-opacity="0.8" stroke-width="0" fill="red" cx="{{ finish_point[0] }}" cy="{{ finish_point[1] }}" r="5" />#}
+        {% if draw_finish_circle %}
+        <circle stroke="magenta" stroke-opacity="0.8" stroke-width="3" fill="none" cx="{{ finish_point[0] }}" cy="{{ finish_point[1] }}" r="7" />
+        <circle stroke="magenta" stroke-opacity="0.8" stroke-width="3" fill="none" cx="{{ finish_point[0] }}" cy="{{ finish_point[1] }}" r="12" />
+        {% endif %}
     </svg>
     <table class="blueTable">
         <thead>

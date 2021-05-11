@@ -28,6 +28,7 @@ import coursedata
 from datetime import timedelta
 from string import Template
 from PIL import Image
+from classes import Finishpoint
 
 
 javascript_map_scale = 1
@@ -142,6 +143,13 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
     ]
 
     start_x, start_y = cp_coords['start']
+    if 'finish' in cp_coords:
+        finish_x, finish_y = cp_coords['finish']
+    else:
+        finish_x, finish_y = start_x, start_y
+    draw_finish_circle = False
+    if finish_x != start_x or finish_y != start_y:
+        draw_finish_circle = True
     start_offset_in_pixels = cp_coords['start_offset_in_pixels']
     rotate_angle = math.radians(cp_coords.get('rotate_angle', 0))
     cp_list = []
@@ -155,7 +163,10 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
     prevCp = None
     for i in range(len(team.route)):
         cp = team.route[i]
-        if isinstance(cp.id, int):
+        if isinstance(cp, Finishpoint):
+            x = finish_x
+            y = finish_y
+        elif isinstance(cp.id, int):
             x, y = cp_coords[cp.id]
         else:
             x = start_x
@@ -263,6 +274,7 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
             cp_list=cp_list,
             arrow=make_arrow(cp_list[0], cp_list[1]),
             start_triangle=start_triangle,
+            draw_finish_circle=draw_finish_circle,
             data=data))
     return team
 

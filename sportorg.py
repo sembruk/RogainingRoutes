@@ -39,15 +39,15 @@ def parse_member_splits(race_obj, person):
         if r['person_id'] == person['id']:
             member.bib = person['bib']
             print('{} '.format(member.bib), end='')
-            member.team_bib = member.bib//10
-            for org in race_obj['organizations']:
-                if org['id'] == person['organization_id']:
+            for org in race_obj['teams']:
+                if org['id'] == person['team_id']:
                     member.team_name = org['name']
+                    member.team_bib = org['number']
             member.first_name = person['name'].capitalize()
             member.last_name = person['surname'].capitalize()
             member.year_of_birth = person['year']
             member.points = r['scores']
-            member.time = str_to_time(re.search('\d+:\d\d:\d\d', r['result']).group(0))
+            member.time = timedelta(seconds=r['result_team_msec']/1000)
 
             current_time = timedelta()
             for splt in r['splits']:
@@ -120,7 +120,7 @@ def parse_sportorg_group(race_obj, group):
 
 def parse_sportorg_result_json(json_filename):
     with open(json_filename) as json_file:
-        sportorg_race_obj = json.load(json_file)
+        sportorg_race_obj = json.load(json_file)['races'][0]
         event_title = sportorg_race_obj['data']['title'] + ' ' + sportorg_race_obj['data']['location']
         teams = {}
         for group in sportorg_race_obj['groups']:

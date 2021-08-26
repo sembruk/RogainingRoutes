@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./rogainingroutes -c ~/mega/yolkino2021/coords.csv -m ~/mega/yolkino2021/map75dpi.png -d 75 -l 20000 ~/mega/yolkino2021/20210708.json -o ~/forestadventure.github.io/files/2021/yo/
+./rogainingroutes -c ~/mega/forest/fa2021/cp.csv -m ~/mega/maps/подосинки2021/map50dpi.png -d 50 -l 20000 ~/mega/forest/yolkino2021/20210708.json -o ~/coding/forestadventure.github.io/files/2021/fa/

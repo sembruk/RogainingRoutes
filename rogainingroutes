@@ -374,8 +374,8 @@ if __name__ == '__main__':
         teams, event_title = sfr.parse_SFR_splits_html(args.file)
     cp_coords = coursedata.parse_course_data_file(args.coords_file)
 
-    shutil.rmtree(args.output_dir, ignore_errors=True)
-    os.mkdir(args.output_dir)
+    #shutil.rmtree(args.output_dir, ignore_errors=True)
+    #os.mkdir(args.output_dir)
 
     output_map_filename = 'map' + os.path.splitext(args.map_file)[1]
 

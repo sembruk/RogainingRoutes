@@ -21,6 +21,7 @@ from datetime import timedelta
 from lxml import html
 
 def _debug(*args):
+    #print(*args)
     pass
 
 def parse_member_splits(line):
@@ -53,6 +54,8 @@ def parse_member_splits(line):
                     wait = 'year'
                     continue
                 except ValueError:
+                    if w in ('Iю','IIю','IIIю','I','II','III','КМС','МС','МСМК','ЗМС','б/р'):
+                        continue
                     if member.team_name:
                         member.team_name += ' ' 
                     member.team_name += w
@@ -71,11 +74,12 @@ def parse_member_splits(line):
                 wait = 'place'
             elif wait == 'place':
                 if w != '=':
-                    wait = 'group'
-            elif wait == 'group':
-                _debug('group', w)
-                member.group = w
-                wait = 'cp'
+                    wait = 'cp'
+            #        wait = 'group'
+            #elif wait == 'group':
+            #    _debug('group', w)
+            #    member.group = w
+            #    wait = 'cp'
             elif wait == 'cp':
                 try:
                     code = int(w[:-1])
@@ -114,17 +118,20 @@ def parse_winorient_splits_html(splits_filename):
     event_title = body.find('h1').text
     _debug(event_title)
     teams = dict()
-    pre = body.find('pre')
-    lines = pre.text_content()
-    for l in lines.splitlines()[2:]:
-        member = parse_member_splits(l)
-        if member:
-            bib = member.bib%1000
-            if teams.get(bib) is None:
-                teams[bib] = Team()
-            teams[bib].members.append(member)
+    for h2 in body.iterfind('h2'):
+        group_name = h2.text.split(',')[0]
+        pre = h2.getnext()
+        lines = pre.text_content()
+        for l in lines.splitlines()[2:]:
+            member = parse_member_splits(l)
+            if member:
+                member.group = group_name
+                bib = member.bib%1000
+                if teams.get(bib) is None:
+                    teams[bib] = Team()
+                teams[bib].members.append(member)
 
-    teams_list = list()
+    teams_by_group = {}
     for bib in teams:
         team = teams[bib]
         nMembers = len(team.members)
@@ -145,9 +152,7 @@ def parse_winorient_splits_html(splits_filename):
             if m.team_name != team_name:
                 team.team_name += ' - ' + m.team_name
         team.route = member.route
-        #team.group = member.group
-        # FIXME
-        team.group = 'Абс'
+        team.group = member.group
 
         # FIXME
         max_time = timedelta(hours=24)
@@ -155,13 +160,17 @@ def parse_winorient_splits_html(splits_filename):
             penalty = math.ceil((team.time - max_time).total_seconds()/60)
             team.points = team.sum - penalty
 
-        teams_list.append(team)
+        if teams_by_group.get(team.group) is None:
+            teams_by_group[team.group] = []
+ 
+        teams_by_group[team.group].append(team)
 
-    teams_list.sort(reverse=False, key=operator.attrgetter('time'))
-    teams_list.sort(reverse=True, key=operator.attrgetter('points'))
+    for _, teams_list in teams_by_group.items():
+        teams_list.sort(reverse=False, key=operator.attrgetter('time'))
+        teams_list.sort(reverse=True, key=operator.attrgetter('points'))
 
-    for i in range(len(teams_list)):
-        teams_list[i].place = i+1
+        for i in range(len(teams_list)):
+            teams_list[i].place = i+1
 
-    return {'Абсолют': teams_list}, event_title
+    return teams_by_group, event_title
 

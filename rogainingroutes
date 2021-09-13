@@ -375,7 +375,8 @@ if __name__ == '__main__':
     cp_coords = coursedata.parse_course_data_file(args.coords_file)
 
     #shutil.rmtree(args.output_dir, ignore_errors=True)
-    #os.mkdir(args.output_dir)
+    if not os.path.isdir(args.output_dir):
+        os.mkdir(args.output_dir)
 
     output_map_filename = 'map' + os.path.splitext(args.map_file)[1]
 

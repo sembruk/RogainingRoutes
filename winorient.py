@@ -21,66 +21,48 @@ from datetime import timedelta
 from lxml import html
 
 def _debug(*args):
-    #print(*args)
-    pass
+    print(*args)
+    #pass
+
+table_header_dict = {
+    '№п/п': 'number',
+    'Фамилия,': 'surname',
+    'имя': 'name',
+    'Коллектив': 'team',
+    'Номер': 'bib',
+    'ГР': 'year',
+    'Очки': 'sum',
+    'Штраф': 'penalty',
+    'Итого': 'score',
+    'Результат': 'time',
+    'Отставание': 'diff',
+    'Группа': 'group',
+}
+
+table_columns = []
+
+def parse_table_header(line):
+    table_columns.clear()
+    for w in re.split('\s+', line):
+        if w in table_header_dict:
+            table_columns.append(table_header_dict[w])
+    _debug(table_columns)
 
 def parse_member_splits(line):
-    wait = 'number'
     member = Member()
     member.team_name = ''
+    member.points = None
     member.group = None
     cp_time = None
     current_time = timedelta()
+    if not line:
+        return
     _debug('===')
+    i = -1
     for w in re.split('\s+', line):
         if w:
-            if wait == 'number' and int(w):
-                _debug('number', w)
-                wait = 'surname'
-            elif wait == 'surname':
-                _debug('surname', w)
-                member.last_name = w
-                wait = 'name'
-            elif wait == 'name':
-                _debug('name', w)
-                member.first_name = w
-                wait = 'team'
-            elif wait == 'team':
-                try:
-                    bib = int(w)
-                    member.bib = bib
-                    _debug('team_name', member.team_name)
-                    _debug('bib', bib)
-                    wait = 'year'
-                    continue
-                except ValueError:
-                    if w in ('Iю','IIю','IIIю','I','II','III','КМС','МС','МСМК','ЗМС','б/р'):
-                        continue
-                    if member.team_name:
-                        member.team_name += ' ' 
-                    member.team_name += w
-            elif wait == 'year':
-                member.year_of_birth = int(w)
-                _debug('year', w)
-                wait = 'time'
-            elif wait == 'time':
-                try:
-                    member.time = str_to_time(w)
-                except Exception:
-                    return 
-                else:
-                    wait = 'diff'
-            elif wait == 'diff':
-                wait = 'place'
-            elif wait == 'place':
-                if w != '=':
-                    wait = 'cp'
-            #        wait = 'group'
-            #elif wait == 'group':
-            #    _debug('group', w)
-            #    member.group = w
-            #    wait = 'cp'
-            elif wait == 'cp':
+            i += 1
+            if i >= len(table_columns):
                 try:
                     code = int(w[:-1])
                     cp = Checkpoint()
@@ -91,10 +73,50 @@ def parse_member_splits(line):
                     current_time += cp.split
                     cp.time = current_time
                     member.route.append(cp)
+                    _debug('cp', cp.id, cp.time)
                 except ValueError:
                     cp_time = str_to_time(w[:-1])
-                _debug(w[:-1])
-                
+            elif table_columns[i] == 'number':
+                _debug('number', w)
+            elif table_columns[i] == 'surname':
+                _debug('surname', w)
+                member.last_name = w
+            elif table_columns[i] == 'name':
+                _debug('name', w)
+                member.first_name = w
+            elif table_columns[i] == 'team':
+                member.team_name += w
+            elif table_columns[i] == 'bib':
+                try:
+                    bib = int(w)
+                    member.bib = bib
+                    _debug('team_name', member.team_name)
+                    _debug('bib', bib)
+                except ValueError:
+                    i -= 1
+                    if w in ('Iю','IIю','IIIю','I','II','III','КМС','МС','МСМК','ЗМС','б/р'):
+                        continue
+                    member.team_name += ' ' + w
+            elif table_columns[i] == 'sum':
+                _debug('sum', w)
+            elif table_columns[i] == 'penalty':
+                _debug('penalty', w)
+            elif table_columns[i] == 'score':
+                _debug('score', w)
+                member.points = int(w)
+            elif table_columns[i] == 'year':
+                member.year_of_birth = int(w)
+                _debug('year', w)
+            elif table_columns[i] == 'time':
+                try:
+                   member.time = str_to_time(w)
+                   _debug('time', w)
+                except Exception:
+                    return 
+            elif table_columns[i] == 'group':
+                _debug('group', w)
+                member.group = w
+
     start = Startpoint()
     member.route.insert(0, start)
 
@@ -106,8 +128,8 @@ def parse_member_splits(line):
             finish.time = member.time
             break
     member.route.append(finish)
-    # FIXME
-    member.points = member.sum
+    if member.points is None:
+        member.points = member.sum 
 
     return member
 
@@ -122,7 +144,8 @@ def parse_winorient_splits_html(splits_filename):
         group_name = h2.text.split(',')[0]
         pre = h2.getnext()
         lines = pre.text_content()
-        for l in lines.splitlines()[2:]:
+        parse_table_header(lines.splitlines()[0])
+        for l in lines.splitlines()[1:]:
             member = parse_member_splits(l)
             if member:
                 member.group = group_name
@@ -155,10 +178,10 @@ def parse_winorient_splits_html(splits_filename):
         team.group = member.group
 
         # FIXME
-        max_time = timedelta(hours=24)
-        if team.points == team.sum and team.time > max_time:
-            penalty = math.ceil((team.time - max_time).total_seconds()/60)
-            team.points = team.sum - penalty
+        #max_time = timedelta(hours=3)
+        #if team.points == team.sum and team.time > max_time:
+        #    penalty = math.ceil((team.time - max_time).total_seconds()/60)
+        #    team.points = team.sum - penalty
 
         if teams_by_group.get(team.group) is None:
             teams_by_group[team.group] = []

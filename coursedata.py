@@ -1,5 +1,5 @@
 """
-   Copyright 2017 Semyon Yakimov
+   Copyright 2017-2022 Semyon Yakimov
    This file is part of RogainingRoutes.
    RogainingRoutes is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

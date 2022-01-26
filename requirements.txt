@@ -1,0 +1,6 @@
+numpy
+jinja2
+pillow
+lxml
+gpxpy
+utm

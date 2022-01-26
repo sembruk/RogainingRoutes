@@ -15,6 +15,8 @@
 
 from io import StringIO
 import csv
+import gpxpy
+import utm
 import xml.etree.ElementTree as ET
 
 def is_IOF_course_data_xml_file(data):
@@ -39,11 +41,28 @@ def parse_course_csv(data):
             code = int(code)
         x = int(float(row[1]))
         y = int(float(row[2]))
-        cps[code] = [x, y]
+        cps[code] = (x, y)
     return cps
-    
+
+def parse_course_gpx_file(filename):
+    with open(filename) as gpx_file:
+        cps = dict()
+        gpx = gpxpy.parse(gpx_file)
+        for wpt in gpx.waypoints:
+            code = wpt.name
+            if code.isdigit():
+                code = int(code)
+            else:
+                code = code.lower()
+            utm_coords = utm.from_latlon(wpt.latitude, wpt.longitude)
+            x = int(utm_coords[0])
+            y = int(utm_coords[1])
+            cps[code] = (x, y)
+        return cps
 
 def parse_course_data_file(filename):
+    if filename.lower().endswith('.gpx'):
+        return parse_course_gpx_file(filename)
     with open(filename, newline='') as fd:
         data = fd.read()
     if is_IOF_course_data_xml_file(data):

@@ -349,13 +349,19 @@ def make_parser():
     parser.add_argument('file', nargs='?', default='splits.html',
         help='splits SFR HTML file')
     parser.add_argument('-c', '--coords-file', default='coords.csv',
-        help='coords CSV file')
+        help='coords GPX or CSV file')
     parser.add_argument('-m', '--map-file', default='map.jpg',
         help='map file')
+    parser.add_argument('-x', '--start-x', type=int, required=True,
+        help='start X offset in pixels of the map')
+    parser.add_argument('-y', '--start-y', type=int, required=True,
+        help='start Y offset in pixels of the map')
     parser.add_argument('-d', '--map-dpi', type=int, default='72',
         help='map DPI')
     parser.add_argument('-l', '--map-scale', type=int, default='25000',
         help='map scale')
+    parser.add_argument('-a', '--angle', type=float, default='0.0',
+        help='map rotate angle')
     parser.add_argument('-o', '--output-dir', default='output',
         help='output directory')
     return parser
@@ -373,6 +379,8 @@ if __name__ == '__main__':
     else:
         teams, event_title = sfr.parse_SFR_splits_html(args.file)
     cp_coords = coursedata.parse_course_data_file(args.coords_file)
+    cp_coords['start_offset_in_pixels'] = (args.start_x, args.start_y)
+    cp_coords['rotate_angle'] = args.angle
 
     #shutil.rmtree(args.output_dir, ignore_errors=True)
     if not os.path.isdir(args.output_dir):

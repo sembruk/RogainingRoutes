@@ -327,7 +327,7 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
             t = [
                 team.place,
                 '<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_full_name()),
-                team.get_members_str(),
+                team.get_members_str(' \n'),
                 tohhmmss(team.time.total_seconds()/60),
                 team.sum,
                 team.penalty if team.penalty > 0 else '',

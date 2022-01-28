@@ -61,8 +61,8 @@ class Team:
     def get_team_html_name(self):
         return 'team{}.html'.format(self.bib)
 
-    def get_members_str(self):
-        return ", ".join(["%s" % m for m in self.members])
+    def get_members_str(self, delimeter=', '):
+        return delimeter.join(["%s" % m for m in self.members])
 
 
 class Checkpoint:

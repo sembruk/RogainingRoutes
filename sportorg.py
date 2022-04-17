@@ -33,7 +33,7 @@ def str_to_time(s):
     else:
         raise Exception(s)
 
-def parse_member_splits(race_obj, person):
+def parse_member_splits(race_obj, person, fixed_cp_points):
     member = Member()
     for r in race_obj['results']:
         if r['person_id'] == person['id']:
@@ -49,15 +49,16 @@ def parse_member_splits(race_obj, person):
             member.points = r['scores']
             member.time = timedelta(seconds=r['result_team_msec']/1000)
 
-            current_time = timedelta()
             for splt in r['splits']:
                 cp = Checkpoint()
                 cp.id = int(splt['code'])
                 if cp.id is not None:
-                    cp.points = cp.id//10
+                    if fixed_cp_points > 0:
+                        cp.points = fixed_cp_points
+                    else:
+                        cp.points = cp.id//10
                     cp.split = timedelta(seconds=splt['leg_time']//1000)
-                    current_time += cp.split
-                    cp.time = current_time
+                    cp.time = timedelta(seconds=splt['relative_time']//1000)
                     member.sum += cp.points
                     member.route.append(cp)
 
@@ -78,13 +79,13 @@ def parse_member_splits(race_obj, person):
 
             return member
 
-def parse_sportorg_group(race_obj, group):
+def parse_sportorg_group(race_obj, group, fixed_cp_points):
     print('Parse splits for:', group['name'])
     teams = {}
     print('Parse splits for members: ', end='')
     for person in race_obj['persons']:
         if person['group_id'] == group['id']:
-            member = parse_member_splits(race_obj, person)
+            member = parse_member_splits(race_obj, person, fixed_cp_points)
             if member:
                 bib = member.team_bib
                 if bib not in teams:
@@ -122,6 +123,10 @@ def parse_sportorg_result_json(json_filename):
     with open(json_filename) as json_file:
         sportorg_race_obj = json.load(json_file)['races'][0]
         event_title = sportorg_race_obj['data']['title'] + ' ' + sportorg_race_obj['data']['location']
+        fixed_cp_points = -1
+        if sportorg_race_obj['settings']['result_processing_mode'] == 'scores' and \
+                sportorg_race_obj['settings']['result_processing_score_mode'] == 'fixed':
+            fixed_cp_points = sportorg_race_obj['settings']['result_processing_fixed_score_value']
         teams = {}
         for group in sportorg_race_obj['groups']:
             group_name = group['name']
@@ -130,6 +135,6 @@ def parse_sportorg_result_json(json_filename):
             if match:
                 duration = match.group(0)
             print(group_name, duration)
-            teams[group_name] = parse_sportorg_group(sportorg_race_obj, group)
+            teams[group_name] = parse_sportorg_group(sportorg_race_obj, group, fixed_cp_points)
  
         return teams, event_title

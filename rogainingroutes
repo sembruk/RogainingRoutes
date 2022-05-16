@@ -184,6 +184,11 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
         previos[1] = y
 
         pace = 0
+        #if cp.id == 38:
+        #    cp.time = None
+        #    cp.split = timedelta()
+        #if prevCp == 38:
+        #    cp.split = timedelta()
         if cp.split and leg_distance != 0:
             pace = cp.split.total_seconds()/leg_distance/60
             if slowest_pace is None or slowest_pace < pace:
@@ -227,7 +232,7 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
         cp = cp_list[i]
         pace = cp[2]
         color = course_color_default
-        if pace > 0:
+        if pace > 0 and slowest_pace != fastest_pace:
             color = colorSpeed((slowest_pace - pace)/(slowest_pace - fastest_pace))
         cp_list[i] = cp[0], cp[1], color
 

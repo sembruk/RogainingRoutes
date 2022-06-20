@@ -57,7 +57,10 @@ def strfdelta(tdelta):
     else:
         d['M'] = int(mins)
         fmt = '%M:%S'
-    d['S'] = '{:02d}'.format(int(secs))
+    if secs - int(secs) > 0:
+        d['S'] = '{:06.3f}'.format(secs)
+    else:
+        d['S'] = '{:02d}'.format(int(secs))
     t = DeltaTemplate(fmt)
     return t.substitute(**d)
 
@@ -66,7 +69,9 @@ def tohhmmss(value):
     """value in minutes"""
     if value is None:
         return ''
-    td = timedelta(minutes=value)
+    td = value
+    if not isinstance(value, timedelta):
+        td = timedelta(minutes=value)
     return strfdelta(td)
 
 def torgb(array):
@@ -183,12 +188,13 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
         previos[0] = x
         previos[1] = y
 
-        pace = 0
-        #if cp.id == 38:
+        #if cp.id == 43:
         #    cp.time = None
         #    cp.split = timedelta()
-        #if prevCp == 38:
+        #if prevCp == 43:
         #    cp.split = timedelta()
+
+        pace = 0
         if cp.split and leg_distance != 0:
             pace = cp.split.total_seconds()/leg_distance/60
             if slowest_pace is None or slowest_pace < pace:
@@ -217,8 +223,8 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
         d = [
             i,
             cp.id,
-            cp.time or '',
-            cp.split or '',
+            tohhmmss(cp.time),
+            tohhmmss(cp.split),
             '{} / {}'.format(cp.points, total_points) if cp.points > 0 else '',
             '{:.2f} / {:.2f}'.format(leg_distance, total_distance) if leg_distance > 0 else '',
             tohhmmss(pace) if pace else '',

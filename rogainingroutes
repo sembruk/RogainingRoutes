@@ -136,7 +136,12 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
     #team.penalty = team.sum - team.points
     #if team.penalty < 0:
     #    team.penalty = 0
-    team.penalty = tohhmmss(team.penalty_time.total_seconds()/60) if team.penalty_time.total_seconds() > 0 else '',
+    team.penalty = ''
+    if team.penalty_time.total_seconds() > 0:
+        team.penalty = tohhmmss(team.penalty_time.total_seconds()/60)
+    team.credit = ''
+    if team.credit_time.total_seconds() > 0:
+        team.credit = tohhmmss(team.credit_time.total_seconds()/60)
     table_titles = [
         'КП',
         'Время',
@@ -324,7 +329,7 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
         #'Очки',
         'Штраф',
         'Бонус',
-        #'Итог',
+        'Итог',
         'Км',
         #'Мин/очк'
     ]
@@ -345,6 +350,7 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
                 #team.sum,
                 tohhmmss(team.penalty_time.total_seconds()/60) if team.penalty_time.total_seconds() > 0 else '',
                 tohhmmss(team.credit_time.total_seconds()/60) if team.credit_time.total_seconds() > 0 else '',
+                tohhmmss(team.res_time.total_seconds()/60) if team.res_time.total_seconds() > 0 else '',
                 #'<b>{}</b>'.format(team.points),
                 '{:.2f}'.format(team.total_distance),
                 #'{:.2f}'.format(team.total_effectiveness),

@@ -107,6 +107,7 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
         team.bib = bib
         team.points = int(member.points)
         team.time = member.time
+        team.res_time = member.time + member.penalty_time - member.credit_time
         team.penalty_time = member.penalty_time
         team.credit_time = member.credit_time
         team.route = member.route
@@ -120,7 +121,7 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
 
         teams_list.append(team)
 
-    teams_list.sort(reverse=False, key=operator.attrgetter('time'))
+    teams_list.sort(reverse=False, key=operator.attrgetter('res_time'))
     teams_list.sort(reverse=True, key=operator.attrgetter('points'))
 
     for i in range(len(teams_list)):

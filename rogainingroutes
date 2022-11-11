@@ -57,10 +57,10 @@ def strfdelta(tdelta):
     else:
         d['M'] = int(mins)
         fmt = '%M:%S'
-    if secs - int(secs) > 0:
-        d['S'] = '{:06.3f}'.format(secs)
-    else:
-        d['S'] = '{:02d}'.format(int(secs))
+    #if secs - int(secs) > 0:
+    #    d['S'] = '{:06.3f}'.format(secs)
+    #else:
+    d['S'] = '{:02d}'.format(int(secs))
     t = DeltaTemplate(fmt)
     return t.substitute(**d)
 
@@ -133,17 +133,18 @@ def make_start_triangle(start, end):
 def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_dirs, meters_in_pixel, map_filename, output_dir):
     team.full_name = team.get_team_full_name()
     title = '{} | {}'.format(team.full_name, event_title)
-    team.penalty = team.sum - team.points
-    if team.penalty < 0:
-        team.penalty = 0
+    #team.penalty = team.sum - team.points
+    #if team.penalty < 0:
+    #    team.penalty = 0
+    team.penalty = tohhmmss(team.penalty_time.total_seconds()/60) if team.penalty_time.total_seconds() > 0 else '',
     table_titles = [
         'КП',
         'Время',
         'Сплит',
-        'Очки',
+        #'Очки',
         'Расстояние, км',
         'Темп, мин/км',
-        'Мин/очко',
+        #'Мин/очко',
         'Место / оба напр.'
     ]
 
@@ -225,10 +226,10 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
             cp.id,
             tohhmmss(cp.time),
             tohhmmss(cp.split),
-            '{} / {}'.format(cp.points, total_points) if cp.points > 0 else '',
+            #'{} / {}'.format(cp.points, total_points) if cp.points > 0 else '',
             '{:.2f} / {:.2f}'.format(leg_distance, total_distance) if leg_distance > 0 else '',
             tohhmmss(pace) if pace else '',
-            tohhmmss(minToPoints) if minToPoints else '',
+            #tohhmmss(minToPoints) if minToPoints else '',
             '{}({}) / {}({})'.format(leg_place, leg_n_teams, leg_place_both_dirs, leg_n_teams_both_dirs) if leg_place else ''
         ]
         data.append(d)
@@ -250,10 +251,10 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
         '',
         '',
         '',
-        total_points,
+        #total_points,
         '{:.2f}'.format(total_distance),
         tohhmmss(avr_pace) if avr_pace else '',
-        tohhmmss(total_effectiveness) if total_effectiveness else '',
+        #tohhmmss(total_effectiveness) if total_effectiveness else '',
         ''
     ]
     team.total_distance = total_distance
@@ -320,11 +321,12 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
         'Команда',
         'Участники',
         'Время',
-        'Очки',
+        #'Очки',
         'Штраф',
-        'Итог',
+        'Бонус',
+        #'Итог',
         'Км',
-        'Мин/очк'
+        #'Мин/очк'
     ]
 
     leg_results, leg_results_both_dirs = make_leg_results(teams)
@@ -340,11 +342,12 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
                 '<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_full_name()),
                 team.get_members_str(' \n'),
                 tohhmmss(team.time.total_seconds()/60),
-                team.sum,
-                team.penalty if team.penalty > 0 else '',
-                '<b>{}</b>'.format(team.points),
+                #team.sum,
+                tohhmmss(team.penalty_time.total_seconds()/60) if team.penalty_time.total_seconds() > 0 else '',
+                tohhmmss(team.credit_time.total_seconds()/60) if team.credit_time.total_seconds() > 0 else '',
+                #'<b>{}</b>'.format(team.points),
                 '{:.2f}'.format(team.total_distance),
-                '{:.2f}'.format(team.total_effectiveness),
+                #'{:.2f}'.format(team.total_effectiveness),
             ]
             data[group].append(t)
 

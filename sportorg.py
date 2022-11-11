@@ -40,6 +40,8 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             member.bib = person['bib']
             print('{} '.format(member.bib), end='')
             for org in race_obj['teams']:
+                member.team_name = ""
+                member.team_bib = member.bib
                 if org['id'] == person['team_id']:
                     member.team_name = org['name']
                     member.team_bib = org['number']
@@ -47,7 +49,12 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             member.last_name = person['surname'].capitalize()
             member.year_of_birth = person['year']
             member.points = r['scores']
-            member.time = timedelta(seconds=r['result_team_msec']/1000)
+            time = r['finish_msec'] - r['start_msec']
+            if r['finish_msec'] < r['start_msec']:
+                time = r['finish_msec'] + 86400000 - r['start_msec']
+            member.time = timedelta(seconds=time/1000)
+            member.penalty_time = timedelta(seconds=r['penalty_time']/1000)
+            member.credit_time = timedelta(seconds=r['credit_time']/1000)
 
             for splt in r['splits']:
                 cp = Checkpoint()
@@ -71,7 +78,7 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             finish = Finishpoint()
             nCps = len(member.route)
             for i in range(nCps):
-                finish.split = member.time - member.route[nCps - 1 - i].time
+                finish.split = member.time - (member.route[nCps - 1 - i].time if member.route[nCps - 1 - i].time is not None else member.time)
                 if finish.split > timedelta():
                     finish.time = member.time
                     break
@@ -100,6 +107,8 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
         team.bib = bib
         team.points = int(member.points)
         team.time = member.time
+        team.penalty_time = member.penalty_time
+        team.credit_time = member.credit_time
         team.route = member.route
         team.sum = member.sum
         team.group = group['name']

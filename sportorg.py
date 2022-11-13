@@ -40,8 +40,8 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             member.bib = person['bib']
             print('{} '.format(member.bib), end='')
             for org in race_obj['teams']:
-                member.team_name = ""
-                member.team_bib = member.bib
+                #member.team_name = ""
+                #member.team_bib = member.bib
                 if org['id'] == person['team_id']:
                     member.team_name = org['name']
                     member.team_bib = org['number']
@@ -56,6 +56,7 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             member.penalty_time = timedelta(seconds=r['penalty_time']/1000)
             member.credit_time = timedelta(seconds=r['credit_time']/1000)
 
+            prev_time = None
             for splt in r['splits']:
                 cp = Checkpoint()
                 cp.id = int(splt['code'])
@@ -64,8 +65,13 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
                         cp.points = fixed_cp_points
                     else:
                         cp.points = cp.id//10
-                    cp.split = timedelta(seconds=splt['leg_time']//1000)
+                    #cp.split = timedelta(seconds=splt['leg_time']//1000)
                     cp.time = timedelta(seconds=splt['relative_time']//1000)
+                    if prev_time is None:
+                        cp.split = cp.time
+                    else:
+                        cp.split = cp.time - prev_time
+                    prev_time = cp.time
                     member.sum += cp.points
                     member.route.append(cp)
 

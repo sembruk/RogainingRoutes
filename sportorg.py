@@ -48,6 +48,7 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             member.year_of_birth = person['year']
             member.points = r['scores']
             member.time = timedelta(seconds=r['result_team_msec']/1000)
+            member.status = r['status']
 
             for splt in r['splits']:
                 cp = Checkpoint()
@@ -100,6 +101,12 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
         team.bib = bib
         team.points = int(member.points)
         team.time = member.time
+        team.status = team.members[0].status
+        team.time_for_sort = team.time
+        team.points_for_sort = team.points
+        if team.status > 1:
+            team.time_for_sort += timedelta(hours=24)
+            team.points_for_sort = 0
         team.route = member.route
         team.sum = member.sum
         team.group = group['name']
@@ -111,11 +118,14 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
 
         teams_list.append(team)
 
-    teams_list.sort(reverse=False, key=operator.attrgetter('time'))
-    teams_list.sort(reverse=True, key=operator.attrgetter('points'))
+    teams_list.sort(reverse=False, key=operator.attrgetter('time_for_sort'))
+    teams_list.sort(reverse=True, key=operator.attrgetter('points_for_sort'))
 
     for i in range(len(teams_list)):
-        teams_list[i].place = i+1
+        if teams_list[i].status == 8:
+            teams_list[i].place = "КВ"
+        else:
+            teams_list[i].place = i+1
 
     return teams_list
 

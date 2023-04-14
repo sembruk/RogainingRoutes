@@ -172,7 +172,11 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
             x = finish_x
             y = finish_y
         elif isinstance(cp.id, int):
-            x, y = cp_coords[cp.id]
+            if cp.id not in cp_coords:
+                print("Missing CP:", cp.id)
+                x, y = start_x, start_y
+            else:
+                x, y = cp_coords[cp.id]
         else:
             x = start_x
             y = start_y

@@ -243,16 +243,18 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
         ]
         data.append(d)
 
-    cp_list1 = []
+    avr_pace = team.time.total_seconds()/total_distance/60 if total_distance != 0 else 0
     for i in range(len(cp_list)):
         cp = cp_list[i]
         pace = cp[2]
         color = course_color_default
         if pace > 0 and slowest_pace != fastest_pace:
-            color = colorSpeed((slowest_pace - pace)/(slowest_pace - fastest_pace))
+            if pace > avr_pace:
+                color = colorSpeed((slowest_pace - pace)/(slowest_pace - avr_pace)/2)
+            else:
+                color = colorSpeed(0.5 + (slowest_pace - pace)/(avr_pace - fastest_pace)/2)
         cp_list[i] = cp[0], cp[1], color
 
-    avr_pace = team.time.total_seconds()/total_distance/60 if total_distance != 0 else 0
     total_effectiveness= team.time.total_seconds()/total_points/60 if total_points != 0 else 0 
 
     table_summary = [

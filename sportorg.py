@@ -50,10 +50,15 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             member.time = timedelta(seconds=r['result_team_msec']/1000)
             member.status = r['status']
 
+            prev_cp_id = None
             for splt in r['splits']:
                 cp = Checkpoint()
                 cp.id = int(splt['code'])
                 if cp.id is not None:
+                    if prev_cp_id is not None:
+                        if cp.id == prev_cp_id:
+                            continue
+                    prev_cp_id = cp.id
                     if fixed_cp_points > 0:
                         cp.points = fixed_cp_points
                     else:

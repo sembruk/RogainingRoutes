@@ -362,7 +362,7 @@ def make_parser():
         description='Command line utility to generate routes.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('file', nargs='?', default='splits.html',
-        help='splits SFR HTML file')
+        help='results file: SportOrg JSON, CSV, WinOrient or SFR splits HTML')
     parser.add_argument('-c', '--coords-file', default='coords.csv',
         help='coords GPX or CSV file')
     parser.add_argument('-m', '--map-file', default='map.jpg',

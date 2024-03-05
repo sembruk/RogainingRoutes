@@ -39,10 +39,10 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
         if r['person_id'] == person['id']:
             member.bib = person['bib']
             print('{} '.format(member.bib), end='')
-            for org in race_obj['teams']:
-                if org['id'] == person['team_id']:
-                    member.team_name = org['name']
-                    member.team_bib = org['number']
+            for team in race_obj['teams']:
+                if team['id'] == person['team_id']:
+                    member.team_name = team['name']
+                    member.team_bib = team['number']
             member.first_name = person['name'].capitalize()
             member.last_name = person['surname'].capitalize()
             member.year_of_birth = person['year']

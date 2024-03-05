@@ -33,7 +33,7 @@
         </defs>
         <image xlink:href="{{ map_file }}" />
         <rect rx="5" width={{ map_width }} height="15" fill="url(#grad)"/>
-        <text class="small" x="2%" y="12" text-anchor="start">Медлено</text>
+        <text class="small" x="2%" y="12" text-anchor="start">Медленно</text>
         <text class="small" x="50%" y="12" text-anchor="middle">Средне</text>
         <text class="small" x="98%" y="12" text-anchor="end">Быстро</text>
         <polyline class="shadow" stroke="black" stroke-opacity="0.6" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" fill="none" points="{% for cp in cp_list %}{{ cp[0] }} {{ cp[1] }}, {% endfor %}" />

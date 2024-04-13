@@ -39,12 +39,10 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
         if r['person_id'] == person['id']:
             member.bib = person['bib']
             print('{} '.format(member.bib), end='')
-            for org in race_obj['teams']:
-                #member.team_name = ""
-                #member.team_bib = member.bib
-                if org['id'] == person['team_id']:
-                    member.team_name = org['name']
-                    member.team_bib = org['number']
+            for team in race_obj['teams']:
+                if team['id'] == person['team_id']:
+                    member.team_name = team['name']
+                    member.team_bib = team['number']
             member.first_name = person['name'].capitalize()
             member.last_name = person['surname'].capitalize()
             member.year_of_birth = person['year']
@@ -55,12 +53,18 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             member.time = timedelta(seconds=time/1000)
             member.penalty_time = timedelta(seconds=r['penalty_time']/1000)
             member.credit_time = timedelta(seconds=r['credit_time']/1000)
+            member.status = r['status']
 
             prev_time = None
+            prev_cp_id = None
             for splt in r['splits']:
                 cp = Checkpoint()
                 cp.id = int(splt['code'])
                 if cp.id is not None:
+                    if prev_cp_id is not None:
+                        if cp.id == prev_cp_id:
+                            continue
+                    prev_cp_id = cp.id
                     if fixed_cp_points > 0:
                         cp.points = fixed_cp_points
                     else:
@@ -114,8 +118,14 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
         team.points = int(member.points)
         team.time = member.time
         team.res_time = member.time + member.penalty_time - member.credit_time
+        team.status = team.members[0].status
         team.penalty_time = member.penalty_time
         team.credit_time = member.credit_time
+        team.time_for_sort = team.time
+        team.points_for_sort = team.points
+        if team.status > 1:
+            team.time_for_sort += timedelta(hours=24)
+            team.points_for_sort = 0
         team.route = member.route
         team.sum = member.sum
         team.group = group['name']
@@ -131,7 +141,10 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
     teams_list.sort(reverse=True, key=operator.attrgetter('points'))
 
     for i in range(len(teams_list)):
-        teams_list[i].place = i+1
+        if teams_list[i].status == 8:
+            teams_list[i].place = "КВ"
+        else:
+            teams_list[i].place = i+1
 
     return teams_list
 

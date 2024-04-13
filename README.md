@@ -15,16 +15,16 @@ pip install -r requirements.txt
 ## Usage
 
 ```
-./rogainingroutes [-h] [-c COORDS_FILE] [-m MAP_FILE] -x START_X -y START_Y
-                       [-d MAP_DPI] [-l MAP_SCALE] [-a ANGLE] [-o OUTPUT_DIR]
+./rogainingroutes [-h] [-c COORDS_FILE] [-m MAP_FILE] -x START_X -y START_Y [-d MAP_DPI] [-l MAP_SCALE] [-a ANGLE]
+                       [-o OUTPUT_DIR]
                        [file]
 
 Command line utility to generate routes.
 
 positional arguments:
-  file                  splits SFR HTML file (default: splits.html)
+  file                  results file: SportOrg JSON, CSV, WinOrient or SFR splits HTML (default: splits.html)
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -c COORDS_FILE, --coords-file COORDS_FILE
                         coords GPX or CSV file (default: coords.csv)

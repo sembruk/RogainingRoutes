@@ -16,6 +16,7 @@
 import re
 import json
 import operator
+import dateutil.parser
 from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
 from datetime import timedelta
 
@@ -137,7 +138,10 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
 def parse_sportorg_result_json(json_filename):
     with open(json_filename) as json_file:
         sportorg_race_obj = json.load(json_file)['races'][0]
-        event_title = sportorg_race_obj['data']['title'] + ' ' + sportorg_race_obj['data']['location']
+        start_datetime = dateutil.parser.parse(sportorg_race_obj['data']['start_datetime'])
+        event_title = sportorg_race_obj['data']['title']
+        event_title += ' ' + start_datetime.strftime("%Y")
+        event_title += ' ' + sportorg_race_obj['data']['location']
         fixed_cp_points = -1
         if sportorg_race_obj['settings']['result_processing_mode'] == 'scores' and \
                 sportorg_race_obj['settings']['result_processing_score_mode'] == 'fixed':

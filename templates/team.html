@@ -6,8 +6,12 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    {% if team.hide_team_names %}
+    <h1>{{ team.get_members_str() }}</h1>
+    {% else %}
     <h1>{{ team.full_name }}</h1>
     <h2>{{ team.get_members_str() }}</h2>
+    {% endif %}
     <table class="team">
         <tr><td>Место</td><td>{{ team.place }} ({{ team.group }})</td><td>Дистанция</td><td>{{ "%.2f км"|format(team.total_distance) }}</td></tr>
         <tr><td>Очки</td><td>{{ team.sum }}</td><td>Средний темп</td><td>{{ team.avr_pace|tohhmmss + " мин/км" }}</td></tr>

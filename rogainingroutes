@@ -130,9 +130,11 @@ def make_start_triangle(start, end):
     )
     return [_round(rotate(start, (p[0] + start[0], p[1] + start[1]), ang)) for p in polyline]
 
-def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_dirs, meters_in_pixel, map_filename, output_dir):
-    team.full_name = team.get_team_full_name()
-    title = '{} | {}'.format(team.full_name, event_title)
+def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_dirs, meters_in_pixel, map_filename, output_dir, hide_team_name):
+    team.full_name = team.get_team_name()
+    team.hide_team_name = hide_team_name
+    title = team.get_members_str() if hide_team_name else team.get_team_name()
+    title = '{} | {}'.format(title, event_title)
     team.penalty = team.sum - team.points
     if team.penalty < 0:
         team.penalty = 0
@@ -316,20 +318,20 @@ def make_leg_results(teams):
     return all_legs, all_legs_both_dirs
 
 
-def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filename, output_dir):
+def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filename, output_dir, hide_team_name):
     print('Make result HTML')
 
-    table_titles = [
-        'Место',
-        'Команда',
-        'Участники',
-        'Время',
-        'Очки',
-        'Штраф',
-        'Итог',
-        'Км',
-        'Мин/очк'
-    ]
+    table_titles = []
+    table_titles.append('Место')
+    if not hide_team_name:
+        table_titles.append('Команда')
+    table_titles.append('Участники')
+    table_titles.append('Время')
+    table_titles.append('Очки')
+    table_titles.append('Штраф')
+    table_titles.append('Итог')
+    table_titles.append('Км')
+    table_titles.append('Мин/очк')
 
     leg_results, leg_results_both_dirs = make_leg_results(teams)
 
@@ -338,18 +340,20 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
         data[group] = [];
         for i in range(len(teams[group])):
             team = teams[group][i]
-            teams[group][i] = make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_dirs, meters_in_pixel, map_filename, output_dir)
-            t = [
-                team.place,
-                '<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_full_name()),
-                team.get_members_str(),
-                tohhmmss(team.time.total_seconds()/60),
-                team.sum,
-                team.penalty if team.penalty > 0 else '',
-                '<b>{}</b>'.format(team.points),
-                '{:.2f}'.format(team.total_distance),
-                '{:.2f}'.format(team.total_effectiveness),
-            ]
+            teams[group][i] = make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_dirs, meters_in_pixel, map_filename, output_dir, hide_team_name)
+            t = []
+            t.append(team.place)
+            if hide_team_name:
+                t.append('<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_members_str()))
+            else:
+                t.append('<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_full_name()))
+                t.append(team.get_members_str())
+            t.append(tohhmmss(team.time.total_seconds()/60))
+            t.append(team.sum)
+            t.append(team.penalty if team.penalty > 0 else '')
+            t.append('<b>{}</b>'.format(team.points))
+            t.append('{:.2f}'.format(team.total_distance))
+            t.append('{:.2f}'.format(team.total_effectiveness))
             data[group].append(t)
 
     template = env.get_template('results.html')
@@ -379,6 +383,7 @@ def make_parser():
         help='map rotate angle')
     parser.add_argument('-o', '--output-dir', default='output',
         help='output directory')
+    parser.add_argument('--hide-team-name', action='store_true')
     return parser
 
 if __name__ == '__main__':
@@ -408,6 +413,6 @@ if __name__ == '__main__':
 
     meters_in_pixel = args.map_scale*0.0254/args.map_dpi
     print('Meters in pixel:', meters_in_pixel)
-    make_result_html(teams, event_title, cp_coords, meters_in_pixel, output_map_filename, args.output_dir)
+    make_result_html(teams, event_title, cp_coords, meters_in_pixel, output_map_filename, args.output_dir, args.hide_team_name)
 
 

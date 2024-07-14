@@ -57,10 +57,10 @@ def strfdelta(tdelta):
     else:
         d['M'] = int(mins)
         fmt = '%M:%S'
-    if secs - int(secs) > 0:
-        d['S'] = '{:06.3f}'.format(secs)
-    else:
-        d['S'] = '{:02d}'.format(int(secs))
+    #if secs - int(secs) > 0:
+    #    d['S'] = '{:06.3f}'.format(secs)
+    #else:
+    d['S'] = '{:02d}'.format(int(secs))
     t = DeltaTemplate(fmt)
     return t.substitute(**d)
 
@@ -346,7 +346,7 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
             if hide_team_name:
                 t.append('<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_members_str()))
             else:
-                t.append('<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_full_name()))
+                t.append('<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_name()))
                 t.append(team.get_members_str())
             t.append(tohhmmss(team.time.total_seconds()/60))
             t.append(team.sum)

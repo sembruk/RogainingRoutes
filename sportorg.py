@@ -44,7 +44,7 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
                 if team['id'] == person['team_id']:
                     member.team_name = team['name'].strip()
                     member.team_bib = team['number']
-            member.first_name = person['name'].capitalize().strip()
+            member.first_name = person['name'].capitalize().split()[0]
             member.last_name = person['surname'].capitalize().strip()
             member.year_of_birth = person['year']
             member.points = r['scores']

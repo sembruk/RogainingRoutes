@@ -22,6 +22,7 @@ import numpy as np
 from jinja2 import Environment, FileSystemLoader, Template
 import sfr
 import winorient
+import winorient2
 import sportorg
 import splits_csv
 import coursedata
@@ -395,7 +396,8 @@ if __name__ == '__main__':
     elif input_filename_extension == '.csv':
         teams, event_title = splits_csv.parse_splits_csv(args.file)
     elif input_filename_extension == '.htm':
-        teams, event_title = winorient.parse_winorient_splits_html(args.file)
+        #teams, event_title = winorient.parse_winorient_splits_html(args.file)
+        teams, event_title = winorient2.parse_winorient_printout_html(args.file)
     else:
         teams, event_title = sfr.parse_SFR_splits_html(args.file)
     cp_coords = coursedata.parse_course_data_file(args.coords_file)

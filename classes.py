@@ -39,8 +39,8 @@ class Member:
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
-    def get_full_name(self):
-        return self.first_name + ' ' + self.last_name
+    def get_full_name(self, delimeter=' '):
+        return self.first_name + delimeter + self.last_name
 
     def __str__(self):
         return self.get_full_name()
@@ -62,7 +62,7 @@ class Team:
         return 'team{}.html'.format(self.bib)
 
     def get_members_str(self, delimeter=', '):
-        return delimeter.join(["%s" % m for m in self.members])
+        return delimeter.join([m.get_full_name(delimeter='&nbsp;') for m in self.members])
 
 
 class Checkpoint:

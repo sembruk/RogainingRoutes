@@ -16,6 +16,7 @@
 import re
 import json
 import operator
+import dateutil.parser
 from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
 from datetime import timedelta
 
@@ -41,10 +42,10 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             print('{} '.format(member.bib), end='')
             for team in race_obj['teams']:
                 if team['id'] == person['team_id']:
-                    member.team_name = team['name']
+                    member.team_name = team['name'].strip()
                     member.team_bib = team['number']
-            member.first_name = person['name'].capitalize()
-            member.last_name = person['surname'].capitalize()
+            member.first_name = person['name'].capitalize().split()[0]
+            member.last_name = person['surname'].capitalize().strip()
             member.year_of_birth = person['year']
             member.points = r['scores']
             time = r['finish_msec'] - r['start_msec']
@@ -151,7 +152,10 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
 def parse_sportorg_result_json(json_filename):
     with open(json_filename) as json_file:
         sportorg_race_obj = json.load(json_file)['races'][0]
-        event_title = sportorg_race_obj['data']['title'] + ' ' + sportorg_race_obj['data']['location']
+        start_datetime = dateutil.parser.parse(sportorg_race_obj['data']['start_datetime'])
+        event_title = sportorg_race_obj['data']['title']
+        event_title += ' ' + start_datetime.strftime("%Y")
+        event_title += ' ' + sportorg_race_obj['data']['location']
         fixed_cp_points = -1
         if sportorg_race_obj['settings']['result_processing_mode'] == 'scores' and \
                 sportorg_race_obj['settings']['result_processing_score_mode'] == 'fixed':

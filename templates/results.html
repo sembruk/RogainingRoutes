@@ -6,8 +6,15 @@
     <link rel="stylesheet" href="style.css">
     <style>
 {# table {width: 95%;} #}
+table.blueTable {
+    border: none;
+}
 table.blueTable td, table.blueTable th {
-  border: 1px solid #FFFFFF;
+  border: none;
+  border-right: 1px solid #FFFFFF;
+}
+table.blueTable td:last-child, table.blueTable th:last-child {
+  border-right: none;
 }
 table.blueTable thead {
   border-bottom: 2px solid #FFFFFF;

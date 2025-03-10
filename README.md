@@ -15,7 +15,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```
-./rogainingroutes [-h] [-c COORDS_FILE] [-m MAP_FILE] -x START_X -y START_Y [-d MAP_DPI] [-l MAP_SCALE] [-a ANGLE]
+python ./rogainingroutes [-h] [-c COORDS_FILE] [-m MAP_FILE] -x START_X -y START_Y [-d MAP_DPI] [-l MAP_SCALE] [-a ANGLE]
                        [-o OUTPUT_DIR]
                        [file]
 
@@ -42,5 +42,6 @@ options:
                         map rotate angle (default: 0.0)
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                         output directory (default: output)
+  --hide-team-name
 ```
 

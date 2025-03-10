@@ -136,7 +136,7 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
     return teams_list
 
 def parse_sportorg_result_json(json_filename):
-    with open(json_filename) as json_file:
+    with open(json_filename, encoding='utf-8') as json_file:
         sportorg_race_obj = json.load(json_file)['races'][0]
         start_datetime = dateutil.parser.parse(sportorg_race_obj['data']['start_datetime'])
         event_title = sportorg_race_obj['data']['title']

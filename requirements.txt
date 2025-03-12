@@ -4,3 +4,4 @@ pillow
 lxml
 gpxpy
 utm
+dateutil

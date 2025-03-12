@@ -45,7 +45,7 @@ def parse_course_csv(data):
     return cps
 
 def parse_course_gpx_file(filename):
-    with open(filename) as gpx_file:
+    with open(filename, encoding='utf-8-sig') as gpx_file:
         cps = dict()
         gpx = gpxpy.parse(gpx_file)
         for wpt in gpx.waypoints:

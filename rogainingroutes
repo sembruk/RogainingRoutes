@@ -140,14 +140,14 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
     if team.penalty < 0:
         team.penalty = 0
     table_titles = [
-        'КП',
-        'Время',
-        'Сплит',
-        'Очки',
-        'Расстояние, км',
-        'Темп, мин/км',
-        'Мин/очко',
-        'Место / оба напр.'
+        'CP',
+        'Time',
+        'Split',
+        'Points',
+        'Length, km',
+        'Pace, min/km',
+        'Min/pt',
+        'Place / both dirs'
     ]
 
     start_x, start_y = cp_coords['start']

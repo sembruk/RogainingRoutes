@@ -297,7 +297,7 @@ def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_d
     return team
 
 
-def make_leg_results(teams):
+def collect_leg_results(teams):
     all_legs = {}
     all_legs_both_dirs = {}
     for group in teams:
@@ -318,6 +318,25 @@ def make_leg_results(teams):
             l[k] = {l_sorted[i][0]:(i + 1) for i in range(len(l_sorted))}
     return all_legs, all_legs_both_dirs
 
+def collect_popularity_data(teams, cp_coords, all_legs_both_dirs):
+    popularity_legs = {}
+    popularity_cps = {}
+
+    for cp_id in cp_coords:
+        if isinstance(cp_id, int):
+            popularity_cps[cp_id] = 0
+
+    for group in teams:
+        for t in teams[group]:
+            for cp in t.route:
+                if isinstance(cp.id, int):
+                    popularity_cps[cp.id] += 1
+    for leg in all_legs_both_dirs:
+        popularity_legs[leg] = len(all_legs_both_dirs[leg])
+    return {
+        "legs": popularity_legs,
+        "cps": popularity_cps
+    }
 
 def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filename, output_dir, hide_team_name):
     print('Make result HTML')
@@ -334,7 +353,7 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
     table_titles.append('Км')
     table_titles.append('Мин/очк')
 
-    leg_results, leg_results_both_dirs = make_leg_results(teams)
+    leg_results, leg_results_both_dirs = collect_leg_results(teams)
 
     data = {}
     for group in teams:
@@ -361,6 +380,79 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
     with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as fd:
         group_list = sorted(teams, reverse=True)
         fd.write(template.render(title=event_title, table_titles=table_titles, group_list=group_list, data=data))
+    return leg_results_both_dirs
+
+def make_popularity_map_html(cp_coords, meters_in_pixel, map_filename, output_dir, popularity_data, title="Популярность маршрутов"):
+    """
+    popularity_data: {
+        "legs": { "1-2": 5, "2-3": 10, ... },  # сколько раз каждая пара посещена
+        "cps": { 1: 15, 2: 18, ... }           # сколько раз каждая точка посещена
+    }
+    """
+
+    from collections import defaultdict
+
+    image = Image.open(os.path.join(output_dir, map_filename))
+    map_width, map_height = image.size
+
+    start_x, start_y = cp_coords['start']
+    start_offset_in_pixels = cp_coords['start_offset_in_pixels']
+    rotate_angle = math.radians(cp_coords.get('rotate_angle', 0))
+
+    def coord_to_pixel(x, y):
+        x_pixels = int((x - start_x)/meters_in_pixel) + start_offset_in_pixels[0]
+        y_pixels = -int((y - start_y)/meters_in_pixel) + start_offset_in_pixels[1]
+        return _round(rotate(start_offset_in_pixels, (x_pixels, y_pixels), rotate_angle))
+
+    # 1. Точки (CP) с радиусом круга
+    cp_circles = []
+    max_cp_visits = max(popularity_data["cps"].values())
+    for cp_id, count in popularity_data["cps"].items():
+        if cp_id not in cp_coords:
+            continue
+        x, y = coord_to_pixel(*cp_coords[cp_id])
+        radius = 4 + 10 * (count / max_cp_visits)  # базовый + масштаб
+        cp_circles.append((x, y, radius, count))
+
+    def parse_cp_id(s):
+        if s in ('S', 'F'):
+            return s
+        return int(s)
+
+    def get_cp_coordinates(cp_id, cp_coords):
+        if cp_id == 'S':
+            return cp_coords['start']
+        elif cp_id == 'F':
+            return cp_coords.get('finish', cp_coords['start'])
+        elif isinstance(cp_id, int) and cp_id in cp_coords:
+            return cp_coords[cp_id]
+        else:
+            return None
+
+    # 2. Перегоны (между CP), линия с толщиной
+    leg_lines = []
+    max_leg_popularity = max(popularity_data["legs"].values())
+    for key, count in popularity_data["legs"].items():
+        a_str, b_str = key.split('-')
+        a, b = parse_cp_id(a_str), parse_cp_id(b_str)
+        #if a not in cp_coords or b not in cp_coords:
+        #    continue
+        x1, y1 = coord_to_pixel(*get_cp_coordinates(a, cp_coords))
+        x2, y2 = coord_to_pixel(*get_cp_coordinates(b, cp_coords))
+        width = 2 + 10 * (count / max_leg_popularity)
+        leg_lines.append((x1, y1, x2, y2, width, count))
+
+    # Рендер
+    template = env.get_template('popularity_map.html')
+    with open(os.path.join(output_dir, "popularity_map.html"), 'w', encoding='utf-8') as fd:
+        fd.write(template.render(
+            title=title,
+            map_file=map_filename,
+            map_width=map_width,
+            map_height=map_height,
+            cp_circles=cp_circles,
+            leg_lines=leg_lines
+        ))
 
 def make_parser():
     parser = argparse.ArgumentParser(
@@ -415,6 +507,7 @@ if __name__ == '__main__':
 
     meters_in_pixel = args.map_scale*0.0254/args.map_dpi
     print('Meters in pixel:', meters_in_pixel)
-    make_result_html(teams, event_title, cp_coords, meters_in_pixel, output_map_filename, args.output_dir, args.hide_team_name)
-
+    leg_results_both_dirs = make_result_html(teams, event_title, cp_coords, meters_in_pixel, output_map_filename, args.output_dir, args.hide_team_name)
+    popularity_data = collect_popularity_data(teams, cp_coords, leg_results_both_dirs)
+    make_popularity_map_html(cp_coords, meters_in_pixel, output_map_filename, args.output_dir, popularity_data)
 

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>{{ title }}</h1>
+<svg width="{{ map_width }}px" height="{{ map_height }}px">
+    <image xlink:href="{{ map_file }}" width="{{ map_width }}" height="{{ map_height }}"/>
+
+    <!-- Перегоны -->
+    {% for x1, y1, x2, y2, width, count in leg_lines %}
+    <line x1="{{ x1 }}" y1="{{ y1 }}" x2="{{ x2 }}" y2="{{ y2 }}"
+          stroke="red" stroke-width="{{ width }}" stroke-opacity="0.6">
+        <title>Популярность: {{ count }}</title>
+    </line>
+    {% endfor %}
+
+    <!-- Контрольные пункты -->
+    {% for x, y, radius, count in cp_circles %}
+    <circle cx="{{ x }}" cy="{{ y }}" r="{{ radius }}"
+            fill="blue" fill-opacity="0.4" stroke="black" stroke-width="1">
+        <title>Посещений: {{ count }}</title>
+    </circle>
+    <!-- Подпись количества -->
+    <text x="{{ x }}" y="{{ y - radius - 4 }}" 
+          font-size="12" text-anchor="middle" fill="black">{{ count }}</text>
+    {% endfor %}
+</svg>
+</body>
+</html>
+

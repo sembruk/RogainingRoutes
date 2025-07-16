@@ -21,6 +21,7 @@ import argparse
 import numpy as np
 from jinja2 import Environment, FileSystemLoader, Template
 import sfr
+import oescore
 import winorient
 import winorient2
 import sportorg
@@ -482,7 +483,7 @@ def make_parser():
 if __name__ == '__main__':
     args,_ = make_parser().parse_known_args()
 
-    input_filename_extension = os.path.splitext(args.file)[1]
+    input_filename_extension = os.path.splitext(args.file)[1].lower()
     if input_filename_extension == '.json':
         teams, event_title = sportorg.parse_sportorg_result_json(args.file)
     elif input_filename_extension == '.csv':
@@ -490,8 +491,19 @@ if __name__ == '__main__':
     elif input_filename_extension == '.htm':
         #teams, event_title = winorient.parse_winorient_splits_html(args.file)
         teams, event_title = winorient2.parse_winorient_printout_html(args.file)
+    elif input_filename_extension == '.html':
+        # If file contains 'OEScore' string in header, then it's OEScore
+        # splits HTML
+        with open(args.file, 'r', encoding='utf-8') as fd:
+            head = ''.join(fd.readline() for _ in range(10))
+        if 'OEScore' in head:
+            teams, event_title = oescore.parse_OEScore_splits_html(args.file)
+        else:
+            teams, event_title = sfr.parse_SFR_splits_html(args.file)
     else:
-        teams, event_title = sfr.parse_SFR_splits_html(args.file)
+        raise Exception('Unknown file extension: ' + input_filename_extension)
+
+    print('Event title:', event_title)
     cp_coords = coursedata.parse_course_data_file(args.coords_file)
     cp_coords['start_offset_in_pixels'] = (args.start_x, args.start_y)
     cp_coords['rotate_angle'] = args.angle

@@ -18,6 +18,9 @@ import re
 from datetime import timedelta
 
 def str_to_time(s):
+    if not s:
+        return str_to_time('00:00:00')
+
     match = re.match('(\d+):(\d\d):(\d\d)',s)
 
     if not match:
@@ -29,7 +32,7 @@ def str_to_time(s):
         s = int(match.group(3))
         return timedelta(hours=h, minutes=m, seconds=s)
     else:
-        raise Exception(s)
+        raise Exception("{} is not a valid time".format(s))
 
 class Member:
     def __init__(self):

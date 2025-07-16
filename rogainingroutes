@@ -521,5 +521,5 @@ if __name__ == '__main__':
     print('Meters in pixel:', meters_in_pixel)
     leg_results_both_dirs = make_result_html(teams, event_title, cp_coords, meters_in_pixel, output_map_filename, args.output_dir, args.hide_team_name)
     popularity_data = collect_popularity_data(teams, cp_coords, leg_results_both_dirs)
-    make_popularity_map_html(cp_coords, meters_in_pixel, output_map_filename, args.output_dir, popularity_data, event_title + " | Популярность маршрутов" )
+    make_popularity_map_html(cp_coords, meters_in_pixel, output_map_filename, args.output_dir, popularity_data, event_title + " | Popularity map" )
 

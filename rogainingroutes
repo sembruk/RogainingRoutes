@@ -343,16 +343,16 @@ def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filenam
     print('Make result HTML')
 
     table_titles = []
-    table_titles.append('Место')
+    table_titles.append('Place')
     if not hide_team_name:
-        table_titles.append('Команда')
-    table_titles.append('Участники')
-    table_titles.append('Время')
-    table_titles.append('Очки')
-    table_titles.append('Штраф')
-    table_titles.append('Итог')
-    table_titles.append('Км')
-    table_titles.append('Мин/очк')
+        table_titles.append('Team')
+    table_titles.append('Members')
+    table_titles.append('Time')
+    table_titles.append('Points')
+    table_titles.append('Penalty')
+    table_titles.append('Result')
+    table_titles.append('Km')
+    table_titles.append('Min/point')
 
     leg_results, leg_results_both_dirs = collect_leg_results(teams)
 

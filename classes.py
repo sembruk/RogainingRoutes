@@ -76,12 +76,16 @@ class Checkpoint:
         self.time = None
 
 class Startpoint(Checkpoint):
+    ID = 'S'
+
     def __init__(self):
-        Checkpoint.__init__(self)
-        self.id = 'S'
+        super().__init__()
+        self.id = self.ID
 
 class Finishpoint(Checkpoint):
+    ID = 'F'
+
     def __init__(self):
-        Checkpoint.__init__(self)
-        self.id = 'F'
+        super().__init__()
+        self.id = self.ID
 

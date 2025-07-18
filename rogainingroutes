@@ -370,7 +370,13 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
         x_px = int((x - start_x)/meters_in_pixel) + offset_x
         y_px = -int((y - start_y)/meters_in_pixel) + offset_y
         x_rot, y_rot = _round(rotate((offset_x, offset_y), (x_px, y_px), angle))
+        if cp_code == 'start':
+            cp_code = Startpoint.ID
+        elif cp_code == 'finish':
+            cp_code = Finishpoint.ID
         cp_pixel_coords[cp_code] = (x_rot, y_rot)
+    if not 'finish' in cp_coords:
+        cp_pixel_coords[Finishpoint.ID] = cp_pixel_coords[Startpoint.ID]
 
     team_routes = {}
     leg_lengths = {}
@@ -429,7 +435,7 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
                 team_data['route'].append({
                     'cp': cp_code,
                     'split': tohhmmss(cp.split),
-                    'points': cp.points,
+                    #'points': cp.points,
                     'leg_distance': '{:.2f}'.format(leg_distance),
                     'pace': tohhmmss(pace) if pace else '',
                     'min_per_point': tohhmmss(min_per_point) if min_per_point else '',

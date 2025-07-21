@@ -133,20 +133,35 @@
 
     let currentTeam = null;
     let lineSegments = [];
+    let needRedraw = true;
 
     function draw() {
       if (!currentTeam) return;
+      //console.log('draw');
+     
       const team = currentTeam;
 
+      tooltip.style.display = "none";
+
+      //console.log(canvas.width, canvas.height);
       canvas.width = img.clientWidth;
       canvas.height = img.clientHeight;
       const scaleX = img.clientWidth / img.naturalWidth;
       const scaleY = img.clientHeight / img.naturalHeight;
+      //console.log(canvas.width, canvas.height);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
+ 
+      // Hack for Firefox
+      if (needRedraw) {
+        needRedraw = false;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        setTimeout(() => {
+          requestAnimationFrame(draw);
+          requestAnimationFrame(draw);
+        }, 200);
+        return;
+      }
 
       lineSegments = [];
 
@@ -157,28 +172,49 @@
         x *= scaleX;
         y *= scaleY;
 
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          const prevCp = team.route[i - 1].cp;
-          const prevCoord = cpCoords[prevCp];
-          if (!prevCoord) return;
-          let [px, py] = prevCoord;
-          px *= scaleX;
-          py *= scaleY;
+        if (i === 0) return;
 
-          // Сохраняем сегмент
-          lineSegments.push({
-            x1: px, y1: py,
-            x2: x, y2: y,
-            desc: prevCp + '->' + pt.cp,
-            data: team.route[i] // текущий pt содержит split, pace и т.п.
-          });
+        const prevCp = team.route[i - 1].cp;
+        const prevCoord = cpCoords[prevCp];
+        if (!prevCoord) return;
+        let [px, py] = prevCoord;
+        px *= scaleX;
+        py *= scaleY;
 
-          ctx.lineTo(x, y);
-        }
+        const color = pt.color || "grey";
+
+        ctx.beginPath();
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 6;
+        ctx.shadowColor = "rgba(0,0,0,0.6)";
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.moveTo(px, py);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 4;
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.moveTo(px, py);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        lineSegments.push({
+          x1: px, y1: py,
+          x2: x, y2: y,
+          desc: prevCp + '->' + pt.cp,
+          data: team.route[i]
+        });
+
+        ctx.lineTo(x, y);
+        
       });
-      ctx.stroke();
 
       team.route.forEach(pt => {
         const coord = cpCoords[pt.cp];
@@ -190,8 +226,8 @@
         x *= scaleX;
         y *= scaleY;
         ctx.beginPath();
-        ctx.fillStyle = "red";
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fillStyle = "purple";
+        ctx.arc(x, y, 3, 0, 2*Math.PI);
         ctx.fill();
       });
 
@@ -203,9 +239,6 @@
         Distance: ${team.distance_km} km<br>
       `;
 
-      //team.route.forEach(pt => {
-      //  info.innerHTML += `CP ${pt.cp}: Split ${pt.split}, Pace ${pt.pace}, Points ${pt.points}, Min/pt ${pt.min_per_point}, Rank ${pt.leg_ranking}<br>`;
-      //});
     }
 
     function showTeamPopup(bib) {
@@ -213,12 +246,10 @@
       if (!team) return;
 
       currentTeam = team;
-      //popup.style.display = "block";
       popup.style.display = "flex";
 
       if (img.complete) draw();
       else img.onload = draw;
-      //setTimeout(draw, 100);
     }
 
     const table = document.getElementById("results");
@@ -310,11 +341,19 @@
     }
 
 
+    // Event listeners
+
     window.addEventListener("resize", () => {
       if (popup.style.display !== "none" && currentTeam) {
         draw();
       }
-    })
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        closePopup();
+      }
+    });
 
     /*canvas.addEventListener("mousemove", e => {*/
     canvas.addEventListener("click", e => {
@@ -334,7 +373,7 @@
 
       if (found) {
         showTooltip(e.clientX, e.clientY, `
-          Segment: ${found.desc}<br>
+          Segment: <b>${found.desc}</b><br>
           Split: ${found.data.split}<br>
           Pace: ${found.data.pace}<br>
           Min/pt: ${found.data.min_per_point}<br>

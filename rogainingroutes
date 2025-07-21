@@ -133,173 +133,6 @@ def colorSpeed(pos):
 #    )
 #    return [_round(rotate(start, (p[0] + start[0], p[1] + start[1]), ang)) for p in polyline]
 
-
-#def make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_dirs, meters_in_pixel, map_filename, output_dir, hide_team_name):
-#    team.full_name = team.get_team_name()
-#    team.hide_team_name = hide_team_name
-#    title = team.get_members_str() if hide_team_name else team.get_team_name()
-#    title = '{} | {}'.format(title, event_title)
-#    team.penalty = team.sum - team.points
-#    if team.penalty < 0:
-#        team.penalty = 0
-#    table_titles = [
-#        'КП',
-#        'Время',
-#        'Сплит',
-#        'Очки',
-#        'Расстояние, км',
-#        'Темп, мин/км',
-#        'Мин/очко',
-#        'Место / оба напр.'
-#    ]
-#
-#    start_x, start_y = cp_coords['start']
-#    if 'finish' in cp_coords:
-#        finish_x, finish_y = cp_coords['finish']
-#    else:
-#        finish_x, finish_y = start_x, start_y
-#    draw_finish_circle = False
-#    if finish_x != start_x or finish_y != start_y:
-#        draw_finish_circle = True
-#    start_offset_in_pixels = cp_coords['start_offset_in_pixels']
-#    rotate_angle = math.radians(cp_coords.get('rotate_angle', 0))
-#    cp_list = []
-#    data = []
-#    total_points = 0
-#    previos = [start_x, start_y]
-#    total_distance = 0
-#    fastest_pace = None
-#    slowest_pace = None
-#
-#    prevCp = None
-#    for i in range(len(team.route)):
-#        cp = team.route[i]
-#        if isinstance(cp, Finishpoint):
-#            x = finish_x
-#            y = finish_y
-#        elif isinstance(cp.id, int):
-#            if cp.id not in cp_coords:
-#                print("Missing CP:", cp.id)
-#                x, y = start_x, start_y
-#            else:
-#                x, y = cp_coords[cp.id]
-#        else:
-#            x = start_x
-#            y = start_y
-#        x_pixels = int((x - start_x)/meters_in_pixel) + start_offset_in_pixels[0]
-#        y_pixels = -int((y - start_y)/meters_in_pixel) + start_offset_in_pixels[1]
-#
-#        total_points += cp.points
-#
-#        leg_distance = math.sqrt((x - previos[0])**2 + (y - previos[1])**2)
-#        leg_distance /= 1000 # km
-#        total_distance += leg_distance
-#
-#        previos[0] = x
-#        previos[1] = y
-#
-#        #if cp.id == 43:
-#        #    cp.time = None
-#        #    cp.split = timedelta()
-#        #if prevCp == 43:
-#        #    cp.split = timedelta()
-#
-#        pace = 0
-#        if cp.split and leg_distance != 0:
-#            pace = cp.split.total_seconds()/leg_distance/60
-#            if slowest_pace is None or slowest_pace < pace:
-#                slowest_pace = pace
-#            if fastest_pace is None or fastest_pace > pace:
-#                fastest_pace = pace
-#        cp_list.append((*_round(rotate(start_offset_in_pixels, (x_pixels, y_pixels), rotate_angle)), pace))
-#
-#        minToPoints = 0
-#        if cp.points:
-#            minToPoints = cp.split.total_seconds()/cp.points/60
-#
-#        leg_place = None
-#        leg_n_teams = None
-#        leg_place_both_dirs = None
-#        leg_n_teams_both_dirs = None
-#        if prevCp is not None and cp.id is not None:
-#            key = '{}-{}'.format(prevCp, cp.id)
-#            key_both_dirs = '-'.join(sorted((str(prevCp), str(cp.id))))
-#            leg_place = leg_results[key][team.bib]
-#            leg_n_teams = len(leg_results[key])
-#            leg_place_both_dirs = leg_results_both_dirs[key_both_dirs][team.bib]
-#            leg_n_teams_both_dirs = len(leg_results_both_dirs[key_both_dirs])
-#        prevCp = cp.id
-# 
-#        d = [
-#            i,
-#            cp.id,
-#            tohhmmss(cp.time),
-#            tohhmmss(cp.split),
-#            '{} / {}'.format(cp.points, total_points) if cp.points > 0 else '',
-#            '{:.2f} / {:.2f}'.format(leg_distance, total_distance) if leg_distance > 0 else '',
-#            tohhmmss(pace) if pace else '',
-#            tohhmmss(minToPoints) if minToPoints else '',
-#            '{}({}) / {}({})'.format(leg_place, leg_n_teams, leg_place_both_dirs, leg_n_teams_both_dirs) if leg_place else ''
-#        ]
-#        data.append(d)
-#
-#    cp_list1 = []
-#    for i in range(len(cp_list)):
-#        cp = cp_list[i]
-#        pace = cp[2]
-#        color = course_color_default
-#        if pace > 0 and slowest_pace != fastest_pace:
-#            color = colorSpeed((slowest_pace - pace)/(slowest_pace - fastest_pace))
-#        cp_list[i] = cp[0], cp[1], color
-#
-#    avr_pace = team.time.total_seconds()/total_distance/60 if total_distance != 0 else 0
-#    total_effectiveness= team.time.total_seconds()/total_points/60 if total_points != 0 else 0 
-#
-#    table_summary = [
-#        '',
-#        '',
-#        '',
-#        '',
-#        total_points,
-#        '{:.2f}'.format(total_distance),
-#        tohhmmss(avr_pace) if avr_pace else '',
-#        tohhmmss(total_effectiveness) if total_effectiveness else '',
-#        ''
-#    ]
-#    team.total_distance = total_distance
-#    team.avr_pace = avr_pace
-#    team.total_effectiveness = total_effectiveness
-#    team.planning_effectiveness = total_points/total_distance if total_distance != 0 else 0
-#    team.time_str = tohhmmss(team.time.total_seconds()/60)
-#
-#    image =  Image.open(os.path.join(output_dir, map_filename))
-#    map_width, map_height = image.size
-#
-#    start_triangle = make_start_triangle(cp_list[0], cp_list[1])
-#    cp_list[0] = start_triangle[0]
-#
-#    template = env.get_template('team.html')
-#    with open(os.path.join(output_dir, team.get_team_html_name()), 'w', encoding='utf-8') as fd:
-#        fd.write(template.render(
-#            title=title,
-#            team=team,
-#            table_titles=table_titles,
-#            table_summary=table_summary,
-#            map_file=map_filename,
-#            map_scale=javascript_map_scale,
-#            map_width=map_width,
-#            map_height=map_height,
-#            course_color_min_speed=course_color_min_speed,
-#            course_color_avr_speed=course_color_avr_speed,
-#            course_color_max_speed=course_color_max_speed,
-#            cp_list=cp_list,
-#            arrow=make_arrow(cp_list[0], cp_list[1]),
-#            start_triangle=start_triangle,
-#            draw_finish_circle=draw_finish_circle,
-#            data=data))
-#    return team
-
-
 def collect_leg_results(teams):
     all_legs = {}
     all_legs_both_dirs = {}
@@ -386,7 +219,10 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
         for team in teams[group]:
             total_points = 0
             total_distance = 0
+            slowest_pace = None
+            fastest_pace = None
             prev_cp = None
+
             team_data = {
                 'bib': team.bib,
                 'group': group,
@@ -418,6 +254,13 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
                 total_points += cp.points
 
                 pace = cp.split.total_seconds()/leg_distance/60 if cp.split and leg_distance else 0
+
+                if pace > 0:
+                    if slowest_pace is None or slowest_pace < pace:
+                        slowest_pace = pace
+                    if fastest_pace is None or fastest_pace > pace:
+                        fastest_pace = pace
+
                 min_per_point = cp.split.total_seconds()/cp.points/60 if cp.points else 0
 
                 leg_place = leg_n_teams = leg_place_both_dirs = leg_n_teams_both_dirs = ''
@@ -437,10 +280,16 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
                     'split': tohhmmss(cp.split),
                     #'points': cp.points,
                     'leg_distance': '{:.2f}'.format(leg_distance),
-                    'pace': tohhmmss(pace) if pace else '',
+                    'pace': pace,
                     'min_per_point': tohhmmss(min_per_point) if min_per_point else '',
                     'leg_ranking': f'{leg_place}({leg_n_teams}) / {leg_place_both_dirs}({leg_n_teams_both_dirs})' if leg_place else ''
                 })
+
+            for cp in team_data['route']:
+                pace = cp['pace']
+                cp['pace'] = tohhmmss(pace) if pace else ''
+                if pace > 0 and slowest_pace != fastest_pace:
+                    cp['color'] = '#{:02X}{:02X}{:02X}'.format(*colorSpeed((slowest_pace - pace)/(slowest_pace - fastest_pace)))
 
             team_data['distance_km'] = '{:.2f}'.format(total_distance)
             team_data['min_per_point'] = tohhmmss(team.time.total_seconds() / team.points / 60) if team.points else ''
@@ -467,50 +316,6 @@ def generate_result_html(event_title, map_filename, output_dir, data_json):
             map_filename=map_filename,
             embedded_json=data_json
         ))
-
-#def make_result_html(teams, event_title, cp_coords, meters_in_pixel, map_filename, output_dir, hide_team_name):
-#    print('Make result HTML')
-#
-#    table_titles = []
-#    table_titles.append('Место')
-#    if not hide_team_name:
-#        table_titles.append('Команда')
-#    table_titles.append('Участники')
-#    table_titles.append('Время')
-#    table_titles.append('Очки')
-#    table_titles.append('Штраф')
-#    table_titles.append('Итог')
-#    table_titles.append('Км')
-#    table_titles.append('Мин/очк')
-#
-#    leg_results, leg_results_both_dirs = collect_leg_results(teams)
-#
-#    data = {}
-#    for group in teams:
-#        data[group] = [];
-#        for i in range(len(teams[group])):
-#            team = teams[group][i]
-#            teams[group][i] = make_team_html(team, event_title, cp_coords, leg_results, leg_results_both_dirs, meters_in_pixel, map_filename, output_dir, hide_team_name)
-#            t = []
-#            t.append(team.place)
-#            if hide_team_name:
-#                t.append('<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_members_str()))
-#            else:
-#                t.append('<a href="{}">{}</a>'.format(team.get_team_html_name(), team.get_team_name()))
-#                t.append(team.get_members_str())
-#            t.append(tohhmmss(team.time.total_seconds()/60))
-#            t.append(team.sum)
-#            t.append(team.penalty if team.penalty > 0 else '')
-#            t.append('<b>{}</b>'.format(team.points))
-#            t.append('{:.2f}'.format(team.total_distance))
-#            t.append('{:.2f}'.format(team.total_effectiveness))
-#            data[group].append(t)
-#
-#    template = env.get_template('results.html')
-#    with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as fd:
-#        group_list = sorted(teams, reverse=True)
-#        fd.write(template.render(title=event_title, table_titles=table_titles, group_list=group_list, data=data))
-#    return leg_results_both_dirs
 
 def make_popularity_map_html(cp_coords, meters_in_pixel, map_filename, output_dir, popularity_data, title="Популярность маршрутов"):
     """

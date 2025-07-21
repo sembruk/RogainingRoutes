@@ -46,6 +46,7 @@
             width: auto;
             height: auto;
             display: block;
+            object-fit: contain;
             z-index: 0;
         }
         #map-container canvas {
@@ -144,11 +145,18 @@
       tooltip.style.display = "none";
 
       //console.log(canvas.width, canvas.height);
-      canvas.width = img.clientWidth;
-      canvas.height = img.clientHeight;
-      const scaleX = img.clientWidth / img.naturalWidth;
-      const scaleY = img.clientHeight / img.naturalHeight;
-      //console.log(canvas.width, canvas.height);
+      const rect = img.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      scaleX = rect.width / img.naturalWidth;
+      scaleY = rect.height / img.naturalHeight;
+      offsetX = 0;
+      // Hack for Chrome
+      if (scaleX > scaleY) {
+          scaleX = scaleY;
+          offsetX = (rect.width - scaleX*img.naturalWidth)/2;
+          console.log(offsetX);
+      }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
  
@@ -171,6 +179,7 @@
         [x, y] = coord;
         x *= scaleX;
         y *= scaleY;
+        x += offsetX;
 
         if (i === 0) return;
 
@@ -180,6 +189,7 @@
         let [px, py] = prevCoord;
         px *= scaleX;
         py *= scaleY;
+        px += offsetX;
 
         const color = pt.color || "grey";
 
@@ -225,6 +235,7 @@
         [x, y] = coord;
         x *= scaleX;
         y *= scaleY;
+        x += offsetX;
         ctx.beginPath();
         ctx.fillStyle = "purple";
         ctx.arc(x, y, 3, 0, 2*Math.PI);

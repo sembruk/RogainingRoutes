@@ -123,6 +123,9 @@
   </script>
 
   <script>
+    const params = new URLSearchParams(window.location.search);
+    const oneTable = params.get("abs") === "true";
+
     const popup = document.getElementById("popup");
     const canvas = document.getElementById("map-canvas");
     const ctx = canvas.getContext("2d");
@@ -320,51 +323,98 @@
       else img.onload = draw;
     }
 
-    const table = document.getElementById("results");
-    const teamsByGroup = data.teams;
-    const tableTitles = [
-      "Place", "Team", "Members", "Time",
-      "Points", "Penalty", "Result", "Km", "Pt/km", "Pt/h"
-    ];
+    function fillTable() {
+      const table = document.getElementById("results");
+      const teamsByGroup = data.teams;
+      const tableTitles = [
+        "Place", "Group Place", "Team", "Members", "Time",
+        "Points", "Penalty", "Result", "Km", "Pts/km", "Pts/h"
+      ];
 
-    for (const group in teamsByGroup) {
-      const groupTeams = teamsByGroup[group];
+      if (oneTable) {
+        allTeams.sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          return a.time.localeCompare(b.time);
+        });
 
-      // Group header
-      const titleRow = document.createElement("tr");
-      titleRow.style.background = "#FFF";
-      titleRow.innerHTML = `<th colspan="${tableTitles.length}">
-          <h2 id="${group}">${group}</h2></th>`;
-      table.appendChild(titleRow);
+        allTeams.forEach((team, index) => {
+          team.absPlace = index + 1;
+        });
 
-      // Column headers
-      const headerRow = document.createElement("tr");
-      tableTitles.forEach(title => {
-        const th = document.createElement("th");
-        th.textContent = title;
-        headerRow.appendChild(th);
-      });
-      headerRow.style.background = "#1C6EA4";
-      headerRow.style.color = "#FFF";
-      table.appendChild(headerRow);
+        table.innerHTML = "";
 
-      // Team rows
-      groupTeams.forEach(team => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${team.place}</td>
-          <td><a href="#" onclick="showTeamPopup(${team.bib});return false;">${team.name}</a></td>
-          <td>${team.members}</td>
-          <td>${team.time}</td>
-          <td>${team.points}</td>
-          <td>${team.penalty || ""}</td>
-          <td><b>${team.points}</b></td>
-          <td>${team.distance_km}</td>
-          <td>${team.points_per_km}</td>
-          <td>${team.points_per_hour}</td>
-        `;
-        table.appendChild(tr);
-      });
+        const headerRow = document.createElement("tr");
+        tableTitles.forEach(title => {
+          const th = document.createElement("th");
+          th.textContent = title;
+          headerRow.appendChild(th);
+        });
+        headerRow.style.background = "#1C6EA4";
+        headerRow.style.color = "#FFF";
+        table.appendChild(headerRow);
+
+        allTeams.forEach(team => {
+          const tr = document.createElement("tr");
+          boldStr = team.place > 0 && team.place < 4 ? "style=\"font-weight: bold\"" : "";
+          tr.innerHTML = `
+            <td>${team.absPlace}</td>
+            <td ${boldStr}>${team.group}: ${team.place}</td>
+            <td><a href="#" onclick="showTeamPopup(${team.bib});return false;">${team.name}</a></td>
+            <td>${team.members}</td>
+            <td>${team.time}</td>
+            <td>${team.points}</td>
+            <td>${team.penalty || ""}</td>
+            <td><b>${team.points}</b></td>
+            <td>${team.distance_km}</td>
+            <td>${team.points_per_km}</td>
+            <td>${team.points_per_hour}</td>
+          `;
+          table.appendChild(tr);
+        });
+
+        return;
+      }
+
+      for (const group in teamsByGroup) {
+        const groupTeams = teamsByGroup[group];
+
+        // Group header
+        const titleRow = document.createElement("tr");
+        titleRow.style.background = "#FFF";
+        titleRow.innerHTML = `<th colspan="${tableTitles.length}">
+            <h2 id="${group}">${group}</h2></th>`;
+        table.appendChild(titleRow);
+
+        // Column headers
+        const headerRow = document.createElement("tr");
+        tableTitles.forEach((title, index) => {
+          if (index == 1) return;
+          const th = document.createElement("th");
+          th.textContent = title;
+          headerRow.appendChild(th);
+        });
+        headerRow.style.background = "#1C6EA4";
+        headerRow.style.color = "#FFF";
+        table.appendChild(headerRow);
+
+        // Team rows
+        groupTeams.forEach(team => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${team.place}</td>
+            <td><a href="#" onclick="showTeamPopup(${team.bib});return false;">${team.name}</a></td>
+            <td>${team.members}</td>
+            <td>${team.time}</td>
+            <td>${team.sum}</td>
+            <td>${team.penalty || ""}</td>
+            <td><b>${team.points}</b></td>
+            <td>${team.distance_km}</td>
+            <td>${team.points_per_km}</td>
+            <td>${team.points_per_hour}</td>
+          `;
+          table.appendChild(tr);
+        });
+      }
     }
 
     const tooltip = document.getElementById("tooltip");
@@ -487,6 +537,8 @@
         hideTooltip();
       }
     })
+
+    fillTable();
   </script>
 </body>
 </html>

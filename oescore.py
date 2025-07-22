@@ -36,7 +36,7 @@ def parse_OEScore_splits_html(splits_filename):
         table = tables[i]
 
         if table.find(id="c00"):
-            current_group = table.get_text(strip=True).split(" (")[0]
+            current_group = table.get_text(strip=True).split(" (")[0].strip()
             print('Parse splits for:', current_group)
             teams[current_group] = []
             i += 2

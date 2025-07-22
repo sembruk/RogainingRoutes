@@ -48,6 +48,7 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             member.last_name = person['surname'].capitalize().strip()
             member.year_of_birth = person['year']
             member.points = r['scores']
+            member.penalty = r['penalty_points']
             member.time = timedelta(seconds=r['result_team_msec']/1000)
             member.status = r['status']
 
@@ -106,6 +107,7 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
         member = team.members[nMembers-1]
         team.bib = bib
         team.points = int(member.points)
+        team.penalty = int(member.penalty)
         team.time = member.time
         team.status = team.members[0].status
         team.time_for_sort = team.time

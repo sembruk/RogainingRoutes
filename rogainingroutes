@@ -277,11 +277,11 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
 
                 team_data['route'].append({
                     'cp': cp_code,
-                    'split': tohhmmss(cp.split),
-                    #'points': cp.points,
-                    'leg_distance': '{:.2f}'.format(leg_distance),
+                    'split': cp.split.total_seconds() if cp.split else 0,
+                    'points': cp.points,
+                    'leg_len': leg_distance,
                     'pace': pace,
-                    'min_per_point': tohhmmss(min_per_point) if min_per_point else '',
+                    #'min_per_point': tohhmmss(min_per_point) if min_per_point else '',
                     'leg_ranking': f'{leg_place}({leg_n_teams}) / {leg_place_both_dirs}({leg_n_teams_both_dirs})' if leg_place else ''
                 })
 
@@ -292,7 +292,12 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
                     cp['color'] = '#{:02X}{:02X}{:02X}'.format(*colorSpeed((slowest_pace - pace)/(slowest_pace - fastest_pace)))
 
             team_data['distance_km'] = '{:.2f}'.format(total_distance)
-            team_data['min_per_point'] = tohhmmss(team.time.total_seconds() / team.points / 60) if team.points else ''
+            team_data['speed'] = '{:.2f}'.format(total_distance*3600/team.time.total_seconds()) if team.time.total_seconds() > 0 else ''
+            pace = team.time.total_seconds()/total_distance/60 if total_distance > 0 else 0
+            team_data['pace'] = tohhmmss(pace) if pace else ''
+            #team_data['min_per_point'] = tohhmmss(team.time.total_seconds() / team.points / 60) if team.points else ''
+            team_data['points_per_hour'] = '{:.2f}'.format(team.points*3600/team.time.total_seconds()) if team.time and team.points > 0 else ''
+            team_data['points_per_km'] = '{:.2f}'.format(team.points/total_distance) if total_distance > 0 else ''
             team_routes[group].append(team_data)
 
     data = {

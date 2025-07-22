@@ -9,6 +9,10 @@
           color: #1C6EA4;
           text-decoration: none;
         }
+        .bold-text {
+          font-size: 1.2em;
+          font-weight: bold;
+        }
         #popup {
             display: none;
             position: fixed;
@@ -56,20 +60,21 @@
         }
         #popup-close {
           position: absolute;
-          top: 10px; right: 40px;
+          top: 5px;
+          right: 16px;
           font-size: 32px;
-          color: lightcoral;
+          color: black;
           cursor: pointer;
-          z-index: 3;
+          z-index: 10;
         }
         #popup-info {
           position: relative;
           line-height: 1.4;
           background: white;
           padding: 5px;
+          box-sizing: border-box;
           box-shadow: 0 2 6px rgba(0,0,0,0.2);
           max-height: 30vh;
-          overflow-y: auto;
           z-index: 2;
           font-size: 14px;
           flex: 0 0 auto;
@@ -96,9 +101,11 @@
     <table class="blueTable" id="results"></table>
 
     <div id="popup">
-      <div id="popup-close" onclick="closePopup()">×</div>
       <div id="popup-map-wrapper">
-        <div id="popup-info"></div>
+        <div id="popup-info">
+          <div id="popup-close" onclick="closePopup()">×</div>
+          <div id="info-text"></div>
+        </div>
         <div id="map-container">
           <img id="map-image" src="{{ map_filename }}">
           <canvas id="map-canvas"></canvas>
@@ -121,6 +128,7 @@
     const ctx = canvas.getContext("2d");
     const img = document.getElementById("map-image");
     const info = document.getElementById("popup-info");
+    const infoText = document.getElementById("info-text");
 
     const data = JSON.parse(document.getElementById("json-data").textContent);
     const allTeams = Object.values(data.teams).flat();
@@ -130,6 +138,40 @@
       popup.style.display = "none";
       tooltip.style.display = "none";
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawArrow(x1, y1, x2, y2, color) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      const angle = Math.atan2(dy, dx);
+    
+      const arrowLength = Math.min(len*0.7, 30);
+      const arrow = [
+        [len - arrowLength*0.9, 2],
+        [len - arrowLength, 7],
+        [len, 2],
+        [len, -2],
+        [len - arrowLength, -7],
+        [len - arrowLength*0.9, -2]
+      ];
+    
+      const rotated = arrow.map(([lx, ly]) => {
+        const rx = Math.cos(angle)*lx - Math.sin(angle)*ly + x1;
+        const ry = Math.sin(angle)*lx + Math.cos(angle)*ly + y1;
+        return [rx, ry];
+      });
+    
+      ctx.beginPath();
+      ctx.fillStyle = color
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+      ctx.moveTo(rotated[0][0], rotated[0][1]);
+      for (let i = 1; i < rotated.length; i++) {
+        ctx.lineTo(rotated[i][0], rotated[i][1]);
+      }
+      ctx.stroke();
+      ctx.fill();
     }
 
     let currentTeam = null;
@@ -151,12 +193,16 @@
       scaleX = rect.width / img.naturalWidth;
       scaleY = rect.height / img.naturalHeight;
       offsetX = 0;
+      imgWidth = rect.width;
       // Hack for Chrome
       if (scaleX > scaleY) {
           scaleX = scaleY;
-          offsetX = (rect.width - scaleX*img.naturalWidth)/2;
+          imgWidth = scaleX*img.naturalWidth;
+          offsetX = (rect.width - imgWidth)/2;
           console.log(offsetX);
       }
+      imgWidth = Math.round(imgWidth);
+      info.style.width = `${imgWidth}px`;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
  
@@ -215,6 +261,10 @@
         ctx.lineTo(x, y);
         ctx.stroke();
 
+        if (i === 1) {
+          drawArrow(px, py, x, y, color);
+        }
+
         lineSegments.push({
           x1: px, y1: py,
           x2: x, y2: y,
@@ -242,12 +292,19 @@
         ctx.fill();
       });
 
-      info.innerHTML = `
-        Team: <b>${team.name}</b> 
-        <b>(${team.members})</b><br>
-        Points: <b>${team.points}</b> 
-        Time: ${team.time} 
-        Distance: ${team.distance_km} km<br>
+      infoText.innerHTML = `
+        Team: <span style="font-size: 1.6em; font-weight: bold">${team.name}</span>
+        <span class="bold-text">${team.members}</span><br>
+        Points: <span class="bold-text">${team.points}</span>
+        <span style="font-size: 0.8em; color: dimgray">
+        ${team.points_per_km}/km
+        ${team.points_per_hour}/h
+        </span>
+        Time: <span class="bold-text">${team.time}</span>
+        Distance: <span class="bold-text">${team.distance_km} km</span>
+        Speed: ${team.speed} km/h
+        Pace: ${team.pace} min/km
+        <br>
       `;
 
     }
@@ -267,7 +324,7 @@
     const teamsByGroup = data.teams;
     const tableTitles = [
       "Place", "Team", "Members", "Time",
-      "Points", "Penalty", "Result", "Km", "Min/pt"
+      "Points", "Penalty", "Result", "Km", "Pt/km", "Pt/h"
     ];
 
     for (const group in teamsByGroup) {
@@ -303,7 +360,8 @@
           <td>${team.penalty || ""}</td>
           <td><b>${team.points}</b></td>
           <td>${team.distance_km}</td>
-          <td>${team.min_per_point}</td>
+          <td>${team.points_per_km}</td>
+          <td>${team.points_per_hour}</td>
         `;
         table.appendChild(tr);
       });
@@ -313,9 +371,25 @@
     
     function showTooltip(x, y, html) {
       tooltip.innerHTML = html;
-      tooltip.style.left = `${x + 12}px`;
-      tooltip.style.top = `${y + 12}px`;
+      //tooltip.style.left = `${x + 12}px`;
+      //tooltip.style.top = `${y + 12}px`;
       tooltip.style.display = "block";
+
+      const padding = 10;
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      if (x + tooltipRect.width + padding > windowWidth) {
+        x = windowWidth - tooltipRect.width - padding;
+      }
+
+      if (y + tooltipRect.height + padding > windowHeight) {
+        y = windowHeight - tooltipRect.height - padding;
+      }
+
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
     }
     
     function hideTooltip() {
@@ -351,6 +425,13 @@
       return (dx * dx + dy * dy) <= (tolerance * tolerance);
     }
 
+    function tohhmmss(seconds) {
+      const hh = Math.floor(seconds / 3600);
+      const mm = Math.floor((seconds % 3600) / 60);
+      const ss = Math.floor(seconds % 60);
+      return `${hh}:${mm.toString().padStart(2, "0")}:${ss.toString().padStart(2, "0")}`;
+    }
+
 
     // Event listeners
 
@@ -366,8 +447,8 @@
       }
     });
 
-    /*canvas.addEventListener("mousemove", e => {*/
-    canvas.addEventListener("click", e => {
+    canvas.addEventListener("mousemove", e => {
+    /*canvas.addEventListener("click", e => {*/
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
@@ -383,11 +464,23 @@
       }
 
       if (found) {
+        split_str = tohhmmss(found.data.split);
+        speed = 0
+        if (found.data.split > 0) {
+          speed = found.data.leg_len*3600/found.data.split;
+        }
+        ptH = found.data.points*3600/found.data.split;
+        legLength = Math.round(found.data.leg_len*1000);
+        ptKm = found.data.points/found.data.leg_len;
         showTooltip(e.clientX, e.clientY, `
           Segment: <b>${found.desc}</b><br>
-          Split: ${found.data.split}<br>
-          Pace: ${found.data.pace}<br>
-          Min/pt: ${found.data.min_per_point}<br>
+          Split: ${split_str}<br>
+          Length: ${legLength} m<br>
+          Speed: ${speed.toFixed(2)} km/h<br>
+          Pace: ${found.data.pace} min/km<br>
+          Points: ${found.data.points}<br>
+          <span style="color: gray;">${ptKm.toFixed(2)}/km
+          ${ptH.toFixed(2)}/h<br></span>
           Rank: ${found.data.leg_ranking}
         `);
       } else {

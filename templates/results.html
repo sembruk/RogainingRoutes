@@ -359,6 +359,14 @@
       else img.onload = draw;
     }
 
+    function formatGroupPlace(group, place) {
+      const medalEmojis = ['🥇', '🥈', '🥉'];
+      if (place >= 1 && place <= 3) {
+        return `${group}: ${medalEmojis[place - 1]}`;
+      }
+      return `${group}: ${place}`;
+    }
+
     function renderTable(showGlobal) {
       const table = document.getElementById("results");
       const teamsByGroup = data.teams;
@@ -400,10 +408,10 @@
 
         allTeams.forEach(team => {
           const tr = document.createElement("tr");
-          boldStr = team.place > 0 && team.place < 4 ? "style=\"font-weight: bold\"" : "";
+          //boldStr = team.place > 0 && team.place < 4 ? "style=\"font-weight: bold\"" : "";
           tr.innerHTML = `
             <td>${team.absPlace}</td>
-            <td ${boldStr}>${team.group}: ${team.place}</td>
+            <td>${formatGroupPlace(team.group, team.place)}</td>
             <td><a href="#" onclick="showTeamPopup(${team.bib});return false;">${team.name}</a></td>
             <td>${team.members}</td>
             <td>${team.time}</td>

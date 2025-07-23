@@ -4,6 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html" charset="utf-8">
     <title>{{ event_title }}</title>
     <link rel="stylesheet" href="style.css">
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>-->
     <style>
         .githubLink {
           color: #1C6EA4;
@@ -58,14 +59,16 @@
             top: 0; left: 0;
             z-index: 1;
         }
-        #popup-close {
+        #popup-toolbar {
           position: absolute;
           top: 5px;
           right: 16px;
           font-size: 32px;
           color: black;
-          cursor: pointer;
           z-index: 10;
+        }
+        #popup-close, #popup-save {
+          cursor: pointer;
         }
         #popup-info {
           position: relative;
@@ -91,19 +94,48 @@
           display: none;
           pointer-events: none;
         }
+        #toggle-container {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          /*opacity: 0.5;*/
+          /*transition: opacity 0.2s ease;*/
+          background: white;
+          padding: 8px;
+          z-index: 1000;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-family: sans-serif;
+        }
+        #toggle-container label {
+          cursor: pointer;
+        }
+        /*#toggle-container label:hover {
+          opacity: 1;
+        }*/
         /*h1, h2 { text-align: center; }*/
     </style>
 </head>
 <body>
     <h1>{{ event_title }}</h1>
-    <h2>Пути участников</h2>
+    <h2>Teams Routes</h2>
     <br>
     <table class="blueTable" id="results"></table>
+    <div id="toggle-container">
+      <label>
+        <input type="checkbox" id="toggle-global" />
+        <!--Показать общую таблицу-->
+        Show global
+      </label>
+    </div>
 
     <div id="popup">
       <div id="popup-map-wrapper">
         <div id="popup-info">
-          <div id="popup-close" onclick="closePopup()">×</div>
+          <div id="popup-toolbar">
+            <!--<span id="popup-save" title="Сохранить изображение">💾</span>-->
+            <span id="popup-close" title="Close" onclick="closePopup()">×</span>
+          </div>
           <div id="info-text"></div>
         </div>
         <div id="map-container">
@@ -123,8 +155,6 @@
   </script>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const oneTable = params.get("abs") === "true";
 
     const popup = document.getElementById("popup");
     const canvas = document.getElementById("map-canvas");
@@ -136,6 +166,13 @@
     const data = JSON.parse(document.getElementById("json-data").textContent);
     const allTeams = Object.values(data.teams).flat();
     const cpCoords = data.cp_coords;
+
+    function getQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        showGlobal: params.get("abs") === "true" || params.get("abs") === "1"
+      };
+    }
 
     function closePopup() {
       popup.style.display = "none";
@@ -323,7 +360,7 @@
       else img.onload = draw;
     }
 
-    function fillTable() {
+    function renderTable(showGlobal) {
       const table = document.getElementById("results");
       const teamsByGroup = data.teams;
       const tableTitles = [
@@ -331,7 +368,10 @@
         "Points", "Penalty", "Result", "Km", "Pts/km", "Pts/h"
       ];
 
-      if (oneTable) {
+      console.log('showGlobal', showGlobal);
+      table.innerHTML = "";
+
+      if (showGlobal) {
         allTeams.sort((a, b) => {
           if (b.points !== a.points) return b.points - a.points;
           return a.time.localeCompare(b.time);
@@ -340,8 +380,6 @@
         allTeams.forEach((team, index) => {
           team.absPlace = index + 1;
         });
-
-        table.innerHTML = "";
 
         const headerRow = document.createElement("tr");
         tableTitles.forEach(title => {
@@ -482,6 +520,15 @@
       return `${hh}:${mm.toString().padStart(2, "0")}:${ss.toString().padStart(2, "0")}`;
     }
 
+    //document.getElementById("popup-save").addEventListener("click", () => {
+    //  const popup = document.getElementById("popup");
+    //  html2canvas(popup).then(canvas => {
+    //    const link = document.createElement("a");
+    //    link.download = "team_map.jpg";
+    //    link.href = canvas.toDataURL("image/jpg");
+    //    link.click();
+    //  });
+    //});
 
     // Event listeners
 
@@ -538,7 +585,17 @@
       }
     })
 
-    fillTable();
+    document.addEventListener("DOMContentLoaded", () => {
+      const toggleCheckbox = document.getElementById("toggle-global");
+      const { showGlobal } = getQueryParams();
+    
+      toggleCheckbox.checked = showGlobal;
+      renderTable(showGlobal);
+    
+      toggleCheckbox.addEventListener("change", () => {
+        renderTable(toggleCheckbox.checked);
+      });
+    });
   </script>
 </body>
 </html>

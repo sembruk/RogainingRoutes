@@ -118,14 +118,13 @@
 </head>
 <body>
     <h1>{{ event_title }}</h1>
-    <h2>Teams Routes</h2>
+    <h2>{{ l.results_title }}</h2>
     <br>
     <table class="blueTable" id="results"></table>
     <div id="toggle-container">
       <label>
         <input type="checkbox" id="toggle-global" />
-        <!--Показать общую таблицу-->
-        Show global
+        {{ l.show_global }}
       </label>
     </div>
 
@@ -133,8 +132,8 @@
       <div id="popup-map-wrapper">
         <div id="popup-info">
           <div id="popup-toolbar">
-            <!--<span id="popup-save" title="Сохранить изображение">💾</span>-->
-            <span id="popup-close" title="Close" onclick="closePopup()">×</span>
+            <!--<span id="popup-save" title="Save image">💾</span>-->
+            <span id="popup-close" title="{{ l.close_button }}" onclick="closePopup()">×</span>
           </div>
           <div id="info-text"></div>
         </div>
@@ -333,17 +332,17 @@
       });
 
       infoText.innerHTML = `
-        Team: <span style="font-size: 1.6em; font-weight: bold">${team.name}</span>
+        {{ l.team }}: <span style="font-size: 1.6em; font-weight: bold">${team.name}</span>
         <span class="bold-text">${team.members}</span><br>
-        Points: <span class="bold-text">${team.points}</span>
+        {{ l.points }}: <span class="bold-text">${team.points}</span>
         <span style="font-size: 0.8em; color: dimgray">
-        ${team.points_per_km}/km
-        ${team.points_per_hour}/h
+        ${team.points_per_km}/{{ l.km }}
+        ${team.points_per_hour}/{{ l.h }}
         </span>
-        Time: <span class="bold-text">${team.time}</span>
-        Distance: <span class="bold-text">${team.distance_km} km</span>
-        Speed: ${team.speed} km/h
-        Pace: ${team.pace} min/km
+        {{ l.time }}: <span class="bold-text">${team.time}</span>
+        {{ l.distance }}: <span class="bold-text">${team.distance_km} km</span>
+        {{ l.speed }}: ${team.speed} {{ l.km_h }}
+        {{ l.pace }}: ${team.pace} {{ l.min_km }}
         <br>
       `;
 
@@ -364,11 +363,19 @@
       const table = document.getElementById("results");
       const teamsByGroup = data.teams;
       const tableTitles = [
-        "Place", "Group Place", "Team", "Members", "Time",
-        "Points", "Penalty", "Result", "Km", "Pts/km", "Pts/h"
+        "{{ l.place }}", 
+        "{{ l.group_place }}", 
+        "{{ l.team }}",
+        "{{ l.members }}",
+        "{{ l.time }}",
+        "{{ l.points }}",
+        "{{ l.penalty }}",
+        "{{ l.total }}",
+        "{{ l.km_title }}",
+        "{{ l.pts_per_km }}",
+        "{{ l.pts_per_h }}"
       ];
 
-      console.log('showGlobal', showGlobal);
       table.innerHTML = "";
 
       if (showGlobal) {
@@ -570,15 +577,15 @@
         legLength = Math.round(found.data.leg_len*1000);
         ptKm = found.data.points/found.data.leg_len;
         showTooltip(e.clientX, e.clientY, `
-          Segment: <b>${found.desc}</b><br>
-          Split: ${split_str}<br>
-          Length: ${legLength} m<br>
-          Speed: ${speed.toFixed(2)} km/h<br>
-          Pace: ${found.data.pace} min/km<br>
-          Points: ${found.data.points}<br>
-          <span style="color: gray;">${ptKm.toFixed(2)}/km
-          ${ptH.toFixed(2)}/h<br></span>
-          Rank: ${found.data.leg_ranking}
+          {{ l.segment }}: <b>${found.desc}</b><br>
+          {{ l.split }}: ${split_str}<br>
+          {{ l.length }}: ${legLength} {{ l.m }}<br>
+          {{ l.speed }}: ${speed.toFixed(2)} {{ l.km_h }}<br>
+          {{ l.pace }}: ${found.data.pace} {{ l.min_km }}<br>
+          {{ l.points }}: ${found.data.points}<br>
+          <span style="color: gray;">${ptKm.toFixed(2)}/{{ l.km }}
+          ${ptH.toFixed(2)}/{{ l.h }}<br></span>
+          {{ l.rank }}: ${found.data.leg_ranking}
         `);
       } else {
         hideTooltip();

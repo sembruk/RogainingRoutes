@@ -41,6 +41,65 @@ course_color_avr_speed = np.array((255, 255, 0))
 course_color_max_speed = np.array((0, 255, 0))
 course_color_default = np.array((128, 128, 128))
 
+LABELS = {
+    'en': {
+        'results_title': "Teams Routes",
+        'show_global': "Show global",
+        'close_button': "Close",
+        'place': "Place",
+        'group_place': "Group Place",
+        'team': "Team",
+        'members': "Members",
+        'time': "Time",
+        'points': "Points",
+        'penalty': "Penalty",
+        'total': "Total",
+        'km_title': "Km",
+        'distance': "Distance",
+        'pts_per_km': "Pts/km",
+        'pts_per_h': "Pts/h",
+        'segment': "Segment",
+        'split': "Split",
+        'length': "Length",
+        'speed': "Speed",
+        'pace': "Pace",
+        'rank': "Rank",
+        'm': "m",
+        'km_h': "km/h",
+        'min_km': "min/km",
+        'km': "km",
+        'h': "h",
+    },
+    'ru': {
+        'results_title': "Пути участников",
+        'show_global': "Показать общую таблицу",
+        'close_button': "Закрыть",
+        'place': "Место",
+        'group_place': "В группе",
+        'team': "Команда",
+        'members': "Участники",
+        'time': "Время",
+        'points': "Очки",
+        'penalty': "Штраф",
+        'total': "Итог",
+        'km_title': "Км",
+        'distance': "Расстояние",
+        'pts_per_km': "Очк/км",
+        'pts_per_h': "Очк/ч",
+        'segment': "Перегон",
+        'split': "Сплит",
+        'length': "Длина",
+        'speed': "Скорость",
+        'pace': "Темп",
+        'rank': "Место",
+        'm': "м",
+        'km_h': "км/ч",
+        'min_km': "мин/км",
+        'km': "км",
+        'h': "ч",
+    }
+}
+
 env = Environment(
     loader=FileSystemLoader('templates'),
     trim_blocks=True,
@@ -313,13 +372,15 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
     #    json.dump(data, f, ensure_ascii=False, indent=2)
     return json.dumps(data, ensure_ascii=False, indent=2)
 
-def generate_result_html(event_title, map_filename, output_dir, data_json):
+def generate_result_html(event_title, map_filename, output_dir, data_json, lang='ru'):
     template = env.get_template('results.html')
+    labels = LABELS.get(lang, LABELS['ru'])
     with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as fd:
         fd.write(template.render(
             event_title=event_title,
             map_filename=map_filename,
-            embedded_json=data_json
+            embedded_json=data_json,
+            l=labels
         ))
 
 def make_popularity_map_html(cp_coords, meters_in_pixel, map_filename, output_dir, popularity_data, title="Популярность маршрутов"):

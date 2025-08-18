@@ -43,6 +43,8 @@ class Member:
         setattr(self, key, value)
 
     def get_full_name(self, delimeter=' '):
+        if not self.first_name:
+            return self.last_name
         return self.first_name + delimeter + self.last_name
 
     def __str__(self):

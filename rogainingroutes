@@ -376,7 +376,7 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
     #    json.dump(data, f, ensure_ascii=False, indent=2)
     return json.dumps(data, ensure_ascii=False, separators=(',', ':'))
 
-def generate_result_html(event_title, map_filename, output_dir, data_json, lang='ru'):
+def generate_result_html(event_title, map_filename, output_dir, data_json, lang='ru', hide_team_name=False):
     template = env.get_template('results.html')
     labels = LABELS.get(lang, LABELS['ru'])
     with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as fd:
@@ -384,7 +384,8 @@ def generate_result_html(event_title, map_filename, output_dir, data_json, lang=
             event_title=event_title,
             map_filename=map_filename,
             embedded_json=data_json,
-            l=labels
+            hide_team_name=hide_team_name,
+            l=labels,
         ))
 
 def make_popularity_map_html(cp_coords, meters_in_pixel, map_filename, output_dir, popularity_data, title, lang='ru'):
@@ -517,7 +518,7 @@ if __name__ == '__main__':
     print('Meters in pixel:', meters_in_pixel)
     leg_results, leg_results_both_dirs = collect_leg_results(teams)
     data_json = generate_data_json(teams, event_title, cp_coords, meters_in_pixel, output_map_filename, args.output_dir, leg_results, leg_results_both_dirs)
-    generate_result_html(event_title, output_map_filename, args.output_dir, data_json, args.lang)
+    generate_result_html(event_title, output_map_filename, args.output_dir, data_json, args.lang, args.hide_team_name)
     popularity_data = collect_popularity_data(teams, cp_coords, leg_results_both_dirs)
     make_popularity_map_html(cp_coords, meters_in_pixel, output_map_filename, args.output_dir, popularity_data, event_title, args.lang)
 

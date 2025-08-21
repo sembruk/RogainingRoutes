@@ -23,16 +23,21 @@ sfr_spit_field_name = {
     'Номер': 'bib',
     'Фамилия': 'last_name',
     'Имя': 'first_name',
+    'Фамилия, Имя': 'full_name',
+    'Фамилия,': 'full_name',
     'Г.р.': 'year_of_birth',
+    'Г.р': 'year_of_birth',
     'Команда': 'team_name',
     '***': 'points',
+    'Итог': 'points',
+    'Штраф': 'penalty',
     'Результат': 'time',
 }
 
 column_name = list()
 
 def extract_event_title(title):
-    return re.sub('\s+Протокол.+$', '', title)
+    return re.sub('[.,\s]+Протокол.+$', '', title)
 
 def parse_member_splits(tr_element):
     member = Member()
@@ -83,6 +88,8 @@ def parse_member_splits(tr_element):
         return
 
     member.time = str_to_time(member.time)
+    if member.full_name:
+        member.last_name, member.first_name = member.full_name.split(' ', 1)
     member.first_name = member.first_name.capitalize()
     member.last_name = member.last_name.capitalize()
 
@@ -121,6 +128,7 @@ def parse_SFR_splits_table(table_element, group):
         member = team.members[nMembers-1]
         team.bib = bib
         team.points = int(member.points)
+        team.penalty = int(member.penalty) if member.penalty else 0
         team.time = member.time
         team.route = member.route
         team.sum = member.sum

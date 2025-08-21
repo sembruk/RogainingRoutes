@@ -231,7 +231,8 @@ def collect_popularity_data(teams, cp_coords, all_legs_both_dirs):
         for t in teams[group]:
             for cp in t.route:
                 if isinstance(cp.id, int):
-                    popularity_cps[cp.id] += 1
+                    if cp.id in popularity_cps:
+                        popularity_cps[cp.id] += 1
     for leg in all_legs_both_dirs:
         popularity_legs[leg] = len(all_legs_both_dirs[leg])
     return {
@@ -304,6 +305,10 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
 
                 leg_distance = 0
                 if prev_cp is not None and cp_code is not None:
+                    if not cp_code in cp_coords and cp_code != Finishpoint.ID:
+                        print('Warning: CP not found:', cp_code)
+                        continue
+
                     key = '-'.join(sorted((str(prev_cp), str(cp_code))))
                     if key in leg_lengths:
                         leg_distance = leg_lengths[key]
@@ -431,8 +436,10 @@ def make_popularity_map_html(cp_coords, meters_in_pixel, map_filename, output_di
     for key, count in popularity_data["legs"].items():
         a_str, b_str = key.split('-')
         a, b = parse_cp_id(a_str), parse_cp_id(b_str)
-        #if a not in cp_coords or b not in cp_coords:
-        #    continue
+        if a != Finishpoint.ID and a not in cp_coords:
+            continue
+        if b != Finishpoint.ID and b not in cp_coords:
+            continue
         x1, y1 = coord_to_pixel(*get_cp_coords(a, cp_coords))
         x2, y2 = coord_to_pixel(*get_cp_coords(b, cp_coords))
         width = 2 + 10 * (count / max_leg_popularity)
@@ -492,7 +499,11 @@ if __name__ == '__main__':
         # If file contains 'OEScore' string in header, then it's OEScore
         # splits HTML
         with open(args.file, 'r', encoding='utf-8') as fd:
-            head = ''.join(fd.readline() for _ in range(10))
+            try:
+                head = ''.join(fd.readline() for _ in range(10))
+            except UnicodeDecodeError:
+                with open(args.file, 'r', encoding='cp1251') as fd:
+                    head = ''.join(fd.readline() for _ in range(10))
         if 'OEScore' in head:
             teams, event_title = oescore.parse_OEScore_splits_html(args.file)
         else:

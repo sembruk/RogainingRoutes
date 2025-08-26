@@ -20,15 +20,20 @@ from io import StringIO
 from datetime import timedelta
 from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
 
-first_cp_column = 10
+first_cp_column = 12
+skip_first_row = True
 
 fields_order = {
-    'name': 0,
-    'bib': 1,
-    'points': 8,
-    'start_time': 4,
-    'finish_time': 3,
-    'time': 9
+    'surname_name': 1,
+    'group': 4,
+    'team_name': 5,
+    'bib': 6,
+    'points': 7,
+    'penalty': 8,
+    'total_points': 9,
+    'start_time': 10,
+    'finish_time': 11,
+    #'time': 9
 }
 
 def str_to_time(s):
@@ -51,23 +56,32 @@ def parse_teams(csv_filename):
         csvreader = csv.reader(StringIO(data), delimiter=';')
         teams = {}
         event_title = ''
+        if skip_first_row:
+            next(csvreader)
         for row in csvreader:
             if row[0] == 'event_title':
                 event_title = row[1]
                 continue
             member = Member()
             if len(row) >= first_cp_column:
-                member.first_name = ''
-                member.last_name = row[fields_order['name']].title()
+                surname_name = row[fields_order['surname_name']]
+                member.last_name = surname_name.split()[0].title()
+                member.first_name = surname_name.split()[-1].title()
                 member.bib = row[fields_order['bib']]
-                print(member.bib, member.last_name)
+                print(member.bib, member.first_name, member.last_name)
                 member.team_bib = member.bib
-                member.team_name = ''
-                member.points = row[fields_order['points']]
-                member.time = str_to_time(row[fields_order['time']])
+                member.group = row[fields_order['group']]
+                member.team_name = row[fields_order['team_name']] if row[fields_order['team_name']] else ''
+                member.sum = int(row[fields_order['points']])
+                member.penalty = int(row[fields_order['penalty']])
+                member.points = int(row[fields_order['total_points']])
+                try:
+                    member.time = str_to_time(row[fields_order['finish_time']])
+                except:
+                    continue
 
                 start_time = str_to_time(row[fields_order['start_time']])
-                prev_time = start_time
+                prev_time = timedelta()
                 for i in range(first_cp_column, len(row), 2):
                     cp = Checkpoint()
                     cp.id = row[i]
@@ -79,9 +93,10 @@ def parse_teams(csv_filename):
                             abs_time = str_to_time(row[i + 1])
                         cp.split = abs_time - prev_time
                         prev_time = abs_time
-                        cp.time = abs_time - start_time
-                        member.sum += cp.points
+                        cp.time = abs_time # - start_time
+                        #member.sum += cp.points
                         member.route.append(cp)
+                        print(cp.id, cp.time, cp.split)
 
                 if len(member.route) < 1:
                     return
@@ -106,31 +121,37 @@ def parse_teams(csv_filename):
 
 def parse_splits_csv(csv_filename):
     teams,event_title = parse_teams(csv_filename)
-    teams_list = []
+    #teams_list = []
+    teams_groups = {}
     for bib in teams:
         team = teams[bib]
         nMembers = len(team.members)
         member = team.members[nMembers-1]
         team.bib = bib
+        team.group = member.group
         team.points = int(member.points)
+        team.penalty = int(member.penalty) if member.penalty else 0
         team.time = member.time
         team.route = member.route
         team.sum = member.sum
-        team_name = team.members[0].team_name
+        team_name = member.team_name
         team.team_name = team_name
         for m in team.members:
             if m.team_name != team_name:
                 team.team_name += ' - ' + m.team_name
 
-        teams_list.append(team)
+        if team.group not in teams_groups:
+            teams_groups[team.group] = []
+        teams_groups[team.group].append(team)
 
-    teams_list.sort(reverse=False, key=operator.attrgetter('time'))
-    teams_list.sort(reverse=True, key=operator.attrgetter('points'))
+    for teams_list in teams_groups.values():
+        teams_list.sort(reverse=False, key=operator.attrgetter('time'))
+        teams_list.sort(reverse=True, key=operator.attrgetter('points'))
 
-    for i in range(len(teams_list)):
-        teams_list[i].place = i+1
+        for i in range(len(teams_list)):
+            teams_list[i].place = i+1
 
-    return {'Абсолют': teams_list}, event_title
+    return teams_groups, event_title
 
 
 

@@ -578,10 +578,11 @@
       if (found) {
         split_str = tohhmmss(found.data.split);
         speed = 0
+        ptH = 0
         if (found.data.split > 0) {
           speed = found.data.leg_len*3600/found.data.split;
+          ptH = found.data.points*3600/found.data.split;
         }
-        ptH = found.data.points*3600/found.data.split;
         legLength = Math.round(found.data.leg_len*1000);
         ptKm = found.data.points/found.data.leg_len;
         showTooltip(e.clientX, e.clientY, `

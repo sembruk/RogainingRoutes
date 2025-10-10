@@ -20,19 +20,19 @@ from io import StringIO
 from datetime import timedelta
 from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
 
-first_cp_column = 11
+first_cp_column = 12
 skip_first_row = True
 
 fields_order = {
     'surname_name': 1,
-    'group': 2,
-    'team_name': 3,
-    'bib': 4,
-    'points': 5,
-    'penalty': 6,
-    'total_points': 7,
-    'start_time': 9,
-    'finish_time': 10,
+    'group': 4,
+    'team_name': 5,
+    'bib': 6,
+    'points': 7,
+    'penalty': 8,
+    'total_points': 9,
+    'start_time': 10,
+    'finish_time': 11,
     #'time': 9
 }
 
@@ -55,7 +55,7 @@ def parse_teams(csv_filename):
         data = fd.read()
         csvreader = csv.reader(StringIO(data), delimiter=';')
         teams = {}
-        event_title = 'Компактный Рогейн «Электрогорск», 4 октября 2025 года'
+        event_title = ''
         if skip_first_row:
             next(csvreader)
         for row in csvreader:
@@ -65,8 +65,8 @@ def parse_teams(csv_filename):
             member = Member()
             if len(row) >= first_cp_column:
                 surname_name = row[fields_order['surname_name']]
-                member.last_name = surname_name
-                member.first_name = '' #surname_name.split()[-1].title()
+                member.last_name = surname_name.split()[0].title()
+                member.first_name = surname_name.split()[-1].title()
                 member.bib = row[fields_order['bib']]
                 print(member.bib, member.first_name, member.last_name)
                 member.team_bib = member.bib

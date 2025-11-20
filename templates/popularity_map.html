@@ -9,7 +9,7 @@
 <h1>{{ title }}</h1>
 <h2>{{ l.popularity_map_title }}</h2>
 <svg width="{{ map_width }}px" height="{{ map_height }}px">
-    <image xlink:href="{{ map_file }}" width="{{ map_width }}" height="{{ map_height }}"/>
+    <image href="{{ map_file }}" width="{{ map_width }}" height="{{ map_height }}"/>
 
     <!-- Перегоны -->
     {% for x1, y1, x2, y2, width, count in leg_lines %}

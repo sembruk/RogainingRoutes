@@ -155,6 +155,7 @@
 
   <script>
 
+    const body = document.body;
     const popup = document.getElementById("popup");
     const canvas = document.getElementById("map-canvas");
     const ctx = canvas.getContext("2d");
@@ -173,10 +174,20 @@
       };
     }
 
+    function disableDocumentScroll() {
+        body.style.overflow = "hidden";
+    }
+
+    function enableDocumentScroll() {
+        body.style.overflow = "auto";
+    }
+
     function closePopup() {
       popup.style.display = "none";
       tooltip.style.display = "none";
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      enableDocumentScroll();
     }
 
     function drawArrow(x1, y1, x2, y2, color) {
@@ -351,6 +362,8 @@
     function showTeamPopup(bib) {
       const team = allTeams.find(t => t.bib == bib);
       if (!team) return;
+
+      disableDocumentScroll();
 
       currentTeam = team;
       popup.style.display = "flex";

@@ -493,8 +493,8 @@ if __name__ == '__main__':
     elif input_filename_extension == '.csv':
         teams, event_title = splits_csv.parse_splits_csv(args.file)
     elif input_filename_extension == '.htm':
-        #teams, event_title = winorient.parse_winorient_splits_html(args.file)
-        teams, event_title = winorient2.parse_winorient_printout_html(args.file)
+        teams, event_title = winorient.parse_winorient_splits_html(args.file)
+        #teams, event_title = winorient2.parse_winorient_printout_html(args.file)
     elif input_filename_extension == '.html':
         # If file contains 'OEScore' string in header, then it's OEScore
         # splits HTML

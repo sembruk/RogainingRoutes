@@ -53,6 +53,7 @@ def parse_member_splits(line):
     member.team_name = ''
     member.points = None
     member.group = None
+    member.penalty = None
     cp_time = None
     current_time = timedelta()
     if not line:
@@ -101,6 +102,7 @@ def parse_member_splits(line):
                 _debug('sum', w)
             elif table_columns[i] == 'penalty':
                 _debug('penalty', w)
+                member.penalty = int(re.search(r'\d+', w).group())
             elif table_columns[i] == 'score':
                 _debug('score', w)
                 member.points = int(w)
@@ -163,6 +165,7 @@ def parse_winorient_splits_html(splits_filename):
         team.points = int(member.points)
         team.time = member.time
         team.sum = member.sum
+        team.penalty = member.penalty if member.penalty else 0
         team_name = team.members[0].team_name
         team.team_name = team_name
         for m in team.members:

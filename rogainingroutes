@@ -55,6 +55,7 @@ LABELS = {
         'points': "Points",
         'penalty': "Penalty",
         'total': "Total",
+        'comment_title': "",
         'km_title': "Km",
         'distance': "Distance",
         'pts_per_km': "Pts/km",
@@ -74,7 +75,7 @@ LABELS = {
         'cp_teams_count': "Teams",
     },
     'ru': {
-        'results_title': "Пути участников",
+        'results_title': "РЕЗУЛЬТАТЫ",
         'popularity_map_title': "Популярность маршрутов",
         'show_global': "Показать общую таблицу",
         'close_button': "Закрыть",
@@ -86,6 +87,7 @@ LABELS = {
         'points': "Очки",
         'penalty': "Штраф",
         'total': "Итог",
+        'comment_title': "",
         'km_title': "Км",
         'distance': "Расстояние",
         'pts_per_km': "Очк/км",
@@ -250,7 +252,7 @@ def get_cp_coords(cp_id, cp_coords):
     else:
         return None
 
-def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filename, output_dir, leg_results, leg_results_both_dirs):
+def generate_data_json(teams, event, cp_coords, meters_in_pixel, map_filename, output_dir, leg_results, leg_results_both_dirs):
 
     start_x, start_y = cp_coords['start']
     offset_x, offset_y = cp_coords['start_offset_in_pixels']
@@ -297,6 +299,7 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
                 'sum': team.sum,
                 'penalty': team.penalty if team.penalty > 0 else (team.sum - team.points if team.sum > team.points else 0),
                 'points': team.points,
+                'comment': team.comment,
                 'route': []
             }
 
@@ -369,7 +372,10 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
             team_routes[group].append(team_data)
 
     data = {
-        'event_title': event_title,
+        'event_title': event.title,
+        'event_description': event.description,
+        'event_date': event.date,
+        'event_location': event.location,
         'map_filename': map_filename,
         'teams': team_routes,
         'cp_coords': cp_pixel_coords,
@@ -381,12 +387,15 @@ def generate_data_json(teams, event_title, cp_coords, meters_in_pixel, map_filen
     #    json.dump(data, f, ensure_ascii=False, indent=2)
     return json.dumps(data, ensure_ascii=False, separators=(',', ':'))
 
-def generate_result_html(event_title, map_filename, output_dir, data_json, lang='ru', hide_team_name=False):
+def generate_result_html(event, map_filename, output_dir, data_json, lang='ru', hide_team_name=False):
     template = env.get_template('results.html')
     labels = LABELS.get(lang, LABELS['ru'])
     with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as fd:
         fd.write(template.render(
-            event_title=event_title,
+            event_title=event.title,
+            event_description=event.description,
+            event_date=event.date,
+            event_location=event.location,
             map_filename=map_filename,
             embedded_json=data_json,
             hide_team_name=hide_team_name,
@@ -489,12 +498,16 @@ if __name__ == '__main__':
 
     input_filename_extension = os.path.splitext(args.file)[1].lower()
     if input_filename_extension == '.json':
-        teams, event_title = sportorg.parse_sportorg_result_json(args.file)
+        teams, event = sportorg.parse_sportorg_result_json(args.file)
     elif input_filename_extension == '.csv':
         teams, event_title = splits_csv.parse_splits_csv(args.file)
+        event = Event()
+        event.title = event_title
     elif input_filename_extension == '.htm':
         teams, event_title = winorient.parse_winorient_splits_html(args.file)
         #teams, event_title = winorient2.parse_winorient_printout_html(args.file)
+        event = Event()
+        event.title = event_title
     elif input_filename_extension == '.html':
         # If file contains 'OEScore' string in header, then it's OEScore
         # splits HTML
@@ -508,10 +521,12 @@ if __name__ == '__main__':
             teams, event_title = oescore.parse_OEScore_splits_html(args.file)
         else:
             teams, event_title = sfr.parse_SFR_splits_html(args.file)
+        event = Event()
+        event.title = event_title
     else:
         raise Exception('Unknown file extension: ' + input_filename_extension)
 
-    print('Event title:', event_title)
+    print('Event title:', event.title)
     cp_coords = coursedata.parse_course_data_file(args.coords_file)
     cp_coords['start_offset_in_pixels'] = (args.start_x, args.start_y)
     cp_coords['rotate_angle'] = args.angle
@@ -528,8 +543,8 @@ if __name__ == '__main__':
     meters_in_pixel = args.map_scale*0.0254/args.map_dpi
     print('Meters in pixel:', meters_in_pixel)
     leg_results, leg_results_both_dirs = collect_leg_results(teams)
-    data_json = generate_data_json(teams, event_title, cp_coords, meters_in_pixel, output_map_filename, args.output_dir, leg_results, leg_results_both_dirs)
-    generate_result_html(event_title, output_map_filename, args.output_dir, data_json, args.lang, args.hide_team_name)
+    data_json = generate_data_json(teams, event, cp_coords, meters_in_pixel, output_map_filename, args.output_dir, leg_results, leg_results_both_dirs)
+    generate_result_html(event, output_map_filename, args.output_dir, data_json, args.lang, args.hide_team_name)
     popularity_data = collect_popularity_data(teams, cp_coords, leg_results_both_dirs)
-    make_popularity_map_html(cp_coords, meters_in_pixel, output_map_filename, args.output_dir, popularity_data, event_title, args.lang)
+    make_popularity_map_html(cp_coords, meters_in_pixel, output_map_filename, args.output_dir, popularity_data, event.title, args.lang)
 

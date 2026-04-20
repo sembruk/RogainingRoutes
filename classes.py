@@ -56,6 +56,7 @@ class Team:
         self.members = []
         self.team_name = ''
         self.bib = None
+        self.comment = ''
 
     def get_team_name(self):
         return self.team_name
@@ -90,4 +91,11 @@ class Finishpoint(Checkpoint):
     def __init__(self):
         super().__init__()
         self.id = self.ID
+
+class Event():
+    def __init__(self):
+        self.title = ''
+        self.description = ''
+        self.date = ''
+        self.location = ''
 

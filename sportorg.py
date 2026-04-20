@@ -17,7 +17,7 @@ import re
 import json
 import operator
 import dateutil.parser
-from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
+from classes import Member, Team, Checkpoint, Startpoint, Finishpoint, Event
 from datetime import timedelta
 
 def str_to_time(s):
@@ -44,6 +44,7 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
                 if team['id'] == person['team_id']:
                     member.team_name = team['name'].strip()
                     member.team_bib = team['number']
+                    member.subgroup_result = team['subgroup_result']
             member.first_name = person['name'].capitalize().split()[0]
             member.last_name = person['surname'].capitalize().strip()
             member.year_of_birth = person['year']
@@ -51,6 +52,7 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
             member.penalty = r['penalty_points']
             member.time = timedelta(seconds=r['result_team_msec']/1000)
             member.status = r['status']
+            member.comment = person['comment'].strip()
 
             prev_cp_id = None
             for splt in r['splits']:
@@ -116,13 +118,21 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
             team.time_for_sort += timedelta(hours=24)
             team.points_for_sort = 0
         team.route = member.route
-        team.sum = member.sum
+        team.sum = team.points + team.penalty
         team.group = group['name']
         team_name = team.members[0].team_name
         team.team_name = team_name
         for m in team.members:
             if m.team_name != team_name:
                 team.team_name += ' - ' + m.team_name
+        sg = []
+        for r in member.subgroup_result:
+            sg_str = r['name'] + ':' + str(r['place'])
+            if r['place'] < 4:
+                sg_str = "<b>" + sg_str + "</b>"
+            sg.append(sg_str)
+        team.comment = " ".join(sg) + " " + member.comment
+        team.comment = team.comment.strip()
 
         teams_list.append(team)
 
@@ -141,9 +151,10 @@ def parse_sportorg_result_json(json_filename):
     with open(json_filename, encoding='utf-8') as json_file:
         sportorg_race_obj = json.load(json_file)['races'][0]
         start_datetime = dateutil.parser.parse(sportorg_race_obj['data']['start_datetime'])
-        event_title = sportorg_race_obj['data']['title']
-        event_title += ' ' + start_datetime.strftime("%Y")
-        event_title += ' ' + sportorg_race_obj['data']['location']
+        event = Event()
+        event.title = sportorg_race_obj['data']['title']
+        event.date = start_datetime.strftime("%d.%m.%Y")
+        event.location = sportorg_race_obj['data']['location']
         fixed_cp_points = -1
         if sportorg_race_obj['settings']['result_processing_mode'] == 'scores' and \
                 sportorg_race_obj['settings']['result_processing_score_mode'] == 'fixed':
@@ -158,4 +169,4 @@ def parse_sportorg_result_json(json_filename):
             print(group_name, duration)
             teams[group_name] = parse_sportorg_group(sportorg_race_obj, group, fixed_cp_points)
  
-        return teams, event_title
+        return teams, event

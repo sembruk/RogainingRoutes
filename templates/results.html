@@ -113,11 +113,14 @@
         /*#toggle-container label:hover {
           opacity: 1;
         }*/
-        /*h1, h2 { text-align: center; }*/
+        h1,h2 { text-align: center; }
     </style>
 </head>
 <body>
     <h1>{{ event_title }}</h1>
+    <div style="text-align: center;">
+    <h3>{{ event_description }} {{ event_date }} {{ event_location }}</h3>
+    </div>
     <h2>{{ l.results_title }}</h2>
     <br>
     <table class="blueTable" id="results"></table>
@@ -392,6 +395,7 @@
         "{{ l.points }}",
         "{{ l.penalty }}",
         "{{ l.total }}",
+        "{{ l.comment_title }}",
         "{{ l.km_title }}",
         "{{ l.pts_per_km }}",
         "{{ l.pts_per_h }}"
@@ -431,6 +435,7 @@
             <td>${team.sum}</td>
             <td>${team.penalty || ""}</td>
             <td><b>${team.points}</b></td>
+            <td>${team.comment}</td>
             <td>${team.distance_km}</td>
             <td>${team.points_per_km}</td>
             <td>${team.points_per_hour}</td>
@@ -448,7 +453,7 @@
         const titleRow = document.createElement("tr");
         titleRow.style.background = "#FFF";
         titleRow.innerHTML = `<th colspan="${tableTitles.length}">
-            <h2 id="${group}">${group}</h2></th>`;
+            <h3 id="${group}">${group}</h3></th>`;
         table.appendChild(titleRow);
 
         // Column headers
@@ -474,6 +479,7 @@
             <td>${team.sum}</td>
             <td>${team.penalty || ""}</td>
             <td><b>${team.points}</b></td>
+            <td>${team.comment}</td>
             <td>${team.distance_km}</td>
             <td>${team.points_per_km}</td>
             <td>${team.points_per_hour}</td>

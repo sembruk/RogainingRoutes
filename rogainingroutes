@@ -73,6 +73,8 @@ LABELS = {
         'h': "h",
         'popularity': "Popularity",
         'cp_teams_count': "Teams",
+        'male': "M",
+        'female': "F",
     },
     'ru': {
         'results_title': "РЕЗУЛЬТАТЫ",
@@ -105,6 +107,8 @@ LABELS = {
         'h': "ч",
         'popularity': "Популярность",
         'cp_teams_count': "Посещений",
+        'male': "М",
+        'female': "Ж",
     }
 }
 
@@ -294,7 +298,7 @@ def generate_data_json(teams, event, cp_coords, meters_in_pixel, map_filename, o
                 'group': group,
                 'place': team.place,
                 'name': team.get_team_name(),
-                'members': team.get_members_str(),
+                'members': team.get_members_str('\n'),
                 'time': tohhmmss(team.time.total_seconds()/60),
                 'sum': team.sum,
                 'penalty': team.penalty if team.penalty > 0 else (team.sum - team.points if team.sum > team.points else 0),
@@ -388,14 +392,11 @@ def generate_data_json(teams, event, cp_coords, meters_in_pixel, map_filename, o
     return json.dumps(data, ensure_ascii=False, separators=(',', ':'))
 
 def generate_result_html(event, map_filename, output_dir, data_json, lang='ru', hide_team_name=False):
-    template = env.get_template('results.html')
+    template = env.get_template('results2.html')
     labels = LABELS.get(lang, LABELS['ru'])
     with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as fd:
         fd.write(template.render(
-            event_title=event.title,
-            event_description=event.description,
-            event_date=event.date,
-            event_location=event.location,
+            event=event,
             map_filename=map_filename,
             embedded_json=data_json,
             hide_team_name=hide_team_name,

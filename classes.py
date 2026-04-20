@@ -45,7 +45,10 @@ class Member:
     def get_full_name(self, delimeter=' '):
         if not self.first_name:
             return self.last_name
-        return self.first_name + delimeter + self.last_name
+        s = self.first_name + delimeter + self.last_name
+        if self.sex and self.age:
+            s += delimeter + self.sex + str(self.age)
+        return s
 
     def __str__(self):
         return self.get_full_name()

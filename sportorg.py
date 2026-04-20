@@ -47,11 +47,13 @@ def parse_member_splits(race_obj, person, fixed_cp_points):
                     member.subgroup_result = team['subgroup_result']
             member.first_name = person['name'].capitalize().split()[0]
             member.last_name = person['surname'].capitalize().strip()
-            member.year_of_birth = person['year']
+            member.age = person['age']
+            member.sex = 'M' if person['sex'] == 1 else 'Ж' if person['sex'] == 2 else ''
             member.points = r['scores']
             member.penalty = r['penalty_points']
             member.time = timedelta(seconds=r['result_team_msec']/1000)
             member.status = r['status']
+            member.status_comment = r['status_comment'].strip()
             member.comment = person['comment'].strip()
 
             prev_cp_id = None
@@ -111,7 +113,8 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
         team.points = int(member.points)
         team.penalty = int(member.penalty)
         team.time = member.time
-        team.status = team.members[0].status
+        team.status = member.status
+        team.status_comment = member.status_comment
         team.time_for_sort = team.time
         team.points_for_sort = team.points
         if team.status > 1:
@@ -142,6 +145,8 @@ def parse_sportorg_group(race_obj, group, fixed_cp_points):
     for i in range(len(teams_list)):
         if teams_list[i].status == 8:
             teams_list[i].place = "КВ"
+        if teams_list[i].status == 3 and teams_list[i].status_comment:
+            teams_list[i].place = teams_list[i].status_comment
         else:
             teams_list[i].place = i+1
 

@@ -54,6 +54,7 @@ LABELS = {
         'time': "Time",
         'points': "Points",
         'penalty': "Penalty",
+        'bonus': "Bonus",
         'total': "Total",
         'comment_title': "",
         'km_title': "Km",
@@ -88,6 +89,7 @@ LABELS = {
         'time': "Время",
         'points': "Очки",
         'penalty': "Штраф",
+        'bonus': "Бонус",
         'total': "Итог",
         'comment_title': "",
         'km_title': "Км",
@@ -300,6 +302,7 @@ def generate_data_json(teams, event, cp_coords, meters_in_pixel, map_filename, o
                 'name': team.get_team_name(),
                 'members': team.get_members_str('\n'),
                 'time': tohhmmss(team.time.total_seconds()/60),
+                'credit_time': tohhmmss(team.credit_time.total_seconds()/60) if team.credit_time > timedelta() else '',
                 'sum': team.sum,
                 'penalty': team.penalty if team.penalty > 0 else (team.sum - team.points if team.sum > team.points else 0),
                 'points': team.points,
@@ -539,7 +542,7 @@ if __name__ == '__main__':
     output_map_filename = 'map' + os.path.splitext(args.map_file)[1]
 
     shutil.copy(args.map_file, os.path.join(args.output_dir, output_map_filename))
-    shutil.copy('templates/style.css', args.output_dir)
+    #shutil.copy('templates/style.css', args.output_dir)
 
     meters_in_pixel = args.map_scale*0.0254/args.map_dpi
     print('Meters in pixel:', meters_in_pixel)

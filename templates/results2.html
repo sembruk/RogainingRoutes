@@ -407,7 +407,7 @@
         "{{ l.members }}",
         "{{ l.time }}",
         "{{ l.points }}",
-        "{{ l.penalty }}",
+        "{{ l.bonus }}",
         "{{ l.total }}",
         //"{{ l.comment_title }}",
         "{{ l.km_title }}",
@@ -447,7 +447,7 @@
             {% else %}<td><a href="#" onclick="showTeamPopup(${team.bib});return false;">${team.members}</a></td>{% endif %}
             <td>${team.time}</td>
             <td>${team.sum}</td>
-            <td>${team.penalty || ""}</td>
+            <td>${team.credit_time || ""}</td>
             <td><b>${team.points}</b></td>
             <!--<td>${team.comment}</td>-->
             <td>${team.distance_km}</td>
@@ -490,7 +490,7 @@
             {% else %}<td><a href="#" onclick="showTeamPopup(${team.bib});return false;">${team.members}</a></td>{% endif %}
             <td>${team.time}</td>
             <td>${team.sum}</td>
-            <td>${team.penalty || ""}</td>
+            <td>${team.credit_time || ""}</td>
             <td><b>${team.points}</b></td>
             <!--<td>${team.comment}</td>-->
             <td>${team.distance_km}</td>

@@ -38,6 +38,8 @@ class Member:
     def __init__(self):
         self.route = []
         self.sum = 0
+        self.sex = None
+        self.age = None
 
     def __setitem__(self, key, value):
         setattr(self, key, value)

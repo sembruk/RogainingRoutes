@@ -31,7 +31,7 @@ import coursedata
 from datetime import timedelta
 from string import Template
 from PIL import Image
-from classes import Startpoint, Finishpoint
+from classes import Startpoint, Finishpoint, Event
 
 
 javascript_map_scale = 1

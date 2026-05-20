@@ -20,20 +20,21 @@ from io import StringIO
 from datetime import timedelta
 from classes import Member, Team, Checkpoint, Startpoint, Finishpoint
 
-first_cp_column = 12
+first_cp_column = 11
 skip_first_row = True
 
 fields_order = {
+    'place': 0,
     'surname_name': 1,
-    'group': 4,
-    'team_name': 5,
-    'bib': 6,
-    'points': 7,
-    'penalty': 8,
-    'total_points': 9,
+    'team_name': 1,
+    'group': 2,
+    'bib': 3,
+    'time': 5,
+    'points': 6,
+    'penalty': 7,
+    'total_points': 8,
     'start_time': 10,
-    'finish_time': 11,
-    #'time': 9
+    #'finish_time': 11,
 }
 
 def str_to_time(s):
@@ -73,27 +74,36 @@ def parse_teams(csv_filename):
                 member.group = row[fields_order['group']]
                 member.team_name = row[fields_order['team_name']] if row[fields_order['team_name']] else ''
                 member.sum = int(row[fields_order['points']])
-                member.penalty = int(row[fields_order['penalty']])
+                member.penalty = row[fields_order['penalty']]
+                if member.penalty:
+                    member.penalty = int(member.penalty)
+                else:
+                    member.penalty = 0
                 member.points = int(row[fields_order['total_points']])
                 try:
                     member.time = str_to_time(row[fields_order['finish_time']])
                 except:
-                    continue
+                    try:
+                        member.time = str_to_time(row[fields_order['time']])
+                    except:
+                        continue
 
                 start_time = str_to_time(row[fields_order['start_time']])
-                prev_time = timedelta()
-                for i in range(first_cp_column, len(row), 2):
+                prev_time = start_time
+                for i in range(first_cp_column, len(row), 3):
                     cp = Checkpoint()
                     cp.id = row[i]
                     if cp.id:
+                        if cp.id == '240':
+                            continue
                         cp.id = int(cp.id)
                         cp.points = cp.id//10
                         abs_time = prev_time
-                        if row[i + 1]:
-                            abs_time = str_to_time(row[i + 1])
+                        if row[i + 2]:
+                            abs_time = str_to_time(row[i + 2])
                         cp.split = abs_time - prev_time
                         prev_time = abs_time
-                        cp.time = abs_time # - start_time
+                        cp.time = abs_time - start_time
                         #member.sum += cp.points
                         member.route.append(cp)
                         print(cp.id, cp.time, cp.split)

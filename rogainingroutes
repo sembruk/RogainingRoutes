@@ -32,6 +32,7 @@ from datetime import timedelta
 from string import Template
 from PIL import Image
 from classes import Startpoint, Finishpoint, Event
+from sfr2026 import parse_SFR_splits2026_html
 
 
 javascript_map_scale = 1
@@ -491,6 +492,7 @@ def make_parser():
     parser.add_argument('-o', '--output-dir', default='output',
         help='output directory')
     parser.add_argument('--lang', default='ru', help='language')
+    parser.add_argument('-t', '--event-title', default='')
     parser.add_argument('--hide-team-name', action='store_true')
     return parser
 
@@ -521,7 +523,9 @@ if __name__ == '__main__':
         if 'OEScore' in head:
             teams, event_title = oescore.parse_OEScore_splits_html(args.file)
         else:
-            teams, event_title = sfr.parse_SFR_splits_html(args.file)
+            teams, event_title = parse_SFR_splits2026_html(args.file)
+        if args.event_title:
+            event_title = args.event_title
         event = Event()
         event.title = event_title
     else:
